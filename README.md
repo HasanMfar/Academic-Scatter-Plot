@@ -1,6 +1,6 @@
-# QCM Sensor Scatter Plot App
+# Scientific Scatter Plot App
 
-A highly interactive, client-side web application for plotting and analyzing Acoustic Sensor (QCM) response data (e.g., Frequency Shift vs. Relative Humidity).
+A highly interactive, client-side web application for plotting and analyzing scientific data (e.g., Sensor Response, Frequency Shift vs. Relative Humidity, etc.).
 
 ## Features
 - **Dynamic Excel Import/Export**: Directly upload your `.xlsx` files to plot your data instantly.
