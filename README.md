@@ -1,20 +1,33 @@
-# Scientific Scatter Plot App
+# 🎓 Academic Scatter Plot Generator
 
-A highly interactive, client-side web application for plotting and analyzing scientific data (e.g., Sensor Response, Frequency Shift vs. Relative Humidity, etc.).
+A beautiful, interactive, and fully client-side web application designed for students, researchers, and academics to generate **publication-ready scatter plots** with zero coding required.
 
-## Features
-- **Dynamic Excel Import/Export**: Directly upload your `.xlsx` files to plot your data instantly.
-- **Hysteresis Loop Detection**: Automatically detects forward (Adsorption) and backward (Desorption) paths and styles them appropriately (e.g., directional arrows and dashed lines).
-- **Publication-Ready Exports**: Export high-resolution PNGs (up to 600 DPI) or Vector SVG files perfect for academic journals.
-- **Drag & Drop Callouts**: Reposition text boxes and legends directly on the plot.
-- **Bilingual & Dual Theme**: Supports Persian (RTL) and English (LTR) languages, along with modern dark and academic light themes.
+## ✨ Why this tool?
+Often, researchers use complex software (like OriginLab or MATLAB) just to plot simple data or sensor responses. This tool provides a **simple, drag-and-drop web interface** that runs entirely in your browser and exports ultra-HD images ready for journal submission.
 
-## How to Run
-Since this app runs entirely on the client-side (no server required), simply open `index.html` in your web browser.
+## 🚀 Features
 
-## Tech Stack
-- HTML5 / CSS3 / Vanilla JavaScript
-- [SheetJS](https://sheetjs.com/) (For Excel file parsing)
+- **📊 Dynamic Excel Integration:** Upload your `.xlsx` data directly. The app dynamically detects your columns, assigns distinct colors/markers, and plots them.
+- **🔄 Smart Hysteresis Detection:** Automatically detects forward and backward paths in cyclic data (like sensor responses), styling them with directional arrows and dashed return lines.
+- **🖼️ Publication-Quality Export:** 
+  - Save as **300/600 DPI PNG** for direct insertion into MS Word or PowerPoint.
+  - Save as **Vector SVG** for Adobe Illustrator or Inkscape.
+  - One-click **Copy to Clipboard** feature.
+- **🖱️ Drag & Drop Callouts:** Click and drag text labels directly on the chart to position them perfectly without overlapping your data.
+- **🌍 Bilingual & Dual Theme:** Switch seamlessly between **English (LTR)** and **Persian (RTL)**, and choose between an Academic Light theme or a Modern Dark theme.
 
-## Author
-Created for advanced QCM sensor analysis and data visualization.
+## 🛠️ How to Use
+
+1. Simply download this repository and open `index.html` in any modern web browser. (No server or installation needed!)
+2. In the right panel, generate and download an **Excel Template** based on your number of samples.
+3. Fill the template with your data and upload it back.
+4. Customize your titles, markers, and line widths.
+5. Export and publish!
+
+## 💻 Tech Stack
+Built with vanilla web technologies for maximum performance and portability:
+- **HTML5 / CSS3 / JavaScript** (No build steps, no heavy frameworks)
+- **[SheetJS](https://sheetjs.com/)** for native Excel `.xlsx` parsing.
+
+---
+*Open-source and crafted for the academic community.*
