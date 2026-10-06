@@ -575,7 +575,6 @@ function renderChart() {
           ` : ""}
         </g>
       `;
-      `;
     });
 
     // --- Trendlines ---
