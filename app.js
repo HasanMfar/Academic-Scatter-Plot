@@ -938,12 +938,7 @@ function renderLegend() {
 
     item.addEventListener("click", () => {
       s.visible = !s.visible;
-      const chk = document.getElementById({
-        nano1: "chkNano1",
-        nano2: "chkNano2",
-        starch1: "chkStarch1",
-        starch2: "chkStarch2"
-      }[s.id]);
+      const chk = document.getElementById(`chk_${s.id}`);
       if (chk) chk.checked = s.visible;
       renderChart();
       renderLegend();
@@ -957,18 +952,26 @@ function renderLegend() {
 function renderDataTable() {
   if (!dataTableBody) return;
   dataTableBody.innerHTML = "";
-
-  const sNano1 = dataset.series.find(s => s.id === "nano1");
-  const sStarch1 = dataset.series.find(s => s.id === "starch1");
+  const dataTableHeader = document.getElementById("dataTableHeader");
+  if (dataTableHeader) {
+    let theadHTML = `<tr><th style="padding: 8px;">X (RH)</th>`;
+    dataset.series.forEach(s => {
+      theadHTML += `<th style="padding: 8px;">${state.lang === 'fa' ? s.nameFa : s.nameEn}</th>`;
+    });
+    theadHTML += `<th style="padding: 8px;"></th></tr>`;
+    dataTableHeader.innerHTML = theadHTML;
+  }
 
   dataset.xValues.forEach((x, idx) => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><input type="number" step="0.1" class="table-input" data-col="x" data-idx="${idx}" value="${x}"></td>
-      <td><input type="number" class="table-input" data-col="nano1" data-idx="${idx}" value="${sNano1.yValues[idx] ?? 0}"></td>
-      <td><input type="number" class="table-input" data-col="starch1" data-idx="${idx}" value="${sStarch1.yValues[idx] ?? 0}"></td>
-      <td><button class="btn-delete-row" data-idx="${idx}" title="حذف سطر" style="background: none; border: none; cursor: pointer; color: #f43f5e; font-size: 16px;">×</button></td>
-    `;
+    let html = `<td><input type="number" step="0.1" class="table-input" data-col="x" data-idx="${idx}" value="${x}"></td>`;
+    
+    dataset.series.forEach(s => {
+      html += `<td><input type="number" class="table-input" data-col="${s.id}" data-idx="${idx}" value="${s.yValues[idx] ?? 0}"></td>`;
+    });
+    
+    html += `<td><button class="btn-delete-row" data-idx="${idx}" title="حذف سطر" style="background: none; border: none; cursor: pointer; color: #f43f5e; font-size: 16px;">×</button></td>`;
+    tr.innerHTML = html;
     dataTableBody.appendChild(tr);
   });
   
@@ -1284,6 +1287,55 @@ function toggleTheme() {
   renderLegend();
 }
 
+// --- Setup dynamic checkboxes ---
+function setupSeriesCheckboxes() {
+  const container = document.getElementById("seriesCheckboxesContainer");
+  if (!container) return;
+  container.innerHTML = "";
+  
+  dataset.series.forEach((s) => {
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "8px";
+    wrapper.style.marginBottom = "8px";
+
+    const lbl = document.createElement("label");
+    lbl.className = "custom-checkbox";
+    lbl.style.margin = "0";
+    lbl.innerHTML = `
+      <input type="checkbox" id="chk_${s.id}" ${s.visible ? "checked" : ""}>
+      <span class="chk-box" style="border-color: ${state.theme === 'dark' ? s.colorDark : s.colorLight};"></span>
+      <span id="lbl_${s.id}">${state.lang === 'fa' ? s.nameFa : s.nameEn}</span>
+    `;
+    lbl.querySelector("input").addEventListener("change", (e) => {
+      s.visible = e.target.checked;
+      renderChart();
+      renderLegend();
+    });
+
+    const colorPicker = document.createElement("input");
+    colorPicker.type = "color";
+    colorPicker.value = state.theme === 'dark' ? s.colorDark : s.colorLight;
+    colorPicker.style.width = "28px";
+    colorPicker.style.height = "28px";
+    colorPicker.style.border = "none";
+    colorPicker.style.cursor = "pointer";
+    colorPicker.style.background = "none";
+    colorPicker.addEventListener("input", (e) => {
+      s.colorDark = e.target.value;
+      s.colorLight = e.target.value;
+      lbl.querySelector(".chk-box").style.borderColor = e.target.value;
+      renderChart();
+      renderLegend();
+    });
+
+    wrapper.appendChild(lbl);
+    wrapper.appendChild(colorPicker);
+    container.appendChild(wrapper);
+  });
+
+
 // --- 17. Event Listeners ---
 function initEvents() {
   if (langToggleBtn) langToggleBtn.addEventListener("click", () => setLanguagePreset(state.lang === "fa" ? "en" : "fa"));
@@ -1352,53 +1404,6 @@ function initEvents() {
     });
   }
 
-// --- Setup dynamic checkboxes ---
-function setupSeriesCheckboxes() {
-  const container = document.getElementById("seriesCheckboxesContainer");
-  if (!container) return;
-  container.innerHTML = "";
-  
-  dataset.series.forEach((s) => {
-    const wrapper = document.createElement("div");
-    wrapper.style.display = "flex";
-    wrapper.style.alignItems = "center";
-    wrapper.style.gap = "8px";
-    wrapper.style.marginBottom = "8px";
-
-    const lbl = document.createElement("label");
-    lbl.className = "custom-checkbox";
-    lbl.style.margin = "0";
-    lbl.innerHTML = `
-      <input type="checkbox" id="chk_${s.id}" ${s.visible ? "checked" : ""}>
-      <span class="chk-box" style="border-color: ${state.theme === 'dark' ? s.colorDark : s.colorLight};"></span>
-      <span id="lbl_${s.id}">${state.lang === 'fa' ? s.nameFa : s.nameEn}</span>
-    `;
-    lbl.querySelector("input").addEventListener("change", (e) => {
-      s.visible = e.target.checked;
-      renderChart();
-      renderLegend();
-    });
-
-    const colorPicker = document.createElement("input");
-    colorPicker.type = "color";
-    colorPicker.value = state.theme === 'dark' ? s.colorDark : s.colorLight;
-    colorPicker.style.width = "28px";
-    colorPicker.style.height = "28px";
-    colorPicker.style.border = "none";
-    colorPicker.style.cursor = "pointer";
-    colorPicker.style.background = "none";
-    colorPicker.addEventListener("input", (e) => {
-      s.colorDark = e.target.value;
-      s.colorLight = e.target.value;
-      lbl.querySelector(".chk-box").style.borderColor = e.target.value;
-      renderChart();
-      renderLegend();
-    });
-
-    wrapper.appendChild(lbl);
-    wrapper.appendChild(colorPicker);
-    container.appendChild(wrapper);
-  });
 }
 
   // Title inputs
