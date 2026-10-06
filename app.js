@@ -307,13 +307,20 @@ function renderChart() {
     calloutBorder: isDark ? "rgba(148, 163, 184, 0.35)" : "#94a3b8"
   };
 
+  const xStep = Math.max(0.0001, state.axis.xStep || 10);
+  const yStep = Math.max(0.0001, state.axis.yStep || 50);
+  const xMin = state.axis.xMin;
+  const xMax = state.axis.xMax > xMin ? state.axis.xMax : xMin + 1;
+  const yMin = state.axis.yMin;
+  const yMax = state.axis.yMax > yMin ? state.axis.yMax : yMin + 1;
+
   const xTicks = [];
-  for (let t = state.axis.xMin; t <= state.axis.xMax; t += state.axis.xStep) {
-    xTicks.push(t);
+  for (let t = xMin, count = 0; t <= xMax + 1e-9 && count < 200; t += xStep, count++) {
+    xTicks.push(Math.round(t * 1e6) / 1e6);
   }
   const yTicks = [];
-  for (let t = state.axis.yMin; t <= state.axis.yMax; t += state.axis.yStep) {
-    yTicks.push(t);
+  for (let t = yMin, count = 0; t <= yMax + 1e-9 && count < 200; t += yStep, count++) {
+    yTicks.push(Math.round(t * 1e6) / 1e6);
   }
 
   const nanoColor = isDark ? "#06b6d4" : "#0284c7";
@@ -444,7 +451,7 @@ function renderChart() {
   // Y Ticks & Labels
   yTicks.forEach(tick => {
     const yPos = mapY(tick);
-    const tickStr = tick === 0 ? "0" : `-${Math.abs(tick)}`;
+    const tickStr = `${tick}`;
     svgContent += `
       <line x1="${plotArea.x - 6}" y1="${yPos}" x2="${plotArea.x}" y2="${yPos}"
             stroke="${colors.axis}" stroke-width="1.5" />
@@ -688,7 +695,7 @@ function renderChart() {
     const legBoxX = state.callouts.inplotX;
     const legBoxY = state.callouts.inplotY;
     const legBoxW = 230;
-    const legBoxH = 148;
+    const legBoxH = Math.max(80, 44 + (dataset.series.length * 26));
 
     svgContent += `
       <g class="draggable-badge" data-badge="inplot" filter="url(#badgeShadow)">
@@ -949,6 +956,24 @@ function renderLegend() {
 }
 
 // --- 11. Render Editable Data Table ---
+function syncInputsToDataset() {
+  if (!dataTableBody) return;
+  const inputs = dataTableBody.querySelectorAll(".table-input");
+  inputs.forEach(input => {
+    const col = input.getAttribute("data-col");
+    const idx = parseInt(input.getAttribute("data-idx"), 10);
+    const val = parseFloat(input.value);
+    const num = isNaN(val) ? 0 : val;
+
+    if (col === "x") {
+      dataset.xValues[idx] = num;
+    } else {
+      const s = dataset.series.find(item => item.id === col);
+      if (s) s.yValues[idx] = num;
+    }
+  });
+}
+
 function renderDataTable() {
   if (!dataTableBody) return;
   dataTableBody.innerHTML = "";
@@ -964,10 +989,10 @@ function renderDataTable() {
 
   dataset.xValues.forEach((x, idx) => {
     const tr = document.createElement("tr");
-    let html = `<td><input type="number" step="0.1" class="table-input" data-col="x" data-idx="${idx}" value="${x}"></td>`;
+    let html = `<td><input type="number" step="any" class="table-input" data-col="x" data-idx="${idx}" value="${x}"></td>`;
     
     dataset.series.forEach(s => {
-      html += `<td><input type="number" class="table-input" data-col="${s.id}" data-idx="${idx}" value="${s.yValues[idx] ?? 0}"></td>`;
+      html += `<td><input type="number" step="any" class="table-input" data-col="${s.id}" data-idx="${idx}" value="${s.yValues[idx] ?? 0}"></td>`;
     });
     
     html += `<td><button class="btn-delete-row" data-idx="${idx}" title="حذف سطر" style="background: none; border: none; cursor: pointer; color: #f43f5e; font-size: 16px;">×</button></td>`;
@@ -988,6 +1013,7 @@ function deleteRow(idx) {
     showToast("حداقل یک سطر باید باقی بماند!");
     return;
   }
+  syncInputsToDataset();
   dataset.xValues.splice(idx, 1);
   dataset.series.forEach(s => s.yValues.splice(idx, 1));
   renderDataTable();
@@ -995,30 +1021,73 @@ function deleteRow(idx) {
 }
 
 function addRow() {
+  syncInputsToDataset();
   const lastX = dataset.xValues.length > 0 ? dataset.xValues[dataset.xValues.length - 1] + 10 : 0;
   dataset.xValues.push(lastX);
   dataset.series.forEach(s => s.yValues.push(0));
   renderDataTable();
+  renderChart();
 }
 
-
 function applyTableData() {
-  const inputs = dataTableBody.querySelectorAll(".table-input");
-  inputs.forEach(input => {
-    const col = input.getAttribute("data-col");
-    const idx = parseInt(input.getAttribute("data-idx"), 10);
-    const val = parseFloat(input.value) || 0;
-
-    if (col === "x") {
-      dataset.xValues[idx] = val;
-    } else {
-      const s = dataset.series.find(item => item.id === col);
-      if (s) s.yValues[idx] = val;
-    }
-  });
-
+  syncInputsToDataset();
   renderChart();
   showToast("داده‌های جدید روی نمودار اعمال شدند!");
+}
+
+function getNiceStep(span, targetTicks = 5) {
+  const rawStep = Math.max(0.0001, span / targetTicks);
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const norm = rawStep / mag;
+  let niceNorm;
+  if (norm <= 1.5) niceNorm = 1;
+  else if (norm <= 3) niceNorm = 2;
+  else if (norm <= 7) niceNorm = 5;
+  else niceNorm = 10;
+  return Math.round(niceNorm * mag * 1e6) / 1e6;
+}
+
+function autoScaleAxis() {
+  if (!dataset.xValues || !dataset.xValues.length) return;
+  const minX = Math.min(...dataset.xValues);
+  const maxX = Math.max(...dataset.xValues);
+  
+  let allY = [];
+  dataset.series.forEach(s => {
+    if (s.yValues && s.yValues.length) allY.push(...s.yValues);
+  });
+  if (!allY.length) return;
+  const minY = Math.min(...allY);
+  const maxY = Math.max(...allY);
+
+  const xSpan = Math.max(1, maxX - minX);
+  const xStep = getNiceStep(xSpan, 6);
+  state.axis.xMin = Math.floor(minX / xStep) * xStep;
+  state.axis.xMax = Math.ceil(maxX / xStep) * xStep;
+  if (state.axis.xMax <= state.axis.xMin) state.axis.xMax = state.axis.xMin + xStep * 5;
+  state.axis.xStep = xStep;
+
+  const ySpan = Math.max(1, maxY - minY);
+  const yStep = getNiceStep(ySpan, 6);
+  state.axis.yMin = Math.floor(minY / yStep) * yStep;
+  state.axis.yMax = Math.ceil(maxY / yStep) * yStep;
+  if (state.axis.yMax <= state.axis.yMin) state.axis.yMax = state.axis.yMin + yStep * 5;
+  state.axis.yStep = yStep;
+
+  // Sync inputs in UI
+  const inpXMin = document.getElementById("inpXMin");
+  const inpXMax = document.getElementById("inpXMax");
+  const inpXStep = document.getElementById("inpXStep");
+  const inpYMin = document.getElementById("inpYMin");
+  const inpYMax = document.getElementById("inpYMax");
+  const inpYStep = document.getElementById("inpYStep");
+
+  if (inpXMin) inpXMin.value = state.axis.xMin;
+  if (inpXMax) inpXMax.value = state.axis.xMax;
+  if (inpXStep) inpXStep.value = state.axis.xStep;
+  if (inpYMin) inpYMin.value = state.axis.yMin;
+  if (inpYMax) inpYMax.value = state.axis.yMax;
+  if (inpYStep) inpYStep.value = state.axis.yStep;
 }
 
 function exportExcelTemplate() {
@@ -1114,6 +1183,14 @@ function importExcelFile(e) {
     
     dataset.xValues = newX;
     dataset.series = newSeries;
+    
+    // Automatically hide sample-specific annotations (nano/starch callouts)
+    state.showAnnotations = false;
+    const chkAnnotations = document.getElementById("chkShowAnnotations");
+    if (chkAnnotations) chkAnnotations.checked = false;
+
+    // Auto-scale axis limits for the imported data
+    autoScaleAxis();
     
     setupSeriesCheckboxes();
     renderDataTable();
@@ -1275,6 +1352,8 @@ function setLanguagePreset(newLang) {
   const badgeStarch = document.getElementById("badgeStarch");
   if (badgeStarch) badgeStarch.textContent = p.badgeStarch;
 
+  setupSeriesCheckboxes();
+  renderDataTable();
   renderChart();
   renderLegend();
 }
@@ -1334,6 +1413,7 @@ function setupSeriesCheckboxes() {
     wrapper.appendChild(colorPicker);
     container.appendChild(wrapper);
   });
+}
 
 
 // --- 17. Event Listeners ---
@@ -1403,8 +1483,6 @@ function initEvents() {
       renderChart();
     });
   }
-
-}
 
   // Title inputs
   if (inputChartTitle) {
@@ -1550,27 +1628,44 @@ function initEvents() {
   if (excelImportInput) excelImportInput.addEventListener("change", importExcelFile);
 
   // Advanced Options
+  const chkHysteresis = document.getElementById("chkHysteresis");
+  if (chkHysteresis) chkHysteresis.addEventListener("change", e => {
+    state.showHysteresis = e.target.checked;
+    renderChart();
+  });
+
   const chkTrendline = document.getElementById("chkTrendline");
   if (chkTrendline) chkTrendline.addEventListener("change", e => {
     state.showTrendlines = e.target.checked;
     renderChart();
   });
 
+  const btnAutoScaleAxis = document.getElementById("btnAutoScaleAxis");
+  if (btnAutoScaleAxis) {
+    btnAutoScaleAxis.addEventListener("click", () => {
+      autoScaleAxis();
+      renderChart();
+      showToast("مقیاس محورها به صورت خودکار تنظیم شد.");
+    });
+  }
+
   ['inpXMin', 'inpXMax', 'inpXStep', 'inpYMin', 'inpYMax', 'inpYStep'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      el.addEventListener("change", e => {
+      const handler = e => {
         const val = parseFloat(e.target.value);
         if (!isNaN(val)) {
           if (id === 'inpXMin') state.axis.xMin = val;
           if (id === 'inpXMax') state.axis.xMax = val;
-          if (id === 'inpXStep') state.axis.xStep = val;
+          if (id === 'inpXStep') state.axis.xStep = Math.max(0.0001, val);
           if (id === 'inpYMin') state.axis.yMin = val;
           if (id === 'inpYMax') state.axis.yMax = val;
-          if (id === 'inpYStep') state.axis.yStep = val;
+          if (id === 'inpYStep') state.axis.yStep = Math.max(0.0001, val);
           renderChart();
         }
-      });
+      };
+      el.addEventListener("input", handler);
+      el.addEventListener("change", handler);
     }
   });
 }
