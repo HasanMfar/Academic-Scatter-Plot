@@ -842,3 +842,13 @@ html[dir="ltr"] body {
     padding: 0 !important;
   }
 }
+
+/* Accordion Styles */
+.accordion { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+.accordion summary { padding: 12px 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; color: var(--text-primary); transition: background 0.2s; }
+.accordion summary:hover { background: var(--hover-color); }
+.accordion summary::-webkit-details-marker { display: none; }
+.accordion summary::after { content: '\25BC'; font-size: 12px; transition: transform 0.3s ease; }
+.accordion[open] summary::after { transform: rotate(-180deg); }
+.accordion-content { padding: 16px; border-top: 1px solid var(--border-color); }
+

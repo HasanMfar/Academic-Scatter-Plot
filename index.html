@@ -221,25 +221,26 @@
           </div>
 
           <!-- Curve & Marker Styling -->
-          <div class="control-group">
-            <label class="control-label" id="labelStyleSliders">تنظیمات نقاط و خطوط</label>
-            
-            <div class="slider-control">
-              <div class="slider-control-header">
-                <span id="lblMarkerSize">اندازه مارکرها</span>
-                <span id="valMarkerSize">10 px</span>
+          <details class="accordion control-group">
+            <summary id="labelStyleSliders">تنظیمات نقاط و خطوط</summary>
+            <div class="accordion-content">
+              <div class="slider-control">
+                <div class="slider-control-header">
+                  <span id="lblMarkerSize">اندازه مارکرها</span>
+                  <span id="valMarkerSize">10 px</span>
+                </div>
+                <input type="range" id="rngMarkerSize" min="6" max="16" value="10">
               </div>
-              <input type="range" id="rngMarkerSize" min="6" max="16" value="10">
-            </div>
 
-            <div class="slider-control">
-              <div class="slider-control-header">
-                <span id="lblLineWidth">ضخامت خطوط</span>
-                <span id="valLineWidth">2.6 px</span>
+              <div class="slider-control">
+                <div class="slider-control-header">
+                  <span id="lblLineWidth">ضخامت خطوط</span>
+                  <span id="valLineWidth">2.6 px</span>
+                </div>
+                <input type="range" id="rngLineWidth" min="1.2" max="4.5" step="0.2" value="2.6">
               </div>
-              <input type="range" id="rngLineWidth" min="1.2" max="4.5" step="0.2" value="2.6">
             </div>
-          </div>
+          </details>
 
           <!-- Series Toggles -->
           <div class="control-group">
@@ -250,167 +251,171 @@
           </div>
 
           <!-- Show/Hide Elements -->
-          <div class="control-group">
-            <label class="control-label" id="labelDisplayOpts">عناصر دیداری</label>
-            <div class="checkbox-list">
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkHysteresis" onchange="window.toggleHysteresis && window.toggleHysteresis(this.checked)" checked>
-                <span class="chk-box"></span>
-                <span id="lblHysteresis" style="color: var(--primary-accent); font-weight: bold;">تشخیص رفت و برگشت (هیسترزیس)</span>
-              </label>
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkShowAnnotations" onchange="window.toggleAnnotations && window.toggleAnnotations(this.checked)" checked>
-                <span class="chk-box"></span>
-                <span id="lblAnnotations">برچسب‌ها و فلش‌های نام‌گذاری</span>
-              </label>
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkShowErrorBand" onchange="window.toggleErrorBand && window.toggleErrorBand(this.checked)" checked>
-                <span class="chk-box"></span>
-                <span id="lblErrorBand">باند سایه‌دار محدوده تکرارها (Shaded Band)</span>
-              </label>
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkShowInplotLegend" onchange="window.toggleInplotLegend && window.toggleInplotLegend(this.checked)" checked>
-                <span class="chk-box"></span>
-                <span id="lblInplotLegend">نمایش راهنمای نمونه‌ها داخل پلات</span>
-              </label>
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkShowBottomLegend" onchange="window.toggleBottomLegend && window.toggleBottomLegend(this.checked)" checked>
-                <span class="chk-box"></span>
-                <span id="lblBottomLegend">نمایش راهنمای نمونه‌ها پایین نمودار</span>
-              </label>
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkShowDataLabels" onchange="window.toggleDataLabels && window.toggleDataLabels(this.checked)">
-                <span class="chk-box"></span>
-                <span id="lblDataLabels">نمایش عدد روی نقاط</span>
-              </label>
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkShowGrid" onchange="window.toggleGrid && window.toggleGrid(this.checked)" checked>
-                <span class="chk-box"></span>
-                <span id="lblGrid">خطوط راهنمای زمینه (Grid)</span>
-              </label>
+          <details class="accordion control-group">
+            <summary id="labelDisplayOpts">عناصر دیداری</summary>
+            <div class="accordion-content">
+              <div class="checkbox-list">
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkHysteresis" onchange="window.toggleHysteresis && window.toggleHysteresis(this.checked)" checked>
+                  <span class="chk-box"></span>
+                  <span id="lblHysteresis" style="color: var(--primary-accent); font-weight: bold;">تشخیص رفت و برگشت (هیسترزیس)</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkShowAnnotations" onchange="window.toggleAnnotations && window.toggleAnnotations(this.checked)" checked>
+                  <span class="chk-box"></span>
+                  <span id="lblAnnotations">برچسب‌ها و فلش‌های نام‌گذاری</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkShowErrorBand" onchange="window.toggleErrorBand && window.toggleErrorBand(this.checked)" checked>
+                  <span class="chk-box"></span>
+                  <span id="lblErrorBand">باند سایه‌دار محدوده تکرارها (Shaded Band)</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkShowInplotLegend" onchange="window.toggleInplotLegend && window.toggleInplotLegend(this.checked)" checked>
+                  <span class="chk-box"></span>
+                  <span id="lblInplotLegend">نمایش راهنمای نمونه‌ها داخل پلات</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkShowBottomLegend" onchange="window.toggleBottomLegend && window.toggleBottomLegend(this.checked)" checked>
+                  <span class="chk-box"></span>
+                  <span id="lblBottomLegend">نمایش راهنمای نمونه‌ها پایین نمودار</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkShowDataLabels" onchange="window.toggleDataLabels && window.toggleDataLabels(this.checked)">
+                  <span class="chk-box"></span>
+                  <span id="lblDataLabels">نمایش عدد روی نقاط</span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkShowGrid" onchange="window.toggleGrid && window.toggleGrid(this.checked)" checked>
+                  <span class="chk-box"></span>
+                  <span id="lblGrid">خطوط راهنمای زمینه (Grid)</span>
+                </label>
+              </div>
             </div>
-          </div>
+          </details>
 
           <!-- Titles Customization -->
-          <div class="control-group">
-            <label class="control-label" id="labelTitlesCustom">شخصی‌سازی تک‌تک عنوان‌ها</label>
-            
-            <div class="input-field">
-              <label for="inputChartTitle" id="lblInpTitle">عنوان نمودار:</label>
-              <input type="text" id="inputChartTitle" value="تغییر فرکانس بر حسب رطوبت نسبی: نانوکامپوزیت در مقایسه با نشاسته خالص">
-            </div>
+          <details class="accordion control-group">
+            <summary id="labelTitlesCustom">شخصی‌سازی تک‌تک عنوان‌ها</summary>
+            <div class="accordion-content">
+              <div class="input-field">
+                <label for="inputChartTitle" id="lblInpTitle">عنوان نمودار:</label>
+                <input type="text" id="inputChartTitle" value="تغییر فرکانس بر حسب رطوبت نسبی: نانوکامپوزیت در مقایسه با نشاسته خالص">
+              </div>
 
-            <div class="input-field">
-              <label for="inputChartSubtitle" id="lblInpSubtitle">زیرعنوان نمودار:</label>
-              <input type="text" id="inputChartSubtitle" value="نمودار اسکتر پلات پاسخ سنسور (Scatter Plot without Trendlines)">
-            </div>
+              <div class="input-field">
+                <label for="inputChartSubtitle" id="lblInpSubtitle">زیرعنوان نمودار:</label>
+                <input type="text" id="inputChartSubtitle" value="نمودار اسکتر پلات پاسخ سنسور (Scatter Plot without Trendlines)">
+              </div>
 
-            <div class="input-field">
-              <label for="inputXTitle" id="lblInpX">عنوان محور افقی (X):</label>
-              <input type="text" id="inputXTitle" value="RH (%)">
-            </div>
+              <div class="input-field">
+                <label for="inputXTitle" id="lblInpX">عنوان محور افقی (X):</label>
+                <input type="text" id="inputXTitle" value="RH (%)">
+              </div>
 
-            <div class="input-field">
-              <label for="inputYTitle" id="lblInpY">عنوان محور عمودی (Y):</label>
-              <input type="text" id="inputYTitle" value="Δf (Hz)">
-            </div>
+              <div class="input-field">
+                <label for="inputYTitle" id="lblInpY">عنوان محور عمودی (Y):</label>
+                <input type="text" id="inputYTitle" value="Δf (Hz)">
+              </div>
 
-            <div class="input-field">
-              <label for="inputNanoLabel" id="lblInpNano">متن فلش نانوکامپوزیت:</label>
-              <input type="text" id="inputNanoLabel" value="نانوکامپوزیت">
-            </div>
+              <div class="input-field">
+                <label for="inputNanoLabel" id="lblInpNano">متن فلش نانوکامپوزیت:</label>
+                <input type="text" id="inputNanoLabel" value="نانوکامپوزیت">
+              </div>
 
-            <div class="input-field">
-              <label for="inputNanoSub" id="lblInpNanoSub">زیرمتن فلش نانوکامپوزیت:</label>
-              <input type="text" id="inputNanoSub" value="پایداری بالا در رطوبت">
-            </div>
+              <div class="input-field">
+                <label for="inputNanoSub" id="lblInpNanoSub">زیرمتن فلش نانوکامپوزیت:</label>
+                <input type="text" id="inputNanoSub" value="پایداری بالا در رطوبت">
+              </div>
 
-            <div class="input-field">
-              <label for="inputStarchLabel" id="lblInpStarch">متن فلش نشاسته خالص:</label>
-              <input type="text" id="inputStarchLabel" value="نشاسته خالص">
-            </div>
+              <div class="input-field">
+                <label for="inputStarchLabel" id="lblInpStarch">متن فلش نشاسته خالص:</label>
+                <input type="text" id="inputStarchLabel" value="نشاسته خالص">
+              </div>
 
-            <div class="input-field">
-              <label for="inputStarchSub" id="lblInpStarchSub">زیرمتن فلش نشاسته خالص:</label>
-              <input type="text" id="inputStarchSub" value="افت شدید فرکانس">
+              <div class="input-field">
+                <label for="inputStarchSub" id="lblInpStarchSub">زیرمتن فلش نشاسته خالص:</label>
+                <input type="text" id="inputStarchSub" value="افت شدید فرکانس">
+              </div>
             </div>
-          </div>
+          </details>
 
           <!-- Callouts Position & Placement -->
-          <div class="control-group">
-            <label class="control-label" id="labelPosControl">تنظیم محل قرارگیری فلش‌ها و کادرها</label>
-            
-            <div class="drag-instruction-toast">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="5 9 2 12 5 15"></polyline>
-                <polyline points="9 5 12 2 15 5"></polyline>
-                <polyline points="15 19 12 22 9 19"></polyline>
-                <polyline points="19 9 22 12 19 15"></polyline>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <line x1="12" y1="2" x2="12" y2="22"></line>
-              </svg>
-              <span id="hintDragDrop">می‌توانید کادرها را مستقیماً با ماوس روی نمودار جابجا کنید (Drag & Drop) یا از اسلایدرهای زیر استفاده کنید:</span>
-            </div>
-
-            <!-- Nanocomposite Box Position -->
-            <div class="slider-control">
-              <div class="slider-control-header">
-                <span id="lblNanoPosX">نانوکامپوزیت - افقی (X)</span>
-                <span id="valNanoX">705 px</span>
+          <details class="accordion control-group">
+            <summary id="labelPosControl">تنظیم دستی محل قرارگیری فلش‌ها و کادرها</summary>
+            <div class="accordion-content">
+              <div class="drag-instruction-toast">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="5 9 2 12 5 15"></polyline>
+                  <polyline points="9 5 12 2 15 5"></polyline>
+                  <polyline points="15 19 12 22 9 19"></polyline>
+                  <polyline points="19 9 22 12 19 15"></polyline>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <line x1="12" y1="2" x2="12" y2="22"></line>
+                </svg>
+                <span id="hintDragDrop">می‌توانید کادرها را مستقیماً با ماوس روی نمودار جابجا کنید (Drag & Drop) یا از اسلایدرهای زیر استفاده کنید:</span>
               </div>
-              <input type="range" id="rngNanoX" min="80" max="820" value="705">
-            </div>
 
-            <div class="slider-control">
-              <div class="slider-control-header">
-                <span id="lblNanoPosY">نانوکامپوزیت - عمودی (Y)</span>
-                <span id="valNanoY">100 px</span>
+              <!-- Nanocomposite Box Position -->
+              <div class="slider-control">
+                <div class="slider-control-header">
+                  <span id="lblNanoPosX">نانوکامپوزیت - افقی (X)</span>
+                  <span id="valNanoX">705 px</span>
+                </div>
+                <input type="range" id="rngNanoX" min="80" max="820" value="705">
               </div>
-              <input type="range" id="rngNanoY" min="30" max="460" value="100">
-            </div>
 
-            <!-- Pure Starch Box Position -->
-            <div class="slider-control">
-              <div class="slider-control-header">
-                <span id="lblStarchPosX">نشاسته خالص - افقی (X)</span>
-                <span id="valStarchX">495 px</span>
+              <div class="slider-control">
+                <div class="slider-control-header">
+                  <span id="lblNanoPosY">نانوکامپوزیت - عمودی (Y)</span>
+                  <span id="valNanoY">100 px</span>
+                </div>
+                <input type="range" id="rngNanoY" min="30" max="460" value="100">
               </div>
-              <input type="range" id="rngStarchX" min="80" max="820" value="495">
-            </div>
 
-            <div class="slider-control">
-              <div class="slider-control-header">
-                <span id="lblStarchPosY">نشاسته خالص - عمودی (Y)</span>
-                <span id="valStarchY">275 px</span>
+              <!-- Pure Starch Box Position -->
+              <div class="slider-control">
+                <div class="slider-control-header">
+                  <span id="lblStarchPosX">نشاسته خالص - افقی (X)</span>
+                  <span id="valStarchX">495 px</span>
+                </div>
+                <input type="range" id="rngStarchX" min="80" max="820" value="495">
               </div>
-              <input type="range" id="rngStarchY" min="30" max="460" value="275">
-            </div>
 
-            <!-- In-Plot Legend Position -->
-            <div class="slider-control" id="grpInplotX">
-              <div class="slider-control-header">
-                <span id="lblInplotPosX">راهنمای داخل پلات - افقی (X)</span>
-                <span id="valInplotX">160 px</span>
+              <div class="slider-control">
+                <div class="slider-control-header">
+                  <span id="lblStarchPosY">نشاسته خالص - عمودی (Y)</span>
+                  <span id="valStarchY">275 px</span>
+                </div>
+                <input type="range" id="rngStarchY" min="30" max="460" value="275">
               </div>
-              <input type="range" id="rngInplotX" min="80" max="680" value="160">
-            </div>
 
-            <div class="slider-control" id="grpInplotY">
-              <div class="slider-control-header">
-                <span id="lblInplotPosY">راهنمای داخل پلات - عمودی (Y)</span>
-                <span id="valInplotY">280 px</span>
+              <!-- In-Plot Legend Position -->
+              <div class="slider-control" id="grpInplotX">
+                <div class="slider-control-header">
+                  <span id="lblInplotPosX">راهنمای داخل پلات - افقی (X)</span>
+                  <span id="valInplotX">160 px</span>
+                </div>
+                <input type="range" id="rngInplotX" min="80" max="680" value="160">
               </div>
-              <input type="range" id="rngInplotY" min="30" max="420" value="280">
-            </div>
 
-            <button id="btnResetPositions" class="btn btn-secondary btn-sm-reset">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                <path d="M3 3v5h5"></path>
-              </svg>
-              <span id="btnResetText">بازنشانی محل فلش‌ها و راهنما به حالت پیش‌فرض</span>
-            </button>
-          </div>
+              <div class="slider-control" id="grpInplotY">
+                <div class="slider-control-header">
+                  <span id="lblInplotPosY">راهنمای داخل پلات - عمودی (Y)</span>
+                  <span id="valInplotY">280 px</span>
+                </div>
+                <input type="range" id="rngInplotY" min="30" max="420" value="280">
+              </div>
+
+              <button id="btnResetPositions" class="btn btn-secondary btn-sm-reset">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+                <span id="btnResetText">بازنشانی محل فلش‌ها و راهنما به حالت پیش‌فرض</span>
+              </button>
+            </div>
+          </details>
 
           <!-- Table of Data & Excel Integration -->
           <div class="control-group">
