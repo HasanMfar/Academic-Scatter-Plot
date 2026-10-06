@@ -61,6 +61,17 @@ const state = {
   showDataLabels: false,
   showGrid: true,
   showHysteresis: true,
+  showTrendlines: false, // New feature: Trendline & R²
+
+  // Axis overrides (null means auto-calculate or default)
+  axis: {
+    xMin: 20,
+    xMax: 100,
+    xStep: 10,
+    yMin: -450,
+    yMax: 50,
+    yStep: 50
+  },
 
   // Editable titles
   chartTitle: "تغییر فرکانس بر حسب رطوبت نسبی: نانوکامپوزیت در مقایسه با نشاسته خالص",
@@ -224,15 +235,12 @@ const plotArea = {
   height: chartBox.height - chartBox.marginTop - chartBox.marginBottom
 };
 
-const xDomain = { min: 20, max: 100 };
-const yDomain = { min: -450, max: 20 };
-
 function mapX(val) {
-  return plotArea.x + ((val - xDomain.min) / (xDomain.max - xDomain.min)) * plotArea.width;
+  return plotArea.x + ((val - state.axis.xMin) / (state.axis.xMax - state.axis.xMin)) * plotArea.width;
 }
 
 function mapY(val) {
-  return plotArea.y + ((yDomain.max - val) / (yDomain.max - yDomain.min)) * plotArea.height;
+  return plotArea.y + ((state.axis.yMax - val) / (state.axis.yMax - state.axis.yMin)) * plotArea.height;
 }
 
 function getMarkerSvg(type, cx, cy, size, fill, stroke) {
@@ -299,8 +307,14 @@ function renderChart() {
     calloutBorder: isDark ? "rgba(148, 163, 184, 0.35)" : "#94a3b8"
   };
 
-  const xTicks = [20, 30, 40, 50, 60, 70, 80, 90, 100];
-  const yTicks = [0, -50, -100, -150, -200, -250, -300, -350, -400, -450];
+  const xTicks = [];
+  for (let t = state.axis.xMin; t <= state.axis.xMax; t += state.axis.xStep) {
+    xTicks.push(t);
+  }
+  const yTicks = [];
+  for (let t = state.axis.yMin; t <= state.axis.yMax; t += state.axis.yStep) {
+    yTicks.push(t);
+  }
 
   const nanoColor = isDark ? "#06b6d4" : "#0284c7";
   const starchColor = isDark ? "#f43f5e" : "#e11d48";
@@ -561,7 +575,47 @@ function renderChart() {
           ` : ""}
         </g>
       `;
+      `;
     });
+
+    // --- Trendlines ---
+    if (state.showTrendlines) {
+      let n = xVals.length;
+      let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+      for(let i=0; i<n; i++) {
+        sumX += xVals[i];
+        sumY += yVals[i];
+        sumXY += xVals[i] * yVals[i];
+        sumXX += xVals[i] * xVals[i];
+      }
+      let slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      let intercept = (sumY - slope * sumX) / n;
+
+      let yMean = sumY / n;
+      let ssTot = 0, ssRes = 0;
+      for(let i=0; i<n; i++) {
+        let yPred = slope * xVals[i] + intercept;
+        ssTot += Math.pow(yVals[i] - yMean, 2);
+        ssRes += Math.pow(yVals[i] - yPred, 2);
+      }
+      let rSquared = ssTot === 0 ? 1 : 1 - (ssRes / ssTot);
+      
+      const x1 = Math.min(...xVals);
+      const x2 = Math.max(...xVals);
+      const y1 = slope * x1 + intercept;
+      const y2 = slope * x2 + intercept;
+      
+      const px1 = mapX(x1);
+      const py1 = mapY(y1);
+      const px2 = mapX(x2);
+      const py2 = mapY(y2);
+
+      svgContent += `
+        <line x1="${px1}" y1="${py1}" x2="${px2}" y2="${py2}"
+              stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="0.8" />
+        <text x="${px2 - 10}" y="${py2 - 10}" fill="${seriesColor}" font-size="11" font-weight="bold" font-family="'Plus Jakarta Sans', Arial, sans-serif" text-anchor="end" direction="ltr">R² = ${rSquared.toFixed(3)}</text>
+      `;
+    }
   });
 
   // Callouts & Dynamic Arrows
@@ -1306,8 +1360,15 @@ function setupSeriesCheckboxes() {
   container.innerHTML = "";
   
   dataset.series.forEach((s) => {
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "8px";
+    wrapper.style.marginBottom = "8px";
+
     const lbl = document.createElement("label");
     lbl.className = "custom-checkbox";
+    lbl.style.margin = "0";
     lbl.innerHTML = `
       <input type="checkbox" id="chk_${s.id}" ${s.visible ? "checked" : ""}>
       <span class="chk-box" style="border-color: ${state.theme === 'dark' ? s.colorDark : s.colorLight};"></span>
@@ -1318,7 +1379,26 @@ function setupSeriesCheckboxes() {
       renderChart();
       renderLegend();
     });
-    container.appendChild(lbl);
+
+    const colorPicker = document.createElement("input");
+    colorPicker.type = "color";
+    colorPicker.value = state.theme === 'dark' ? s.colorDark : s.colorLight;
+    colorPicker.style.width = "28px";
+    colorPicker.style.height = "28px";
+    colorPicker.style.border = "none";
+    colorPicker.style.cursor = "pointer";
+    colorPicker.style.background = "none";
+    colorPicker.addEventListener("input", (e) => {
+      s.colorDark = e.target.value;
+      s.colorLight = e.target.value;
+      lbl.querySelector(".chk-box").style.borderColor = e.target.value;
+      renderChart();
+      renderLegend();
+    });
+
+    wrapper.appendChild(lbl);
+    wrapper.appendChild(colorPicker);
+    container.appendChild(wrapper);
   });
 }
 
@@ -1464,6 +1544,31 @@ function setupSeriesCheckboxes() {
   if (btnExportTemplate) btnExportTemplate.addEventListener("click", exportExcelTemplate);
   if (btnAddRow) btnAddRow.addEventListener("click", addRow);
   if (excelImportInput) excelImportInput.addEventListener("change", importExcelFile);
+
+  // Advanced Options
+  const chkTrendline = document.getElementById("chkTrendline");
+  if (chkTrendline) chkTrendline.addEventListener("change", e => {
+    state.showTrendlines = e.target.checked;
+    renderChart();
+  });
+
+  ['inpXMin', 'inpXMax', 'inpXStep', 'inpYMin', 'inpYMax', 'inpYStep'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("change", e => {
+        const val = parseFloat(e.target.value);
+        if (!isNaN(val)) {
+          if (id === 'inpXMin') state.axis.xMin = val;
+          if (id === 'inpXMax') state.axis.xMax = val;
+          if (id === 'inpXStep') state.axis.xStep = val;
+          if (id === 'inpYMin') state.axis.yMin = val;
+          if (id === 'inpYMax') state.axis.yMax = val;
+          if (id === 'inpYStep') state.axis.yStep = val;
+          renderChart();
+        }
+      });
+    }
+  });
 }
 
 // Initial Boot
