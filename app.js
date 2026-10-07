@@ -54,10 +54,10 @@ const state = {
   frameStyle: "boxed", // 'boxed' (Nature/ACS 4-sided) or 'open' (L-shape)
   markerSize: 10,
   lineWidth: 2.6,
-  showErrorBand: true,
+  showErrorBand: false,
   showAnnotations: true,
-  showInplotLegend: true,
-  showBottomLegend: true,
+  showInplotLegend: false,
+  showBottomLegend: false,
   showDataLabels: false,
   showGrid: true,
   showHysteresis: true,
@@ -79,9 +79,9 @@ const state = {
   xTitle: "RH (%)",
   yTitle: "Δf (Hz)",
   nanoLabel: "نانوکامپوزیت",
-  nanoSub: "پایداری بالا در رطوبت",
+  nanoSub: "",
   starchLabel: "نشاسته خالص",
-  starchSub: "افت شدید فرکانس",
+  starchSub: "",
 
   // Coordinates
   callouts: {
@@ -111,11 +111,11 @@ const presets = {
     xTitle: "RH (%)",
     yTitle: "Δf (Hz)",
     nanoLabel: "نانوکامپوزیت",
-    nanoSub: "پایداری بالا در رطوبت",
+    nanoSub: "",
     starchLabel: "نشاسته خالص",
-    starchSub: "افت شدید فرکانس",
-    badgeNano: "نانوکامپوزیت: پایداری بالاتر",
-    badgeStarch: "نشاسته خالص: افت شدید فرکانس",
+    starchSub: "",
+    badgeNano: "نانوکامپوزیت",
+    badgeStarch: "نشاسته خالص",
     metricNanoTitle: "نانوکامپوزیت در 93.6% RH",
     metricNanoDesc: "میانگین تغییر فرکانس: -۱۵۱.۵ هرتز (پایداری مطلوب در رطوبت بالا)",
     metricStarchTitle: "نشاسته خالص در 93.6% RH",
@@ -129,11 +129,11 @@ const presets = {
     xTitle: "RH (%)",
     yTitle: "Δf (Hz)",
     nanoLabel: "Nanocomposite",
-    nanoSub: "High RH Stability",
+    nanoSub: "",
     starchLabel: "Pure Starch",
-    starchSub: "Sharp Frequency Drop",
-    badgeNano: "Nanocomposite: Higher Stability",
-    badgeStarch: "Pure Starch: Sharp Frequency Drop",
+    starchSub: "",
+    badgeNano: "Nanocomposite",
+    badgeStarch: "Pure Starch",
     metricNanoTitle: "Nanocomposite at 93.6% RH",
     metricNanoDesc: "Mean frequency shift: -151.5 Hz (Stability retained at high RH)",
     metricStarchTitle: "Pure Starch at 93.6% RH",
@@ -632,13 +632,16 @@ function renderChart() {
     const isFa = state.lang === "fa";
 
     // Nanocomposite Callout
+    const sNano = dataset.series.find(s => s.id === "nano1" || s.id === "series_1") || dataset.series[0];
+    const sStarch = dataset.series.find(s => s.id === "starch1" || s.id === "series_2") || dataset.series[1];
+
     const lastIdx = dataset.xValues.length - 1;
     const nanoTargetX = mapX(dataset.xValues[lastIdx]);
-    const nanoTargetY = mapY(-151.5);
+    const nanoTargetY = sNano && sNano.yValues.length ? mapY(sNano.yValues[lastIdx]) : mapY(-151.5);
     const nanoCardX = state.callouts.nanoX;
     const nanoCardY = state.callouts.nanoY;
-    const nanoCardW = 165;
-    const nanoCardH = 44;
+    const nanoCardW = Math.max(120, state.nanoLabel.length * 9 + 30);
+    const nanoCardH = state.nanoSub ? 44 : 32;
 
     const nanoArrow = getBoxArrowPoints(nanoCardX, nanoCardY, nanoCardW, nanoCardH, nanoTargetX, nanoTargetY);
 
@@ -651,7 +654,7 @@ function renderChart() {
         <g class="draggable-badge" data-badge="nano" filter="url(#badgeShadow)">
           <rect x="${nanoCardX}" y="${nanoCardY}" width="${nanoCardW}" height="${nanoCardH}" rx="8"
                 fill="${colors.calloutBg}" stroke="${nanoColor}" stroke-width="1.8" />
-          <text x="${nanoCardX + nanoCardW / 2}" y="${nanoCardY + 19}" fill="${nanoColor}" font-size="13" font-weight="700"
+          <text x="${nanoCardX + nanoCardW / 2}" y="${nanoCardY + (state.nanoSub ? 19 : 21)}" fill="${nanoColor}" font-size="13" font-weight="700"
                 text-anchor="middle" direction="ltr" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${state.nanoLabel}</text>
           ${state.nanoSub ? `
             <text x="${nanoCardX + nanoCardW / 2}" y="${nanoCardY + 34}" fill="${colors.text}" font-size="10" font-weight="500"
@@ -664,11 +667,11 @@ function renderChart() {
     // Pure Starch Callout
     const starchPlungeIdx = Math.max(0, dataset.xValues.length - 2);
     const starchTargetX = mapX(dataset.xValues[starchPlungeIdx]);
-    const starchTargetY = mapY(-256.5);
+    const starchTargetY = sStarch && sStarch.yValues.length ? mapY(sStarch.yValues[starchPlungeIdx]) : mapY(-256.5);
     const starchCardX = state.callouts.starchX;
     const starchCardY = state.callouts.starchY;
-    const starchCardW = 160;
-    const starchCardH = 44;
+    const starchCardW = Math.max(120, state.starchLabel.length * 9 + 30);
+    const starchCardH = state.starchSub ? 44 : 32;
 
     const starchArrow = getBoxArrowPoints(starchCardX, starchCardY, starchCardW, starchCardH, starchTargetX, starchTargetY);
 
@@ -681,7 +684,7 @@ function renderChart() {
         <g class="draggable-badge" data-badge="starch" filter="url(#badgeShadow)">
           <rect x="${starchCardX}" y="${starchCardY}" width="${starchCardW}" height="${starchCardH}" rx="8"
                 fill="${colors.calloutBg}" stroke="${starchColor}" stroke-width="1.8" />
-          <text x="${starchCardX + starchCardW / 2}" y="${starchCardY + 19}" fill="${starchColor}" font-size="13" font-weight="700"
+          <text x="${starchCardX + starchCardW / 2}" y="${starchCardY + (state.starchSub ? 19 : 21)}" fill="${starchColor}" font-size="13" font-weight="700"
                 text-anchor="middle" direction="ltr" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${state.starchLabel}</text>
           ${state.starchSub ? `
             <text x="${starchCardX + starchCardW / 2}" y="${starchCardY + 34}" fill="${colors.text}" font-size="10" font-weight="500"
@@ -1189,10 +1192,21 @@ function importExcelFile(e) {
     dataset.xValues = newX;
     dataset.series = newSeries;
     
-    // Automatically hide sample-specific annotations (nano/starch callouts)
-    state.showAnnotations = false;
+    // Automatically set labels to imported sample names with direct arrows (no legend box)
+    if (newSeries[0]) state.nanoLabel = state.lang === 'fa' ? newSeries[0].nameFa : newSeries[0].nameEn;
+    if (newSeries[1]) state.starchLabel = state.lang === 'fa' ? newSeries[1].nameFa : newSeries[1].nameEn;
+    state.nanoSub = "";
+    state.starchSub = "";
+    state.showAnnotations = true;
+    state.showInplotLegend = false;
+    state.showBottomLegend = false;
+
     const chkAnnotations = document.getElementById("chkShowAnnotations");
-    if (chkAnnotations) chkAnnotations.checked = false;
+    if (chkAnnotations) chkAnnotations.checked = true;
+    const chkInplot = document.getElementById("chkShowInplotLegend");
+    if (chkInplot) chkInplot.checked = false;
+    const chkBottom = document.getElementById("chkShowBottomLegend");
+    if (chkBottom) chkBottom.checked = false;
 
     // Auto-scale axis limits for the imported data
     autoScaleAxis();
