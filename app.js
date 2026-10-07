@@ -17,30 +17,30 @@
 
 // --- 1. Dataset Definition ---
 const dataset = {
-  xValues: [21.6, 43.1, 51.4, 75.1, 83.6, 93.6, 93.6, 83.6, 75.1, 51.4, 43.1, 21.6],
+  xValues: [20, 40, 60, 80, 100, 100, 80, 60, 40, 20],
   series: [
     {
       id: "series_1",
-      nameFa: "نمونه ۱",
-      nameEn: "Sample 1",
+      nameFa: "پلیمر A (تستی)",
+      nameEn: "Polymer A (Mock)",
       group: "series_1",
       colorDark: "#06b6d4",
       colorLight: "#0284c7",
       marker: "circle",
       strokeDash: "",
-      yValues: [0, -48, -62, -119, -135, -156, -147, -130, -118, -60, -52, 0],
+      yValues: [0, -20, -55, -110, -180, -170, -100, -45, -15, 0],
       visible: true
     },
     {
       id: "series_2",
-      nameFa: "نمونه ۲",
-      nameEn: "Sample 2",
+      nameFa: "هیدروژل B (تستی)",
+      nameEn: "Hydrogel B (Mock)",
       group: "series_2",
       colorDark: "#f43f5e",
       colorLight: "#e11d48",
       marker: "square",
       strokeDash: "",
-      yValues: [0, -30, -37, -119, -242, -390, -379, -271, -143, -58, -43, 0],
+      yValues: [0, -40, -95, -170, -290, -270, -150, -75, -30, 0],
       visible: true
     }
   ]
