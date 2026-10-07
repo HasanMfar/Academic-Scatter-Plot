@@ -1128,94 +1128,201 @@ function exportExcelTemplate() {
   XLSX.writeFile(wb, "Plot_Template.xlsx");
 }
 
+function parseSmartExcel(rawRows) {
+  if (!rawRows || !rawRows.length) throw new Error("فایل اکسل خالی است");
+  
+  // Filter out empty rows
+  const rows = rawRows.filter(r => r && r.length && r.some(c => c !== "" && c != null));
+  if (!rows.length) throw new Error("هیچ داده‌ای در فایل یافت نشد");
+  
+  const r0 = rows[0];
+  
+  // Check if raw 8/9 column lab file (sample1&2 layout with resonance frequency cols > 1000 Hz)
+  if (r0.length >= 7) {
+    const r0Nums = r0.map(v => parseFloat(v));
+    const isLabFormat = (r0Nums[1] > 1000 || r0Nums[2] > 1000 || r0Nums[5] > 1000) && (Math.abs(r0Nums[3]) < 500);
+    if (isLabFormat) {
+      if (rows.length <= 8) {
+        // 6-row side-by-side format (Forward in cols 3/7, Backward in cols 4/8)
+        const fwdX = [], bwdX = [];
+        const nanoFwd = [], nanoBwd = [];
+        const starchFwd = [], starchBwd = [];
+
+        rows.forEach(r => {
+          const rh = parseFloat(r[0]);
+          if (isNaN(rh)) return;
+          fwdX.push(rh);
+          bwdX.unshift(rh);
+          nanoFwd.push(parseFloat(r[7] ?? r[5] ?? 0) || 0);
+          nanoBwd.unshift(parseFloat(r[8] ?? r[7] ?? 0) || 0);
+          starchFwd.push(parseFloat(r[3]) || 0);
+          starchBwd.unshift(parseFloat(r[4] ?? r[3]) || 0);
+        });
+
+        return {
+          xValues: fwdX.concat(bwdX),
+          series: [
+            { nameFa: "نانوکامپوزیت", nameEn: "Nanocomposite", yValues: nanoFwd.concat(nanoBwd) },
+            { nameFa: "نشاسته خالص", nameEn: "Pure Starch", yValues: starchFwd.concat(starchBwd) }
+          ]
+        };
+      } else {
+        // 12-row sequential format (already stacked)
+        const fullX = [], fullNano = [], fullStarch = [];
+        rows.forEach(r => {
+          const rh = parseFloat(r[0]);
+          if (isNaN(rh)) return;
+          fullX.push(rh);
+          fullStarch.push(parseFloat(r[3]) || 0);
+          fullNano.push(parseFloat(r[7] ?? r[4] ?? 0) || 0);
+        });
+        return {
+          xValues: fullX,
+          series: [
+            { nameFa: "نانوکامپوزیت", nameEn: "Nanocomposite", yValues: fullNano },
+            { nameFa: "نشاسته خالص", nameEn: "Pure Starch", yValues: fullStarch }
+          ]
+        };
+      }
+    }
+  }
+
+  // Standard tabular format
+  const isHeaderRow = isNaN(parseFloat(r0[0])) || 
+    (typeof r0[1] === "string" && isNaN(parseFloat(r0[1])));
+
+  let headers = [];
+  let dataRows = [];
+
+  if (isHeaderRow) {
+    headers = r0.map((h, i) => (h ? String(h).trim() : (i === 0 ? "RH (%)" : `نمونه ${i}`)));
+    dataRows = rows.slice(1);
+  } else {
+    // Headerless: row 0 is already numeric data
+    headers = ["RH (%)"];
+    for (let i = 1; i < r0.length; i++) {
+      headers.push(`نمونه ${i}`);
+    }
+    dataRows = rows;
+  }
+
+  const series = [];
+  for (let i = 1; i < headers.length; i++) {
+    const colName = headers[i];
+    series.push({
+      nameFa: colName,
+      nameEn: colName,
+      yValues: []
+    });
+  }
+
+  const xValues = [];
+  dataRows.forEach(r => {
+    const x = parseFloat(r[0]);
+    if (isNaN(x)) return;
+    xValues.push(x);
+    series.forEach((s, idx) => {
+      const y = parseFloat(r[idx + 1]);
+      s.yValues.push(isNaN(y) ? 0 : y);
+    });
+  });
+
+  return { xValues, series };
+}
+
 function importExcelFile(e) {
   const file = e.target.files[0];
   if (!file) return;
   if (typeof XLSX === "undefined") {
-    showToast("کتابخانه SheetJS بارگذاری نشده است.");
+    showToast("کتابخانه SheetJS بارگذاری نشده است. لطفاً صفحه را رفرش کنید.");
     return;
   }
   
   const reader = new FileReader();
   reader.onload = function(evt) {
-    const data = new Uint8Array(evt.target.result);
-    const workbook = XLSX.read(data, {type: 'array'});
-    const ws = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: 0}); // Get arrays
-    
-    if (rows.length < 2) {
-      showToast("فایل خالی است یا ساختار درستی ندارد!");
-      return;
-    }
-    
-    const headers = rows[0];
-    const newSeries = [];
-    const colorPalette = [
-      { dark: "#06b6d4", light: "#0284c7" }, // cyan
-      { dark: "#f43f5e", light: "#e11d48" }, // rose
-      { dark: "#10b981", light: "#059669" }, // emerald
-      { dark: "#f59e0b", light: "#d97706" }, // amber
-      { dark: "#8b5cf6", light: "#6d28d9" }, // violet
-      { dark: "#ec4899", light: "#be185d" }  // pink
-    ];
-    const markers = ["circle", "square", "diamond", "triangle", "cross"];
-    
-    // Create series from columns
-    for (let i = 1; i < headers.length; i++) {
-       const colName = headers[i] || `Sample ${i}`;
-       const color = colorPalette[(i-1) % colorPalette.length];
-       const marker = markers[(i-1) % markers.length];
-       newSeries.push({
-         id: `series_${i}`,
-         nameFa: colName,
-         nameEn: colName,
-         group: "custom",
-         colorDark: color.dark,
-         colorLight: color.light,
-         marker: marker,
-         strokeDash: "",
-         yValues: [],
-         visible: true
-       });
-    }
-    
-    const newX = [];
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (row.length === 0 || row[0] == null || isNaN(parseFloat(row[0]))) continue;
-      newX.push(parseFloat(row[0]) || 0);
-      newSeries.forEach((s, sIdx) => {
-        s.yValues.push(parseFloat(row[sIdx + 1]) || 0);
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, {type: "array"});
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: 0});
+      
+      const parsed = parseSmartExcel(rows);
+      if (!parsed.xValues || !parsed.xValues.length) {
+        showToast("داده معتبری در فایل اکسل یافت نشد!");
+        return;
+      }
+
+      const colorPalette = [
+        { dark: "#10b981", light: "#059669" }, // emerald (Nano)
+        { dark: "#f43f5e", light: "#e11d48" }, // rose (Starch)
+        { dark: "#06b6d4", light: "#0284c7" }, // cyan
+        { dark: "#f59e0b", light: "#d97706" }, // amber
+        { dark: "#8b5cf6", light: "#6d28d9" }, // violet
+        { dark: "#ec4899", light: "#be185d" }  // pink
+      ];
+      const markers = ["circle", "square", "diamond", "triangle", "cross"];
+
+      const newSeries = parsed.series.map((s, i) => {
+        const color = colorPalette[i % colorPalette.length];
+        const marker = markers[i % markers.length];
+        return {
+          id: `series_${i + 1}`,
+          nameFa: s.nameFa,
+          nameEn: s.nameEn,
+          group: i === 0 ? "nano" : (i === 1 ? "starch" : "custom"),
+          colorDark: color.dark,
+          colorLight: color.light,
+          marker: marker,
+          strokeDash: "",
+          yValues: s.yValues,
+          visible: true
+        };
       });
+
+      dataset.xValues = parsed.xValues;
+      dataset.series = newSeries;
+
+      // Configure direct callout arrows (without clutter)
+      if (newSeries[0]) state.nanoLabel = state.lang === "fa" ? newSeries[0].nameFa : newSeries[0].nameEn;
+      if (newSeries[1]) state.starchLabel = state.lang === "fa" ? newSeries[1].nameFa : newSeries[1].nameEn;
+      state.nanoSub = "";
+      state.starchSub = "";
+      state.showAnnotations = true;
+      state.showInplotLegend = false;
+      state.showBottomLegend = false;
+      state.showHysteresis = true;
+
+      // Sync form inputs
+      const inpNano = document.getElementById("inputNanoLabel");
+      if (inpNano) inpNano.value = state.nanoLabel;
+      const inpStarch = document.getElementById("inputStarchLabel");
+      if (inpStarch) inpStarch.value = state.starchLabel;
+      const inpNanoSub = document.getElementById("inputNanoSub");
+      if (inpNanoSub) inpNanoSub.value = "";
+      const inpStarchSub = document.getElementById("inputStarchSub");
+      if (inpStarchSub) inpStarchSub.value = "";
+
+      const chkHyst = document.getElementById("chkHysteresis");
+      if (chkHyst) chkHyst.checked = true;
+      const chkAnnotations = document.getElementById("chkShowAnnotations");
+      if (chkAnnotations) chkAnnotations.checked = true;
+      const chkInplot = document.getElementById("chkShowInplotLegend");
+      if (chkInplot) chkInplot.checked = false;
+      const chkBottom = document.getElementById("chkShowBottomLegend");
+      if (chkBottom) chkBottom.checked = false;
+
+      // Automatically scale axes
+      autoScaleAxis();
+      
+      setupSeriesCheckboxes();
+      renderDataTable();
+      renderChart();
+      renderLegend();
+      showToast(`فایل با موفقیت بارگذاری شد (${dataset.xValues.length} نقطه مسیر رفت و برگشت)`);
+    } catch(err) {
+      console.error("Excel import error:", err);
+      showToast("خطا در بارگذاری اکسل: " + (err.message || "فایل نامعتبر"));
     }
-    
-    dataset.xValues = newX;
-    dataset.series = newSeries;
-    
-    // Automatically set labels to imported sample names with direct arrows (no legend box)
-    if (newSeries[0]) state.nanoLabel = state.lang === 'fa' ? newSeries[0].nameFa : newSeries[0].nameEn;
-    if (newSeries[1]) state.starchLabel = state.lang === 'fa' ? newSeries[1].nameFa : newSeries[1].nameEn;
-    state.nanoSub = "";
-    state.starchSub = "";
-    state.showAnnotations = true;
-    state.showInplotLegend = false;
-    state.showBottomLegend = false;
-
-    const chkAnnotations = document.getElementById("chkShowAnnotations");
-    if (chkAnnotations) chkAnnotations.checked = true;
-    const chkInplot = document.getElementById("chkShowInplotLegend");
-    if (chkInplot) chkInplot.checked = false;
-    const chkBottom = document.getElementById("chkShowBottomLegend");
-    if (chkBottom) chkBottom.checked = false;
-
-    // Auto-scale axis limits for the imported data
-    autoScaleAxis();
-    
-    setupSeriesCheckboxes();
-    renderDataTable();
-    renderChart();
-    renderLegend();
-    showToast("فایل با موفقیت ایمپورت و روی نمودار اعمال شد!");
   };
   reader.readAsArrayBuffer(file);
   e.target.value = ""; // Reset file input
@@ -1654,6 +1761,20 @@ function initEvents() {
   if (btnExportTemplate) btnExportTemplate.addEventListener("click", exportExcelTemplate);
   if (btnAddRow) btnAddRow.addEventListener("click", addRow);
   if (excelImportInput) excelImportInput.addEventListener("change", importExcelFile);
+
+  // Drag and drop Excel files directly into window
+  window.addEventListener("dragover", e => {
+    e.preventDefault();
+  });
+  window.addEventListener("drop", e => {
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFile = e.dataTransfer.files[0];
+      if (droppedFile.name.match(/\.(xlsx|xls|csv)$/i)) {
+        importExcelFile({ target: { files: [droppedFile], value: "" } });
+      }
+    }
+  });
 
   // Advanced Options
   const chkHysteresis = document.getElementById("chkHysteresis");

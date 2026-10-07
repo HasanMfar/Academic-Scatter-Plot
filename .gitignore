@@ -1,6 +1,7 @@
 *.xlsx
 !Clean_Hysteresis_Data.xlsx
 *.png
+!Clean_Hysteresis_Plot.png
 *.zip
 chart_standalone.html
 node_modules/

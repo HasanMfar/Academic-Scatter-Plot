@@ -509,8 +509,13 @@
     <span id="toastMsg">تصویر در کلیپ‌بورد کپی شد (می‌توانید در Word پیست کنید)</span>
   </div>
 
-  <!-- SheetJS Library for native Excel support -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="app.js?v=6"></script>
+  <!-- SheetJS Library for native Excel support (Local offline bundle with CDN fallback) -->
+  <script src="xlsx.full.min.js"></script>
+  <script>
+    if (typeof XLSX === "undefined") {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
+    }
+  </script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

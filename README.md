@@ -2,6 +2,10 @@
 
 [🇮🇷 برای مطالعه نسخه فارسی کلیک کنید](#-توضیحات-فارسی)
 
+<p align="center">
+  <img src="Clean_Hysteresis_Plot.png" alt="Academic Hysteresis Scatter Plot" width="820">
+</p>
+
 A beautiful, interactive, and fully client-side web application designed for students, researchers, and academics to generate **publication-ready scatter plots** with zero coding required.
 
 ## ✨ Why this tool?
