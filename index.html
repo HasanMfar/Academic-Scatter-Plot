@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نمودار پراکندگی نانوکامپوزیت و نشاسته خالص | Advanced Scatter Plot</title>
+  <title>نمودار اسکتر پلات تحلیلی | Advanced Scatter Plot</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
         </div>
         <div class="brand-text">
           <h1 id="brandTitle">نمودار اسکتر پلات تحلیلی</h1>
-          <span id="brandSubtitle" class="brand-badge">نانوکامپوزیت در برابر نشاسته خالص</span>
+          <span id="brandSubtitle" class="brand-badge">ترسیم و تحلیل داده‌های آزمایشگاهی</span>
         </div>
       </div>
 
@@ -102,12 +102,8 @@
           <!-- Chart Header Info -->
           <div class="chart-title-bar">
             <div>
-              <h2 id="displayChartTitle" class="chart-title">تغییر فرکانس بر حسب رطوبت نسبی: نانوکامپوزیت در مقایسه با نشاسته خالص</h2>
-              <p id="displayChartSubtitle" class="chart-subtitle">نمودار اسکتر پلات پاسخ سنسور (Scatter Plot without Trendlines)</p>
-            </div>
-            <div class="chart-badge-group">
-              <span class="pill-badge pill-nano" id="badgeNano">نانوکامپوزیت: پایداری بالاتر</span>
-              <span class="pill-badge pill-starch" id="badgeStarch">نشاسته خالص: افت شدید فرکانس</span>
+              <h2 id="displayChartTitle" class="chart-title">نمودار اسکتر پلات تحلیلی</h2>
+              <p id="displayChartSubtitle" class="chart-subtitle">مسیر رفت و برگشت داده‌ها (Hysteresis Scatter Plot)</p>
             </div>
           </div>
 
@@ -125,56 +121,6 @@
             <!-- Dynamically populated or rendered -->
           </div>
 
-        </div>
-
-        <!-- Quick Summary Metrics -->
-        <div class="metrics-row">
-          <div class="metric-card metric-nano">
-            <div class="metric-header">
-              <span class="metric-indicator nano-dot"></span>
-              <h4 id="metricNanoTitle">نانوکامپوزیت در 93.6% RH</h4>
-            </div>
-            <div class="metric-value">-۱۵۱.۵ <small>Hz (Δf)</small></div>
-            <div class="metric-footer" id="metricNanoDesc">میانگین تغییر فرکانس: -۱۵۱.۵ هرتز (پایداری مطلوب در رطوبت بالا)</div>
-          </div>
-
-          <div class="metric-card metric-starch">
-            <div class="metric-header">
-              <span class="metric-indicator starch-dot"></span>
-              <h4 id="metricStarchTitle">نشاسته خالص در 93.6% RH</h4>
-            </div>
-            <div class="metric-value">-۳۸۴.۵ <small>Hz (Δf)</small></div>
-            <div class="metric-footer" id="metricStarchDesc">میانگین تغییر فرکانس: -۳۸۴.۵ هرتز (افت شدید ناشی از تورم و جذب رطوبت)</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <span class="metric-indicator neutral-dot"></span>
-              <h4 id="metricDiffTitle">بهبود عملکرد نانوکامپوزیت</h4>
-            </div>
-            <div class="metric-value">۶۰.۶٪ <small>بهبود پایداری</small></div>
-            <div class="metric-footer" id="metricDiffDesc">کاهش ۲۳۳ هرتزی افت فرکانس به دلیل نفوذناپذیری نانوذرات</div>
-          </div>
-        </div>
-
-        <!-- Sensor Sensitivity & Academic Analysis Card -->
-        <div class="sensitivity-card">
-          <div class="sensitivity-header">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-            </svg>
-            <h4 id="sensCardTitle">تحلیل حساسیت سنسور QCM (Sensitivity = Δf / ΔRH)</h4>
-          </div>
-          <div class="sensitivity-grid">
-            <div class="sens-item">
-              <span class="sens-label" id="sensLabelLow">حساسیت در رطوبت پایین (21.6% تا 75.1% RH):</span>
-              <span class="sens-val">نشاسته: <strong>-2.45 Hz/%RH</strong> | نانوکامپوزیت: <strong>-2.21 Hz/%RH</strong></span>
-            </div>
-            <div class="sens-item">
-              <span class="sens-label" id="sensLabelHigh">حساسیت در رطوبت بالا (75.1% تا 93.6% RH):</span>
-              <span class="sens-val sens-highlight">نشاسته: <strong>-13.70 Hz/%RH</strong> (افت شدید) | نانوکامپوزیت: <strong>-1.78 Hz/%RH</strong> (پایداری مطلوب)</span>
-            </div>
-          </div>
         </div>
 
       </section>
@@ -251,7 +197,7 @@
           </div>
 
           <!-- Advanced Settings (Axis & Trendline) -->
-          <details class="accordion control-group">
+          <details class="accordion control-group" open>
             <summary id="labelAdvancedOptions">تنظیمات پیشرفته (محورها و خط روند)</summary>
             <div class="accordion-content">
               
@@ -261,7 +207,13 @@
                   <span class="chk-box"></span>
                   <span id="lblTrendline" style="font-weight: bold; color: var(--primary-accent);">رسم خط روند (Trendline) و R²</span>
                 </label>
-                <small style="display: block; margin-top: 5px; color: var(--text-muted); font-size: 12px; margin-right: 28px;">نمایش خط بهترین برازش و فرمول رگرسیون خطی</small>
+                <small style="display: block; margin-top: 5px; margin-bottom: 10px; color: var(--text-muted); font-size: 12px; margin-right: 28px;">نمایش خط بهترین برازش و فرمول رگرسیون خطی</small>
+                
+                <label class="custom-checkbox" style="margin-top: 10px;">
+                  <input type="checkbox" id="chkShowCalloutBox" checked>
+                  <span class="chk-box"></span>
+                  <span id="lblCalloutBox" style="font-weight: bold;">نمایش کادر پس‌زمینه متن راهنما</span>
+                </label>
               </div>
 
               <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
@@ -333,16 +285,16 @@
 
           <!-- Titles Customization -->
           <details class="accordion control-group">
-            <summary id="labelTitlesCustom">شخصی‌سازی تک‌تک عنوان‌ها</summary>
+            <summary id="labelTitlesCustom">شخصی‌سازی عنوان‌ها و محورها</summary>
             <div class="accordion-content">
               <div class="input-field">
                 <label for="inputChartTitle" id="lblInpTitle">عنوان نمودار:</label>
-                <input type="text" id="inputChartTitle" value="تغییر فرکانس بر حسب رطوبت نسبی: نانوکامپوزیت در مقایسه با نشاسته خالص">
+                <input type="text" id="inputChartTitle" value="نمودار اسکتر پلات تحلیلی">
               </div>
 
               <div class="input-field">
                 <label for="inputChartSubtitle" id="lblInpSubtitle">زیرعنوان نمودار:</label>
-                <input type="text" id="inputChartSubtitle" value="نمودار اسکتر پلات پاسخ سنسور (Scatter Plot without Trendlines)">
+                <input type="text" id="inputChartSubtitle" value="مسیر رفت و برگشت داده‌ها (Hysteresis Scatter Plot)">
               </div>
 
               <div class="input-field">
@@ -354,32 +306,12 @@
                 <label for="inputYTitle" id="lblInpY">عنوان محور عمودی (Y):</label>
                 <input type="text" id="inputYTitle" value="Δf (Hz)">
               </div>
-
-              <div class="input-field">
-                <label for="inputNanoLabel" id="lblInpNano">متن فلش نانوکامپوزیت:</label>
-                <input type="text" id="inputNanoLabel" value="نانوکامپوزیت">
-              </div>
-
-              <div class="input-field">
-                <label for="inputNanoSub" id="lblInpNanoSub">زیرمتن فلش نانوکامپوزیت:</label>
-                <input type="text" id="inputNanoSub" value="پایداری بالا در رطوبت">
-              </div>
-
-              <div class="input-field">
-                <label for="inputStarchLabel" id="lblInpStarch">متن فلش نشاسته خالص:</label>
-                <input type="text" id="inputStarchLabel" value="نشاسته خالص">
-              </div>
-
-              <div class="input-field">
-                <label for="inputStarchSub" id="lblInpStarchSub">زیرمتن فلش نشاسته خالص:</label>
-                <input type="text" id="inputStarchSub" value="افت شدید فرکانس">
-              </div>
             </div>
           </details>
 
           <!-- Callouts Position & Placement -->
           <details class="accordion control-group">
-            <summary id="labelPosControl">تنظیم دستی محل قرارگیری فلش‌ها و کادرها</summary>
+            <summary id="labelPosControl">تنظیم محل قرارگیری فلش‌ها و کادر نمونه‌ها</summary>
             <div class="accordion-content">
               <div class="drag-instruction-toast">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -390,42 +322,11 @@
                   <line x1="2" y1="12" x2="22" y2="12"></line>
                   <line x1="12" y1="2" x2="12" y2="22"></line>
                 </svg>
-                <span id="hintDragDrop">می‌توانید کادرها را مستقیماً با ماوس روی نمودار جابجا کنید (Drag & Drop) یا از اسلایدرهای زیر استفاده کنید:</span>
+                <span id="hintDragDrop">هم <b>کادر هر نمونه</b> و هم <b>نوک فلش (نقطه هدف)</b> را می‌توانید مستقیماً با ماوس روی نمودار جابجا کنید (Drag & Drop) یا از اسلایدرهای زیر برای هر نمونه استفاده نمایید:</span>
               </div>
 
-              <!-- Nanocomposite Box Position -->
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span id="lblNanoPosX">نانوکامپوزیت - افقی (X)</span>
-                  <span id="valNanoX">705 px</span>
-                </div>
-                <input type="range" id="rngNanoX" min="80" max="820" value="705">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span id="lblNanoPosY">نانوکامپوزیت - عمودی (Y)</span>
-                  <span id="valNanoY">100 px</span>
-                </div>
-                <input type="range" id="rngNanoY" min="30" max="460" value="100">
-              </div>
-
-              <!-- Pure Starch Box Position -->
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span id="lblStarchPosX">نشاسته خالص - افقی (X)</span>
-                  <span id="valStarchX">495 px</span>
-                </div>
-                <input type="range" id="rngStarchX" min="80" max="820" value="495">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span id="lblStarchPosY">نشاسته خالص - عمودی (Y)</span>
-                  <span id="valStarchY">275 px</span>
-                </div>
-                <input type="range" id="rngStarchY" min="30" max="460" value="275">
-              </div>
+              <!-- Dynamically populated for each series/sample by app.js -->
+              <div id="calloutsControlsContainer" style="margin-bottom: 12px;"></div>
 
               <!-- In-Plot Legend Position -->
               <div class="slider-control" id="grpInplotX">
@@ -516,6 +417,6 @@
       document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
     }
   </script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

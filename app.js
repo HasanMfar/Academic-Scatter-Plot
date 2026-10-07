@@ -20,10 +20,10 @@ const dataset = {
   xValues: [21.6, 43.1, 51.4, 75.1, 83.6, 93.6, 93.6, 83.6, 75.1, 51.4, 43.1, 21.6],
   series: [
     {
-      id: "nano1",
-      nameFa: "نانوکامپوزیت",
-      nameEn: "Nanocomposite",
-      group: "nano",
+      id: "series_1",
+      nameFa: "نمونه ۱",
+      nameEn: "Sample 1",
+      group: "series_1",
       colorDark: "#06b6d4",
       colorLight: "#0284c7",
       marker: "circle",
@@ -32,10 +32,10 @@ const dataset = {
       visible: true
     },
     {
-      id: "starch1",
-      nameFa: "نشاسته خالص",
-      nameEn: "Pure Starch",
-      group: "starch",
+      id: "series_2",
+      nameFa: "نمونه ۲",
+      nameEn: "Sample 2",
+      group: "series_2",
       colorDark: "#f43f5e",
       colorLight: "#e11d48",
       marker: "square",
@@ -61,7 +61,8 @@ const state = {
   showDataLabels: false,
   showGrid: true,
   showHysteresis: true,
-  showTrendlines: false, // New feature: Trendline & R²
+  showTrendlines: false,
+  showCalloutBox: true,
 
   // Axis overrides (null means auto-calculate or default)
   axis: {
@@ -70,34 +71,20 @@ const state = {
     xStep: 10,
     yMin: -450,
     yMax: 50,
-    yStep: 50
+    yStep: 50,
+    xLabel: "RH (%)",
+    yLabel: "Δf (Hz)"
   },
 
   // Editable titles
-  chartTitle: "تغییر فرکانس بر حسب رطوبت نسبی: نانوکامپوزیت در مقایسه با نشاسته خالص",
-  chartSubtitle: "نمودار اسکتر پلات پاسخ سنسور (Scatter Plot without Trendlines)",
+  chartTitle: "نمودار اسکتر پلات تحلیلی",
+  chartSubtitle: "مسیر رفت و برگشت داده‌ها (Hysteresis Scatter Plot)",
   xTitle: "RH (%)",
   yTitle: "Δf (Hz)",
-  nanoLabel: "نانوکامپوزیت",
-  nanoSub: "",
-  starchLabel: "نشاسته خالص",
-  starchSub: "",
 
-  // Coordinates
-  callouts: {
-    nanoX: 705,
-    nanoY: 100,
-    starchX: 495,
-    starchY: 275,
-    inplotX: 160,
-    inplotY: 280
-  },
-
+  // Dynamic Callouts stored per series ID
+  callouts: {},
   defaultCallouts: {
-    nanoX: 705,
-    nanoY: 100,
-    starchX: 495,
-    starchY: 275,
     inplotX: 160,
     inplotY: 280
   }
@@ -106,40 +93,16 @@ const state = {
 // --- 3. Language Presets ---
 const presets = {
   fa: {
-    chartTitle: "تغییر فرکانس بر حسب رطوبت نسبی: نانوکامپوزیت در مقایسه با نشاسته خالص",
-    chartSubtitle: "نمودار اسکتر پلات پاسخ سنسور (Scatter Plot without Trendlines)",
+    chartTitle: "نمودار اسکتر پلات تحلیلی",
+    chartSubtitle: "مسیر رفت و برگشت داده‌ها (Hysteresis Scatter Plot)",
     xTitle: "RH (%)",
-    yTitle: "Δf (Hz)",
-    nanoLabel: "نانوکامپوزیت",
-    nanoSub: "",
-    starchLabel: "نشاسته خالص",
-    starchSub: "",
-    badgeNano: "نانوکامپوزیت",
-    badgeStarch: "نشاسته خالص",
-    metricNanoTitle: "نانوکامپوزیت در 93.6% RH",
-    metricNanoDesc: "میانگین تغییر فرکانس: -۱۵۱.۵ هرتز (پایداری مطلوب در رطوبت بالا)",
-    metricStarchTitle: "نشاسته خالص در 93.6% RH",
-    metricStarchDesc: "میانگین تغییر فرکانس: -۳۸۴.۵ هرتز (افت شدید ناشی از تورم و جذب رطوبت)",
-    metricDiffTitle: "بهبود عملکرد نانوکامپوزیت",
-    metricDiffDesc: "کاهش ۲۳۳ هرتزی افت فرکانس به دلیل نفوذناپذیری نانوذرات"
+    yTitle: "Δf (Hz)"
   },
   en: {
-    chartTitle: "Frequency Shift vs. Relative Humidity: Nanocomposite vs. Pure Starch",
-    chartSubtitle: "Sensor frequency response scatter plot (No trendlines)",
+    chartTitle: "Analytical Scatter Plot",
+    chartSubtitle: "Hysteresis Data Cycle",
     xTitle: "RH (%)",
-    yTitle: "Δf (Hz)",
-    nanoLabel: "Nanocomposite",
-    nanoSub: "",
-    starchLabel: "Pure Starch",
-    starchSub: "",
-    badgeNano: "Nanocomposite",
-    badgeStarch: "Pure Starch",
-    metricNanoTitle: "Nanocomposite at 93.6% RH",
-    metricNanoDesc: "Mean frequency shift: -151.5 Hz (Stability retained at high RH)",
-    metricStarchTitle: "Pure Starch at 93.6% RH",
-    metricStarchDesc: "Mean frequency shift: -384.5 Hz (Severe frequency drop)",
-    metricDiffTitle: "Performance Gain",
-    metricDiffDesc: "60.6% reduction in unwanted swelling/moisture frequency drop"
+    yTitle: "Δf (Hz)"
   }
 };
 
@@ -189,23 +152,11 @@ const inputChartTitle = document.getElementById("inputChartTitle");
 const inputChartSubtitle = document.getElementById("inputChartSubtitle");
 const inputXTitle = document.getElementById("inputXTitle");
 const inputYTitle = document.getElementById("inputYTitle");
-const inputNanoLabel = document.getElementById("inputNanoLabel");
-const inputNanoSub = document.getElementById("inputNanoSub");
-const inputStarchLabel = document.getElementById("inputStarchLabel");
-const inputStarchSub = document.getElementById("inputStarchSub");
 
-// Sliders
-const rngNanoX = document.getElementById("rngNanoX");
-const rngNanoY = document.getElementById("rngNanoY");
-const rngStarchX = document.getElementById("rngStarchX");
-const rngStarchY = document.getElementById("rngStarchY");
+// Sliders & Containers
+const calloutsControlsContainer = document.getElementById("calloutsControlsContainer");
 const rngInplotX = document.getElementById("rngInplotX");
 const rngInplotY = document.getElementById("rngInplotY");
-
-const valNanoX = document.getElementById("valNanoX");
-const valNanoY = document.getElementById("valNanoY");
-const valStarchX = document.getElementById("valStarchX");
-const valStarchY = document.getElementById("valStarchY");
 const valInplotX = document.getElementById("valInplotX");
 const valInplotY = document.getElementById("valInplotY");
 
@@ -293,9 +244,29 @@ function getBoxArrowPoints(bx, by, bw, bh, tx, ty) {
   return { sx, sy, ex, ey };
 }
 
+function getSeriesCallout(s, idx) {
+  if (!state.callouts[s.id]) {
+    // Default: point at the max-X (turning) point of the series, label up-left of it
+    let ptIdx = 0;
+    dataset.xValues.forEach((x, i) => { if (x > dataset.xValues[ptIdx]) ptIdx = i; });
+    const tx = Math.round(mapX(dataset.xValues[ptIdx] ?? 80));
+    const ty = Math.round(mapY(s.yValues && s.yValues[ptIdx] != null ? s.yValues[ptIdx] : 0));
+    const clampX = v => Math.max(plotArea.x + 10, Math.min(v, plotArea.x + plotArea.width - 180));
+    const clampY = v => Math.max(plotArea.y + 10, Math.min(v, plotArea.y + plotArea.height - 40));
+    state.callouts[s.id] = {
+      x: clampX(tx - 230 - (idx % 2) * 60),
+      y: clampY(ty - 90 + (idx % 2) * 40),
+      targetX: tx,
+      targetY: ty
+    };
+  }
+  return state.callouts[s.id];
+}
+
 // --- 6. Render SVG Chart ---
 function renderChart() {
   const isDark = state.theme === "dark";
+  const FONT = state.lang === "fa" ? "Tahoma, Vazirmatn, Arial, sans-serif" : "Arial, Helvetica, sans-serif";
   const colors = {
     bg: isDark ? "#0f172a" : "#ffffff",
     grid: isDark ? "rgba(255, 255, 255, 0.08)" : "#e2e8f0",
@@ -323,20 +294,19 @@ function renderChart() {
     yTicks.push(Math.round(t * 1e6) / 1e6);
   }
 
-  const nanoColor = isDark ? "#06b6d4" : "#0284c7";
-  const starchColor = isDark ? "#f43f5e" : "#e11d48";
-
   let svgContent = `
     <defs>
       <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="130%">
         <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.35" />
       </filter>
-      <marker id="arrowNano" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-        <polygon points="0 1.5, 9 5, 0 8.5" fill="${nanoColor}" />
-      </marker>
-      <marker id="arrowStarch" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-        <polygon points="0 1.5, 9 5, 0 8.5" fill="${starchColor}" />
-      </marker>
+      ${dataset.series.map(s => {
+        const col = isDark ? s.colorDark : s.colorLight;
+        return `
+          <marker id="arrow-${s.id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <polygon points="0 1.5, 9 5, 0 8.5" fill="${col}" />
+          </marker>
+        `;
+      }).join("")}
     </defs>
 
     <!-- Plot Area Background -->
@@ -368,40 +338,25 @@ function renderChart() {
 
   // Shaded Replicate Error Bands
   if (state.showErrorBand && state.plotMode === "scatter-line") {
-    const sNano1 = dataset.series.find(s => s.id === "nano1");
-    const sNano2 = dataset.series.find(s => s.id === "nano2");
-    if (sNano1 && sNano2 && sNano1.visible && sNano2.visible) {
-      let bandD = "";
-      dataset.xValues.forEach((x, i) => {
-        const px = mapX(x);
-        const py = mapY(sNano1.yValues[i]);
-        bandD += i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
-      });
-      for (let i = dataset.xValues.length - 1; i >= 0; i--) {
-        const px = mapX(dataset.xValues[i]);
-        const py = mapY(sNano2.yValues[i]);
-        bandD += ` L ${px} ${py}`;
+    for (let k = 0; k < dataset.series.length - 1; k += 2) {
+      const sA = dataset.series[k];
+      const sB = dataset.series[k + 1];
+      if (sA && sB && sA.visible && sB.visible && sA.yValues && sB.yValues) {
+        let bandD = "";
+        dataset.xValues.forEach((x, i) => {
+          const px = mapX(x);
+          const py = mapY(sA.yValues[i]);
+          bandD += i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
+        });
+        for (let i = dataset.xValues.length - 1; i >= 0; i--) {
+          const px = mapX(dataset.xValues[i]);
+          const py = mapY(sB.yValues[i]);
+          bandD += ` L ${px} ${py}`;
+        }
+        bandD += " Z";
+        const bandColor = state.theme === "dark" ? sA.colorDark : sA.colorLight;
+        svgContent += `<path d="${bandD}" fill="${bandColor}" opacity="0.16" />`;
       }
-      bandD += " Z";
-      svgContent += `<path d="${bandD}" fill="${nanoColor}" opacity="0.16" />`;
-    }
-
-    const sStarch1 = dataset.series.find(s => s.id === "starch1");
-    const sStarch2 = dataset.series.find(s => s.id === "starch2");
-    if (sStarch1 && sStarch2 && sStarch1.visible && sStarch2.visible) {
-      let bandD = "";
-      dataset.xValues.forEach((x, i) => {
-        const px = mapX(x);
-        const py = mapY(sStarch1.yValues[i]);
-        bandD += i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
-      });
-      for (let i = dataset.xValues.length - 1; i >= 0; i--) {
-        const px = mapX(dataset.xValues[i]);
-        const py = mapY(sStarch2.yValues[i]);
-        bandD += ` L ${px} ${py}`;
-      }
-      bandD += " Z";
-      svgContent += `<path d="${bandD}" fill="${starchColor}" opacity="0.16" />`;
     }
   }
 
@@ -455,9 +410,9 @@ function renderChart() {
     svgContent += `
       <line x1="${plotArea.x - 6}" y1="${yPos}" x2="${plotArea.x}" y2="${yPos}"
             stroke="${colors.axis}" stroke-width="1.5" />
-      <text x="${plotArea.x - 12}" y="${yPos + 4}"
-            fill="${colors.text}" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
-            font-weight="600" text-anchor="end" direction="ltr">${tickStr}</text>
+      <text x="${plotArea.x - 12}" y="${yPos + 5}"
+            fill="${colors.title}" font-size="15" font-family="Arial, Helvetica, sans-serif"
+            text-anchor="end" direction="ltr">${tickStr}</text>
     `;
   });
 
@@ -467,22 +422,22 @@ function renderChart() {
     svgContent += `
       <line x1="${xPos}" y1="${plotArea.y + plotArea.height}" x2="${xPos}" y2="${plotArea.y + plotArea.height + 6}"
             stroke="${colors.axis}" stroke-width="1.5" />
-      <text x="${xPos}" y="${plotArea.y + plotArea.height + 22}"
-            fill="${colors.text}" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
-            font-weight="600" text-anchor="middle" direction="ltr">${tick}</text>
+      <text x="${xPos}" y="${plotArea.y + plotArea.height + 25}"
+            fill="${colors.title}" font-size="15" font-family="Arial, Helvetica, sans-serif"
+            text-anchor="middle" direction="ltr">${tick}</text>
     `;
   });
 
   // Axis Titles
   svgContent += `
-    <text x="${plotArea.x + plotArea.width / 2}" y="${chartBox.height - 18}"
-          fill="${colors.title}" font-size="15" font-weight="700" text-anchor="middle"
-          direction="ltr" font-family="'Plus Jakarta Sans', 'Vazirmatn', sans-serif">${state.xTitle}</text>
+    <text x="${plotArea.x + plotArea.width / 2}" y="${chartBox.height - 16}"
+          fill="${colors.title}" font-size="18" font-weight="700" text-anchor="middle"
+          font-family="${FONT}">${state.xTitle}</text>
 
-    <text x="${- (plotArea.y + plotArea.height / 2)}" y="${28}"
-          fill="${colors.title}" font-size="15" font-weight="700" text-anchor="middle"
-          transform="rotate(-90)" direction="ltr"
-          font-family="'Plus Jakarta Sans', 'Vazirmatn', sans-serif">${state.yTitle}</text>
+    <text x="${- (plotArea.y + plotArea.height / 2)}" y="${30}"
+          fill="${colors.title}" font-size="18" font-weight="700" text-anchor="middle"
+          transform="rotate(-90)"
+          font-family="${FONT}">${state.yTitle}</text>
   `;
 
   // Render Series
@@ -534,7 +489,7 @@ function renderChart() {
            <path d="${pathDBack}" fill="none" stroke="${seriesColor}" stroke-width="${state.lineWidth}"
                  stroke-linejoin="round" stroke-linecap="round"
                  ${backDash ? `stroke-dasharray="${backDash}"` : ""}
-                 opacity="${state.showHysteresis ? 0.75 : 0.92}" />
+                 opacity="0.92" />
          `;
       }
       
@@ -566,11 +521,17 @@ function renderChart() {
       }
     }
 
+    let turnIdx = 0;
+    xVals.forEach((x, i) => { if (x > xVals[turnIdx]) turnIdx = i; });
     xVals.forEach((xVal, idx) => {
       const px = mapX(xVal);
       const yVal = yVals[idx];
       const py = mapY(yVal);
-      const pointSvg = getMarkerSvg(s.marker, px, py, state.markerSize, seriesColor, isDark ? "#0f172a" : "#ffffff");
+      // Backward path points are drawn hollow so forward/backward are distinguishable in print
+      const hollow = state.showHysteresis && idx > turnIdx;
+      const pointSvg = hollow
+        ? getMarkerSvg(s.marker, px, py, state.markerSize, colors.bg, seriesColor)
+        : getMarkerSvg(s.marker, px, py, state.markerSize, seriesColor, seriesColor);
 
       svgContent += `
         <g class="point-group" data-series="${s.id}" data-x="${xVal}" data-y="${yVal}" data-idx="${idx}">
@@ -627,72 +588,42 @@ function renderChart() {
     }
   });
 
-  // Callouts & Dynamic Arrows
+  // Dynamic Callouts & Direct Arrows for each sample/series
   if (state.showAnnotations) {
     const isFa = state.lang === "fa";
+    dataset.series.forEach((s, sIdx) => {
+      if (!s.visible) return;
+      const callout = getSeriesCallout(s, sIdx);
+      const col = isDark ? s.colorDark : s.colorLight;
+      const sName = isFa ? s.nameFa : s.nameEn;
+      const cardW = Math.max(60, sName.length * 10.5 + 12);
+      const cardH = 28;
 
-    // Nanocomposite Callout
-    const sNano = dataset.series.find(s => s.id === "nano1" || s.id === "series_1") || dataset.series[0];
-    const sStarch = dataset.series.find(s => s.id === "starch1" || s.id === "series_2") || dataset.series[1];
+      const arrow = getBoxArrowPoints(callout.x, callout.y, cardW, cardH, callout.targetX, callout.targetY);
 
-    const lastIdx = dataset.xValues.length - 1;
-    const nanoTargetX = mapX(dataset.xValues[lastIdx]);
-    const nanoTargetY = sNano && sNano.yValues.length ? mapY(sNano.yValues[lastIdx]) : mapY(-151.5);
-    const nanoCardX = state.callouts.nanoX;
-    const nanoCardY = state.callouts.nanoY;
-    const nanoCardW = Math.max(120, state.nanoLabel.length * 9 + 30);
-    const nanoCardH = state.nanoSub ? 44 : 32;
+      // Clean direct label: text + thin leader arrow. Hit areas are transparent so exports stay clean.
+      svgContent += `
+        <g class="annotation-group" data-series="${s.id}">
+          <line x1="${arrow.sx}" y1="${arrow.sy}" x2="${arrow.ex}" y2="${arrow.ey}"
+                stroke="${col}" stroke-width="1.6" stroke-linecap="round"
+                marker-end="url(#arrow-${s.id})" />
 
-    const nanoArrow = getBoxArrowPoints(nanoCardX, nanoCardY, nanoCardW, nanoCardH, nanoTargetX, nanoTargetY);
+          <g class="draggable-target" data-series="${s.id}" style="cursor: crosshair;">
+            <circle cx="${callout.targetX}" cy="${callout.targetY}" r="22" fill="${col}" fill-opacity="0.0" stroke="transparent" class="target-hit-area" />
+          </g>
 
-    svgContent += `
-      <g class="annotation-group">
-        <line x1="${nanoArrow.sx}" y1="${nanoArrow.sy}" x2="${nanoArrow.ex}" y2="${nanoArrow.ey}"
-              stroke="${nanoColor}" stroke-width="2.2" stroke-linecap="round"
-              marker-end="url(#arrowNano)" />
-
-        <g class="draggable-badge" data-badge="nano" filter="url(#badgeShadow)">
-          <rect x="${nanoCardX}" y="${nanoCardY}" width="${nanoCardW}" height="${nanoCardH}" rx="8"
-                fill="${colors.calloutBg}" stroke="${nanoColor}" stroke-width="1.8" />
-          <text x="${nanoCardX + nanoCardW / 2}" y="${nanoCardY + (state.nanoSub ? 19 : 21)}" fill="${nanoColor}" font-size="13" font-weight="700"
-                text-anchor="middle" direction="ltr" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${state.nanoLabel}</text>
-          ${state.nanoSub ? `
-            <text x="${nanoCardX + nanoCardW / 2}" y="${nanoCardY + 34}" fill="${colors.text}" font-size="10" font-weight="500"
-                  text-anchor="middle" direction="ltr" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${state.nanoSub}</text>
-          ` : ""}
+          <g class="draggable-badge" data-series="${s.id}">
+            <rect x="${callout.x}" y="${callout.y}" width="${cardW}" height="${cardH}" 
+                  fill="${state.showCalloutBox ? colors.calloutBg : 'transparent'}" 
+                  stroke="${state.showCalloutBox ? colors.calloutBorder : 'transparent'}" 
+                  stroke-width="1.2" rx="6" 
+                  ${state.showCalloutBox ? 'filter="url(#badgeShadow)"' : ''} />
+            <text x="${callout.x + cardW / 2}" y="${callout.y + 20}" fill="${col}" font-size="19" font-weight="700"
+                  text-anchor="middle" font-family="${FONT}">${sName}</text>
+          </g>
         </g>
-      </g>
-    `;
-
-    // Pure Starch Callout
-    const starchPlungeIdx = Math.max(0, dataset.xValues.length - 2);
-    const starchTargetX = mapX(dataset.xValues[starchPlungeIdx]);
-    const starchTargetY = sStarch && sStarch.yValues.length ? mapY(sStarch.yValues[starchPlungeIdx]) : mapY(-256.5);
-    const starchCardX = state.callouts.starchX;
-    const starchCardY = state.callouts.starchY;
-    const starchCardW = Math.max(120, state.starchLabel.length * 9 + 30);
-    const starchCardH = state.starchSub ? 44 : 32;
-
-    const starchArrow = getBoxArrowPoints(starchCardX, starchCardY, starchCardW, starchCardH, starchTargetX, starchTargetY);
-
-    svgContent += `
-      <g class="annotation-group">
-        <line x1="${starchArrow.sx}" y1="${starchArrow.sy}" x2="${starchArrow.ex}" y2="${starchArrow.ey}"
-              stroke="${starchColor}" stroke-width="2.2" stroke-linecap="round"
-              marker-end="url(#arrowStarch)" />
-
-        <g class="draggable-badge" data-badge="starch" filter="url(#badgeShadow)">
-          <rect x="${starchCardX}" y="${starchCardY}" width="${starchCardW}" height="${starchCardH}" rx="8"
-                fill="${colors.calloutBg}" stroke="${starchColor}" stroke-width="1.8" />
-          <text x="${starchCardX + starchCardW / 2}" y="${starchCardY + (state.starchSub ? 19 : 21)}" fill="${starchColor}" font-size="13" font-weight="700"
-                text-anchor="middle" direction="ltr" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${state.starchLabel}</text>
-          ${state.starchSub ? `
-            <text x="${starchCardX + starchCardW / 2}" y="${starchCardY + 34}" fill="${colors.text}" font-size="10" font-weight="500"
-                  text-anchor="middle" direction="ltr" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${state.starchSub}</text>
-          ` : ""}
-        </g>
-      </g>
-    `;
+      `;
+    });
   }
 
   // In-Plot Scientific Legend Box
@@ -745,6 +676,26 @@ function renderChart() {
     });
 
     svgContent += `</g>`;
+  }
+
+  // Forward / backward line-style key (only meaningful with hysteresis paths)
+  if (state.showHysteresis && state.plotMode === "scatter-line") {
+    const isFa = state.lang === "fa";
+    const kw = 230, kh = 70;
+    const kx = plotArea.x + 14, ky = plotArea.y + plotArea.height - kh - 14;
+    const lx = isFa ? kx + kw - 58 : kx + 12;
+    const tx = isFa ? lx - 12 : lx + 56;
+    const anc = isFa ? "end" : "start";
+    const keyCol = colors.title;
+    const row = (y, dash, hollow, label) => `
+      <line x1="${lx}" x2="${lx + 44}" y1="${y}" y2="${y}" stroke="${keyCol}" stroke-width="2.4" ${dash ? 'stroke-dasharray="7,5"' : ""} />
+      <circle cx="${lx + 22}" cy="${y}" r="5.5" fill="${hollow ? colors.bg : keyCol}" stroke="${keyCol}" stroke-width="2" />
+      <text x="${tx}" y="${y + 5}" font-size="15" fill="${keyCol}" text-anchor="${anc}" font-family="${FONT}">${label}</text>`;
+    svgContent += `
+      <rect x="${kx}" y="${ky}" width="${kw}" height="${kh}" fill="${colors.bg}" stroke="${colors.calloutBorder}" stroke-width="1" />
+      ${row(ky + 22, false, false, isFa ? "مسیر رفت" : "Forward")}
+      ${row(ky + 50, true, true, isFa ? "مسیر برگشت" : "Backward")}
+    `;
   }
 
   svg.innerHTML = svgContent;
@@ -812,25 +763,37 @@ function attachDragListeners() {
     badge.addEventListener("mousedown", e => {
       e.preventDefault();
       e.stopPropagation();
-      const badgeType = badge.getAttribute("data-badge");
+      const sId = badge.getAttribute("data-series");
       const coords = getSvgCoords(e);
-
-      let initX, initY;
-      if (badgeType === "nano") {
-        initX = state.callouts.nanoX;
-        initY = state.callouts.nanoY;
-      } else if (badgeType === "starch") {
-        initX = state.callouts.starchX;
-        initY = state.callouts.starchY;
-      } else if (badgeType === "inplot") {
-        initX = state.callouts.inplotX;
-        initY = state.callouts.inplotY;
+      if (sId) {
+        const s = dataset.series.find(item => item.id === sId);
+        const idx = dataset.series.findIndex(item => item.id === sId);
+        const callout = getSeriesCallout(s, idx);
+        activeDrag = {
+          kind: "badge",
+          seriesId: sId,
+          offsetX: coords.x - callout.x,
+          offsetY: coords.y - callout.y
+        };
+      } else if (badge.getAttribute("data-badge") === "inplot") {
+        activeDrag = {
+          kind: "inplot",
+          offsetX: coords.x - (state.callouts.inplotX || 160),
+          offsetY: coords.y - (state.callouts.inplotY || 280)
+        };
       }
+    });
+  });
 
+  const targets = svg.querySelectorAll(".draggable-target");
+  targets.forEach(target => {
+    target.addEventListener("mousedown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const sId = target.getAttribute("data-series");
       activeDrag = {
-        type: badgeType,
-        offsetX: coords.x - initX,
-        offsetY: coords.y - initY
+        kind: "target",
+        seriesId: sId
       };
     });
   });
@@ -839,41 +802,180 @@ function attachDragListeners() {
 window.addEventListener("mousemove", e => {
   if (!activeDrag) return;
   const coords = getSvgCoords(e);
-  let newX = Math.round(coords.x - activeDrag.offsetX);
-  let newY = Math.round(coords.y - activeDrag.offsetY);
 
-  newX = Math.max(50, Math.min(newX, 820));
-  newY = Math.max(20, Math.min(newY, 480));
+  if (activeDrag.kind === "target") {
+    const s = dataset.series.find(item => item.id === activeDrag.seriesId);
+    const idx = dataset.series.findIndex(item => item.id === activeDrag.seriesId);
+    if (s) {
+      const callout = getSeriesCallout(s, idx);
+      let newX = Math.round(coords.x);
+      let newY = Math.round(coords.y);
+      newX = Math.max(plotArea.x, Math.min(newX, plotArea.x + plotArea.width));
+      newY = Math.max(plotArea.y, Math.min(newY, plotArea.y + plotArea.height));
 
-  if (activeDrag.type === "nano") {
-    state.callouts.nanoX = newX;
-    state.callouts.nanoY = newY;
-    if (rngNanoX) rngNanoX.value = newX;
-    if (rngNanoY) rngNanoY.value = newY;
-    if (valNanoX) valNanoX.textContent = `${newX} px`;
-    if (valNanoY) valNanoY.textContent = `${newY} px`;
-  } else if (activeDrag.type === "starch") {
-    state.callouts.starchX = newX;
-    state.callouts.starchY = newY;
-    if (rngStarchX) rngStarchX.value = newX;
-    if (rngStarchY) rngStarchY.value = newY;
-    if (valStarchX) valStarchX.textContent = `${newX} px`;
-    if (valStarchY) valStarchY.textContent = `${newY} px`;
-  } else if (activeDrag.type === "inplot") {
+      // Snap to closest point on this series curve if close
+      if (s.yValues) {
+        dataset.xValues.forEach((xv, i) => {
+          const yv = s.yValues[i];
+          if (yv != null) {
+            const px = mapX(xv);
+            const py = mapY(yv);
+            if (Math.hypot(coords.x - px, coords.y - py) < 18) {
+              newX = Math.round(px);
+              newY = Math.round(py);
+            }
+          }
+        });
+      }
+
+      callout.targetX = newX;
+      callout.targetY = newY;
+      syncCalloutSliders(s.id);
+      renderChart();
+    }
+    return;
+  }
+
+  if (activeDrag.kind === "badge") {
+    const s = dataset.series.find(item => item.id === activeDrag.seriesId);
+    const idx = dataset.series.findIndex(item => item.id === activeDrag.seriesId);
+    if (s) {
+      const callout = getSeriesCallout(s, idx);
+      let newX = Math.round(coords.x - activeDrag.offsetX);
+      let newY = Math.round(coords.y - activeDrag.offsetY);
+      newX = Math.max(50, Math.min(newX, 850));
+      newY = Math.max(20, Math.min(newY, 480));
+      callout.x = newX;
+      callout.y = newY;
+      syncCalloutSliders(s.id);
+      renderChart();
+    }
+    return;
+  }
+
+  if (activeDrag.kind === "inplot") {
+    let newX = Math.round(coords.x - activeDrag.offsetX);
+    let newY = Math.round(coords.y - activeDrag.offsetY);
+    newX = Math.max(50, Math.min(newX, 680));
+    newY = Math.max(30, Math.min(newY, 420));
     state.callouts.inplotX = newX;
     state.callouts.inplotY = newY;
     if (rngInplotX) rngInplotX.value = newX;
     if (rngInplotY) rngInplotY.value = newY;
     if (valInplotX) valInplotX.textContent = `${newX} px`;
     if (valInplotY) valInplotY.textContent = `${newY} px`;
+    renderChart();
   }
-
-  renderChart();
 });
 
 window.addEventListener("mouseup", () => {
   activeDrag = null;
 });
+
+function syncCalloutSliders(sId) {
+  const callout = state.callouts[sId];
+  if (!callout) return;
+  const rBx = document.getElementById(`rng_bx_${sId}`);
+  const rBy = document.getElementById(`rng_by_${sId}`);
+  const rTx = document.getElementById(`rng_tx_${sId}`);
+  const rTy = document.getElementById(`rng_ty_${sId}`);
+  const lBx = document.getElementById(`lbl_bx_${sId}`);
+  const lBy = document.getElementById(`lbl_by_${sId}`);
+  const lTx = document.getElementById(`lbl_tx_${sId}`);
+  const lTy = document.getElementById(`lbl_ty_${sId}`);
+  if (rBx) { rBx.value = callout.x; if (lBx) lBx.textContent = `${callout.x} px`; }
+  if (rBy) { rBy.value = callout.y; if (lBy) lBy.textContent = `${callout.y} px`; }
+  if (rTx) { rTx.value = callout.targetX; if (lTx) lTx.textContent = `${callout.targetX} px`; }
+  if (rTy) { rTy.value = callout.targetY; if (lTy) lTy.textContent = `${callout.targetY} px`; }
+}
+
+function setupCalloutsControls() {
+  const container = document.getElementById("calloutsControlsContainer");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const isDark = state.theme === "dark";
+  const isFa = state.lang === "fa";
+
+  dataset.series.forEach((s, idx) => {
+    const callout = getSeriesCallout(s, idx);
+    const col = isDark ? s.colorDark : s.colorLight;
+    const name = isFa ? s.nameFa : s.nameEn;
+
+    const card = document.createElement("div");
+    card.style.cssText = "background: var(--bg-card-subtle); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color);";
+    card.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <span style="font-weight: 700; color: ${col}; font-size: 0.88rem;">${name}</span>
+        <span style="font-size: 0.72rem; color: var(--text-muted);">${isFa ? 'فلش و کادر' : 'Arrow & Callout'}</span>
+      </div>
+
+      <div class="slider-control" style="margin-bottom: 6px;">
+        <div class="slider-control-header">
+          <span>${isFa ? 'محل کادر متن (X)' : 'Box X'}</span>
+          <span id="lbl_bx_${s.id}">${callout.x} px</span>
+        </div>
+        <input type="range" min="80" max="850" value="${callout.x}" id="rng_bx_${s.id}">
+      </div>
+
+      <div class="slider-control" style="margin-bottom: 6px;">
+        <div class="slider-control-header">
+          <span>${isFa ? 'محل کادر متن (Y)' : 'Box Y'}</span>
+          <span id="lbl_by_${s.id}">${callout.y} px</span>
+        </div>
+        <input type="range" min="30" max="480" value="${callout.y}" id="rng_by_${s.id}">
+      </div>
+
+      <div class="slider-control" style="margin-bottom: 6px;">
+        <div class="slider-control-header">
+          <span>${isFa ? 'نوک فلش / نقطه اشاره (X)' : 'Target X'}</span>
+          <span id="lbl_tx_${s.id}">${callout.targetX} px</span>
+        </div>
+        <input type="range" min="90" max="850" value="${callout.targetX}" id="rng_tx_${s.id}">
+      </div>
+
+      <div class="slider-control" style="margin-bottom: 0;">
+        <div class="slider-control-header">
+          <span>${isFa ? 'نوک فلش / نقطه اشاره (Y)' : 'Target Y'}</span>
+          <span id="lbl_ty_${s.id}">${callout.targetY} px</span>
+        </div>
+        <input type="range" min="40" max="480" value="${callout.targetY}" id="rng_ty_${s.id}">
+      </div>
+    `;
+
+    container.appendChild(card);
+
+    const rBx = card.querySelector(`#rng_bx_${s.id}`);
+    const rBy = card.querySelector(`#rng_by_${s.id}`);
+    const rTx = card.querySelector(`#rng_tx_${s.id}`);
+    const rTy = card.querySelector(`#rng_ty_${s.id}`);
+    const lBx = card.querySelector(`#lbl_bx_${s.id}`);
+    const lBy = card.querySelector(`#lbl_by_${s.id}`);
+    const lTx = card.querySelector(`#lbl_tx_${s.id}`);
+    const lTy = card.querySelector(`#lbl_ty_${s.id}`);
+
+    rBx.addEventListener("input", e => {
+      callout.x = parseInt(e.target.value, 10);
+      lBx.textContent = `${callout.x} px`;
+      renderChart();
+    });
+    rBy.addEventListener("input", e => {
+      callout.y = parseInt(e.target.value, 10);
+      lBy.textContent = `${callout.y} px`;
+      renderChart();
+    });
+    rTx.addEventListener("input", e => {
+      callout.targetX = parseInt(e.target.value, 10);
+      lTx.textContent = `${callout.targetX} px`;
+      renderChart();
+    });
+    rTy.addEventListener("input", e => {
+      callout.targetY = parseInt(e.target.value, 10);
+      lTy.textContent = `${callout.targetY} px`;
+      renderChart();
+    });
+  });
+}
 
 // --- 9. Global Toggle Functions ---
 window.toggleInplotLegend = function(checked) {
@@ -903,11 +1005,6 @@ window.toggleDataLabels = function(checked) {
   renderChart();
 };
 
-window.toggleDataLabels = function(checked) {
-  state.showDataLabels = checked;
-  renderChart();
-};
-
 window.toggleGrid = function(checked) {
   state.showGrid = checked;
   renderChart();
@@ -920,6 +1017,13 @@ window.toggleHysteresis = function(checked) {
 
 // --- 10. Render Bottom Legend ---
 function renderLegend() {
+  const legendContainer = document.getElementById("bottomLegend");
+  const inplotLegend = document.getElementById("inplotLegend");
+  
+  if (inplotLegend) {
+    inplotLegend.style.display = state.showInplotLegend ? "block" : "none";
+  }
+
   if (!legendContainer) return;
   if (!state.showBottomLegend) {
     legendContainer.style.display = "none";
@@ -1138,49 +1242,50 @@ function parseSmartExcel(rawRows) {
   const r0 = rows[0];
   
   // Check if raw 8/9 column lab file (sample1&2 layout with resonance frequency cols > 1000 Hz)
-  if (r0.length >= 7) {
-    const r0Nums = r0.map(v => parseFloat(v));
+  const dataRowForCheck = rows.find(r => r && r.length && !isNaN(parseFloat(r[0])) && !isNaN(parseFloat(r[1]))) || rows[0];
+  if (dataRowForCheck.length >= 7) {
+    const r0Nums = dataRowForCheck.map(v => parseFloat(v));
     const isLabFormat = (r0Nums[1] > 1000 || r0Nums[2] > 1000 || r0Nums[5] > 1000) && (Math.abs(r0Nums[3]) < 500);
     if (isLabFormat) {
       if (rows.length <= 8) {
         // 6-row side-by-side format (Forward in cols 3/7, Backward in cols 4/8)
         const fwdX = [], bwdX = [];
-        const nanoFwd = [], nanoBwd = [];
-        const starchFwd = [], starchBwd = [];
+        const s1Fwd = [], s1Bwd = [];
+        const s2Fwd = [], s2Bwd = [];
 
         rows.forEach(r => {
           const rh = parseFloat(r[0]);
           if (isNaN(rh)) return;
           fwdX.push(rh);
           bwdX.unshift(rh);
-          nanoFwd.push(parseFloat(r[7] ?? r[5] ?? 0) || 0);
-          nanoBwd.unshift(parseFloat(r[8] ?? r[7] ?? 0) || 0);
-          starchFwd.push(parseFloat(r[3]) || 0);
-          starchBwd.unshift(parseFloat(r[4] ?? r[3]) || 0);
+          s1Fwd.push(parseFloat(r[7] ?? r[5] ?? 0) || 0);
+          s1Bwd.unshift(parseFloat(r[8] ?? r[7] ?? 0) || 0);
+          s2Fwd.push(parseFloat(r[3]) || 0);
+          s2Bwd.unshift(parseFloat(r[4] ?? r[3]) || 0);
         });
 
         return {
           xValues: fwdX.concat(bwdX),
           series: [
-            { nameFa: "نانوکامپوزیت", nameEn: "Nanocomposite", yValues: nanoFwd.concat(nanoBwd) },
-            { nameFa: "نشاسته خالص", nameEn: "Pure Starch", yValues: starchFwd.concat(starchBwd) }
+            { nameFa: "نمونه ۱", nameEn: "Sample 1", yValues: s1Fwd.concat(s1Bwd) },
+            { nameFa: "نمونه ۲", nameEn: "Sample 2", yValues: s2Fwd.concat(s2Bwd) }
           ]
         };
       } else {
         // 12-row sequential format (already stacked)
-        const fullX = [], fullNano = [], fullStarch = [];
+        const fullX = [], fullS1 = [], fullS2 = [];
         rows.forEach(r => {
           const rh = parseFloat(r[0]);
           if (isNaN(rh)) return;
           fullX.push(rh);
-          fullStarch.push(parseFloat(r[3]) || 0);
-          fullNano.push(parseFloat(r[7] ?? r[4] ?? 0) || 0);
+          fullS2.push(parseFloat(r[3]) || 0);
+          fullS1.push(parseFloat(r[7] ?? r[4] ?? 0) || 0);
         });
         return {
           xValues: fullX,
           series: [
-            { nameFa: "نانوکامپوزیت", nameEn: "Nanocomposite", yValues: fullNano },
-            { nameFa: "نشاسته خالص", nameEn: "Pure Starch", yValues: fullStarch }
+            { nameFa: "نمونه ۱", nameEn: "Sample 1", yValues: fullS1 },
+            { nameFa: "نمونه ۲", nameEn: "Sample 2", yValues: fullS2 }
           ]
         };
       }
@@ -1232,8 +1337,13 @@ function parseSmartExcel(rawRows) {
 
 function importExcelFile(e) {
   const file = e.target.files[0];
-  if (!file) return;
+  if (!file) {
+    alert("هیچ فایلی انتخاب نشد.");
+    return;
+  }
+  
   if (typeof XLSX === "undefined") {
+    alert("خطا: کتابخانه SheetJS بارگذاری نشده است. لطفاً صفحه را رفرش کنید یا اتصال اینترنت را چک کنید.");
     showToast("کتابخانه SheetJS بارگذاری نشده است. لطفاً صفحه را رفرش کنید.");
     return;
   }
@@ -1269,7 +1379,7 @@ function importExcelFile(e) {
           id: `series_${i + 1}`,
           nameFa: s.nameFa,
           nameEn: s.nameEn,
-          group: i === 0 ? "nano" : (i === 1 ? "starch" : "custom"),
+          group: `series_${i + 1}`,
           colorDark: color.dark,
           colorLight: color.light,
           marker: marker,
@@ -1282,25 +1392,12 @@ function importExcelFile(e) {
       dataset.xValues = parsed.xValues;
       dataset.series = newSeries;
 
-      // Configure direct callout arrows (without clutter)
-      if (newSeries[0]) state.nanoLabel = state.lang === "fa" ? newSeries[0].nameFa : newSeries[0].nameEn;
-      if (newSeries[1]) state.starchLabel = state.lang === "fa" ? newSeries[1].nameFa : newSeries[1].nameEn;
-      state.nanoSub = "";
-      state.starchSub = "";
+      // Configure direct callout arrows dynamically
+      state.callouts = {};
       state.showAnnotations = true;
       state.showInplotLegend = false;
       state.showBottomLegend = false;
       state.showHysteresis = true;
-
-      // Sync form inputs
-      const inpNano = document.getElementById("inputNanoLabel");
-      if (inpNano) inpNano.value = state.nanoLabel;
-      const inpStarch = document.getElementById("inputStarchLabel");
-      if (inpStarch) inpStarch.value = state.starchLabel;
-      const inpNanoSub = document.getElementById("inputNanoSub");
-      if (inpNanoSub) inpNanoSub.value = "";
-      const inpStarchSub = document.getElementById("inputStarchSub");
-      if (inpStarchSub) inpStarchSub.value = "";
 
       const chkHyst = document.getElementById("chkHysteresis");
       if (chkHyst) chkHyst.checked = true;
@@ -1315,6 +1412,7 @@ function importExcelFile(e) {
       autoScaleAxis();
       
       setupSeriesCheckboxes();
+      setupCalloutsControls();
       renderDataTable();
       renderChart();
       renderLegend();
@@ -1448,19 +1546,11 @@ function setLanguagePreset(newLang) {
   state.chartSubtitle = p.chartSubtitle;
   state.xTitle = p.xTitle;
   state.yTitle = p.yTitle;
-  state.nanoLabel = p.nanoLabel;
-  state.nanoSub = p.nanoSub;
-  state.starchLabel = p.starchLabel;
-  state.starchSub = p.starchSub;
 
   if (inputChartTitle) inputChartTitle.value = state.chartTitle;
   if (inputChartSubtitle) inputChartSubtitle.value = state.chartSubtitle;
   if (inputXTitle) inputXTitle.value = state.xTitle;
   if (inputYTitle) inputYTitle.value = state.yTitle;
-  if (inputNanoLabel) inputNanoLabel.value = state.nanoLabel;
-  if (inputNanoSub) inputNanoSub.value = state.nanoSub;
-  if (inputStarchLabel) inputStarchLabel.value = state.starchLabel;
-  if (inputStarchSub) inputStarchSub.value = state.starchSub;
 
   if (displayChartTitle) displayChartTitle.textContent = state.chartTitle;
   if (displayChartSubtitle) displayChartSubtitle.textContent = state.chartSubtitle;
@@ -1477,17 +1567,8 @@ function setLanguagePreset(newLang) {
 
   if (langBtnText) langBtnText.textContent = newLang === "fa" ? "English" : "فارسی";
 
-  const badgeNano = document.getElementById("badgeNano");
-  if (badgeNano) badgeNano.textContent = p.badgeNano;
-  const badgeStarch = document.getElementById("badgeStarch");
-  if (badgeStarch) badgeStarch.textContent = p.badgeStarch;
-
-  ['metricNanoTitle', 'metricNanoDesc', 'metricStarchTitle', 'metricStarchDesc', 'metricDiffTitle', 'metricDiffDesc'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el && p[id]) el.textContent = p[id];
-  });
-
   setupSeriesCheckboxes();
+  setupCalloutsControls();
   renderDataTable();
   renderChart();
   renderLegend();
@@ -1650,67 +1731,6 @@ function initEvents() {
     });
   }
 
-  if (inputNanoLabel) {
-    inputNanoLabel.addEventListener("input", e => {
-      state.nanoLabel = e.target.value;
-      renderChart();
-    });
-  }
-
-  if (inputNanoSub) {
-    inputNanoSub.addEventListener("input", e => {
-      state.nanoSub = e.target.value;
-      renderChart();
-    });
-  }
-
-  if (inputStarchLabel) {
-    inputStarchLabel.addEventListener("input", e => {
-      state.starchLabel = e.target.value;
-      renderChart();
-    });
-  }
-
-  if (inputStarchSub) {
-    inputStarchSub.addEventListener("input", e => {
-      state.starchSub = e.target.value;
-      renderChart();
-    });
-  }
-
-  // Sliders for Callout Positions
-  if (rngNanoX) {
-    rngNanoX.addEventListener("input", e => {
-      state.callouts.nanoX = parseInt(e.target.value, 10);
-      if (valNanoX) valNanoX.textContent = `${state.callouts.nanoX} px`;
-      renderChart();
-    });
-  }
-
-  if (rngNanoY) {
-    rngNanoY.addEventListener("input", e => {
-      state.callouts.nanoY = parseInt(e.target.value, 10);
-      if (valNanoY) valNanoY.textContent = `${state.callouts.nanoY} px`;
-      renderChart();
-    });
-  }
-
-  if (rngStarchX) {
-    rngStarchX.addEventListener("input", e => {
-      state.callouts.starchX = parseInt(e.target.value, 10);
-      if (valStarchX) valStarchX.textContent = `${state.callouts.starchX} px`;
-      renderChart();
-    });
-  }
-
-  if (rngStarchY) {
-    rngStarchY.addEventListener("input", e => {
-      state.callouts.starchY = parseInt(e.target.value, 10);
-      if (valStarchY) valStarchY.textContent = `${state.callouts.starchY} px`;
-      renderChart();
-    });
-  }
-
   if (rngInplotX) {
     rngInplotX.addEventListener("input", e => {
       state.callouts.inplotX = parseInt(e.target.value, 10);
@@ -1730,29 +1750,18 @@ function initEvents() {
   // Reset Button
   if (btnResetPositions) {
     btnResetPositions.addEventListener("click", () => {
-      state.callouts.nanoX = state.defaultCallouts.nanoX;
-      state.callouts.nanoY = state.defaultCallouts.nanoY;
-      state.callouts.starchX = state.defaultCallouts.starchX;
-      state.callouts.starchY = state.defaultCallouts.starchY;
-      state.callouts.inplotX = state.defaultCallouts.inplotX;
-      state.callouts.inplotY = state.defaultCallouts.inplotY;
+      state.callouts = {};
+      state.callouts.inplotX = 160;
+      state.callouts.inplotY = 280;
 
-      if (rngNanoX) rngNanoX.value = state.callouts.nanoX;
-      if (rngNanoY) rngNanoY.value = state.callouts.nanoY;
-      if (rngStarchX) rngStarchX.value = state.callouts.starchX;
-      if (rngStarchY) rngStarchY.value = state.callouts.starchY;
-      if (rngInplotX) rngInplotX.value = state.callouts.inplotX;
-      if (rngInplotY) rngInplotY.value = state.callouts.inplotY;
+      if (rngInplotX) rngInplotX.value = 160;
+      if (rngInplotY) rngInplotY.value = 280;
+      if (valInplotX) valInplotX.textContent = "160 px";
+      if (valInplotY) valInplotY.textContent = "280 px";
 
-      if (valNanoX) valNanoX.textContent = `${state.callouts.nanoX} px`;
-      if (valNanoY) valNanoY.textContent = `${state.callouts.nanoY} px`;
-      if (valStarchX) valStarchX.textContent = `${state.callouts.starchX} px`;
-      if (valStarchY) valStarchY.textContent = `${state.callouts.starchY} px`;
-      if (valInplotX) valInplotX.textContent = `${state.callouts.inplotX} px`;
-      if (valInplotY) valInplotY.textContent = `${state.callouts.inplotY} px`;
-
+      setupCalloutsControls();
       renderChart();
-      showToast("موقعیت تمام المان‌ها بازنشانی شد.");
+      showToast(state.lang === "fa" ? "موقعیت فلش‌ها و راهنما به حالت پیش‌فرض بازنشانی شد." : "Positions reset to default.");
     });
   }
 
@@ -1789,6 +1798,12 @@ function initEvents() {
     renderChart();
   });
 
+  const chkShowCalloutBox = document.getElementById("chkShowCalloutBox");
+  if (chkShowCalloutBox) chkShowCalloutBox.addEventListener("change", e => {
+    state.showCalloutBox = e.target.checked;
+    renderChart();
+  });
+
   const btnAutoScaleAxis = document.getElementById("btnAutoScaleAxis");
   if (btnAutoScaleAxis) {
     btnAutoScaleAxis.addEventListener("click", () => {
@@ -1822,6 +1837,7 @@ function initEvents() {
 // Initial Boot
 document.addEventListener("DOMContentLoaded", () => {
   setupSeriesCheckboxes();
+  setupCalloutsControls();
   renderDataTable();
   renderChart();
   renderLegend();

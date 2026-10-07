@@ -852,3 +852,19 @@ html[dir="ltr"] body {
 .accordion[open] summary::after { transform: rotate(-180deg); }
 .accordion-content { padding: 16px; border-top: 1px solid var(--border-color); }
 
+/* Draggable SVG Elements */
+.draggable-badge {
+  cursor: grab;
+  user-select: none;
+}
+.draggable-badge:active {
+  cursor: grabbing;
+}
+.draggable-target {
+  cursor: crosshair;
+  user-select: none;
+}
+.draggable-target:hover .target-hit-area {
+  fill-opacity: 0.25;
+}
+
