@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" style="background:#ffffff; font-family:'Vazirmatn', 'Plus Jakarta Sans', Arial, sans-serif;">
+
+    <defs>
+      <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="130%">
+        <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.35" />
+      </filter>
+      <marker id="arrowNano" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <polygon points="0 1.5, 9 5, 0 8.5" fill="#0284c7" />
+      </marker>
+      <marker id="arrowStarch" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <polygon points="0 1.5, 9 5, 0 8.5" fill="#e11d48" />
+      </marker>
+    </defs>
+
+    <!-- Plot Area Background -->
+    <rect x="90" y="40" width="810" height="445" 
+          fill="#ffffff" rx="4" />
+  
+        <line x1="90" y1="485" x2="900" y2="485"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="429.375" x2="900" y2="429.375"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="373.75" x2="900" y2="373.75"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="318.125" x2="900" y2="318.125"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="262.5" x2="900" y2="262.5"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="206.875" x2="900" y2="206.875"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="151.25" x2="900" y2="151.25"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="95.625" x2="900" y2="95.625"
+              stroke="#e2e8f0"
+              stroke-width="1"
+              stroke-dasharray="3,3" />
+      
+        <line x1="90" y1="40" x2="900" y2="40"
+              stroke="#94a3b8"
+              stroke-width="1.5"
+               />
+      
+        <line x1="90" y1="40" x2="90" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="191.25" y1="40" x2="191.25" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="292.5" y1="40" x2="292.5" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="393.75" y1="40" x2="393.75" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="495" y1="40" x2="495" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="596.25" y1="40" x2="596.25" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="697.5" y1="40" x2="697.5" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="798.75" y1="40" x2="798.75" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+        <line x1="900" y1="40" x2="900" y2="485"
+              stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" />
+      
+    <line x1="90" y1="40" x2="90" y2="485"
+          stroke="#334155" stroke-width="1.8" />
+  
+    <line x1="90" y1="485" x2="900" y2="485"
+          stroke="#334155" stroke-width="1.8" />
+  
+      <line x1="90" y1="40" x2="900" y2="40"
+            stroke="#334155" stroke-width="1.5" />
+    
+      <line x1="900" y1="40" x2="900" y2="485"
+            stroke="#334155" stroke-width="1.5" />
+    
+        <line x1="90" y1="40" x2="90" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="191.25" y1="40" x2="191.25" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="292.5" y1="40" x2="292.5" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="393.75" y1="40" x2="393.75" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="495" y1="40" x2="495" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="596.25" y1="40" x2="596.25" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="697.5" y1="40" x2="697.5" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="798.75" y1="40" x2="798.75" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="900" y1="40" x2="900" y2="45"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="485" x2="900" y2="485"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="429.375" x2="900" y2="429.375"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="373.75" x2="900" y2="373.75"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="318.125" x2="900" y2="318.125"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="262.5" x2="900" y2="262.5"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="206.875" x2="900" y2="206.875"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="151.25" x2="900" y2="151.25"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="95.625" x2="900" y2="95.625"
+              stroke="#334155" stroke-width="1.2" />
+      
+        <line x1="895" y1="40" x2="900" y2="40"
+              stroke="#334155" stroke-width="1.2" />
+      
+      <line x1="84" y1="485" x2="90" y2="485"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="489"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-400</text>
+    
+      <line x1="84" y1="429.375" x2="90" y2="429.375"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="433.375"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-350</text>
+    
+      <line x1="84" y1="373.75" x2="90" y2="373.75"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="377.75"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-300</text>
+    
+      <line x1="84" y1="318.125" x2="90" y2="318.125"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="322.125"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-250</text>
+    
+      <line x1="84" y1="262.5" x2="90" y2="262.5"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="266.5"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-200</text>
+    
+      <line x1="84" y1="206.875" x2="90" y2="206.875"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="210.875"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-150</text>
+    
+      <line x1="84" y1="151.25" x2="90" y2="151.25"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="155.25"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-100</text>
+    
+      <line x1="84" y1="95.625" x2="90" y2="95.625"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="99.625"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">-50</text>
+    
+      <line x1="84" y1="40" x2="90" y2="40"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="78" y="44"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="end" direction="ltr">0</text>
+    
+      <line x1="90" y1="485" x2="90" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="90" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">20</text>
+    
+      <line x1="191.25" y1="485" x2="191.25" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="191.25" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">30</text>
+    
+      <line x1="292.5" y1="485" x2="292.5" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="292.5" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">40</text>
+    
+      <line x1="393.75" y1="485" x2="393.75" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="393.75" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">50</text>
+    
+      <line x1="495" y1="485" x2="495" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="495" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">60</text>
+    
+      <line x1="596.25" y1="485" x2="596.25" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="596.25" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">70</text>
+    
+      <line x1="697.5" y1="485" x2="697.5" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="697.5" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">80</text>
+    
+      <line x1="798.75" y1="485" x2="798.75" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="798.75" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">90</text>
+    
+      <line x1="900" y1="485" x2="900" y2="491"
+            stroke="#334155" stroke-width="1.5" />
+      <text x="900" y="507"
+            fill="#475569" font-size="12" font-family="'Plus Jakarta Sans', Arial, sans-serif"
+            font-weight="600" text-anchor="middle" direction="ltr">100</text>
+    
+    <text x="495" y="542"
+          fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle"
+          direction="ltr" font-family="'Plus Jakarta Sans', 'Vazirmatn', sans-serif">RH (%)</text>
+
+    <text x="-262.5" y="28"
+          fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle"
+          transform="rotate(-90)" direction="ltr"
+          font-family="'Plus Jakarta Sans', 'Vazirmatn', sans-serif">Δf (Hz)</text>
+  
+        <path d="M 106.20000000000002 40 L 323.88750000000005 93.4 L 407.92499999999995 108.975 L 647.8874999999999 172.3875 L 733.9499999999999 190.1875 L 835.1999999999999 213.55" fill="none" stroke="#0284c7" stroke-width="2.6"
+              stroke-linejoin="round" stroke-linecap="round"
+              
+              opacity="0.92" />
+      
+           <path d="M 835.1999999999999 213.55 L 835.1999999999999 203.5375 L 733.9499999999999 184.625 L 647.8874999999999 171.275 L 407.92499999999995 106.75 L 323.88750000000005 97.85 L 106.20000000000002 40" fill="none" stroke="#0284c7" stroke-width="2.6"
+                 stroke-linejoin="round" stroke-linecap="round"
+                 stroke-dasharray="6,5"
+                 opacity="0.75" />
+         
+                    <g transform="translate(225.92812500000002, 69.37) rotate(13.78282684551738)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(370.108125, 101.96625) rotate(10.499716574497391)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(539.904375, 143.851875) rotate(14.802605191950263)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(695.221875, 182.1775) rotate(11.685516599844606)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(789.6374999999999, 203.036875) rotate(12.993066958826649)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(779.5124999999999, 193.135625) rotate(-169.41964135561255)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(686.6156249999999, 177.2825) rotate(-171.18256270230526)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(515.9081249999999, 135.78625) rotate(-164.94938813683746)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(361.704375, 101.85499999999999) rotate(-173.95461887284236)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+                    <g transform="translate(204.159375, 66.0325) rotate(-165.11773965027348)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#0284c7" />
+                    </g>
+                 
+        <g class="point-group" data-series="series_1" data-x="21.6" data-y="0" data-idx="0">
+          <circle cx="106.20000000000002" cy="40" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="106.20000000000002" cy="40" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="43.1" data-y="-48" data-idx="1">
+          <circle cx="323.88750000000005" cy="93.4" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="323.88750000000005" cy="93.4" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="51.4" data-y="-62" data-idx="2">
+          <circle cx="407.92499999999995" cy="108.975" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="407.92499999999995" cy="108.975" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="75.1" data-y="-119" data-idx="3">
+          <circle cx="647.8874999999999" cy="172.3875" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="647.8874999999999" cy="172.3875" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="83.6" data-y="-135" data-idx="4">
+          <circle cx="733.9499999999999" cy="190.1875" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="733.9499999999999" cy="190.1875" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="93.6" data-y="-156" data-idx="5">
+          <circle cx="835.1999999999999" cy="213.55" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="835.1999999999999" cy="213.55" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="93.6" data-y="-147" data-idx="6">
+          <circle cx="835.1999999999999" cy="203.5375" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="835.1999999999999" cy="203.5375" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="83.6" data-y="-130" data-idx="7">
+          <circle cx="733.9499999999999" cy="184.625" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="733.9499999999999" cy="184.625" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="75.1" data-y="-118" data-idx="8">
+          <circle cx="647.8874999999999" cy="171.275" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="647.8874999999999" cy="171.275" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="51.4" data-y="-60" data-idx="9">
+          <circle cx="407.92499999999995" cy="106.75" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="407.92499999999995" cy="106.75" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="43.1" data-y="-52" data-idx="10">
+          <circle cx="323.88750000000005" cy="97.85" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="323.88750000000005" cy="97.85" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_1" data-x="21.6" data-y="0" data-idx="11">
+          <circle cx="106.20000000000002" cy="40" r="14" fill="transparent" style="cursor: pointer;" />
+          <circle cx="106.20000000000002" cy="40" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <path d="M 106.20000000000002 40 L 323.88750000000005 73.375 L 407.92499999999995 81.1625 L 647.8874999999999 172.3875 L 733.9499999999999 309.22499999999997 L 835.1999999999999 473.875" fill="none" stroke="#e11d48" stroke-width="2.6"
+              stroke-linejoin="round" stroke-linecap="round"
+              
+              opacity="0.92" />
+      
+           <path d="M 835.1999999999999 473.875 L 835.1999999999999 461.6375 L 733.9499999999999 341.4875 L 647.8874999999999 199.0875 L 407.92499999999995 104.52499999999999 L 323.88750000000005 87.8375 L 106.20000000000002 40" fill="none" stroke="#e11d48" stroke-width="2.6"
+                 stroke-linejoin="round" stroke-linecap="round"
+                 stroke-dasharray="6,5"
+                 opacity="0.75" />
+         
+                    <g transform="translate(225.92812500000002, 58.35625) rotate(8.716492627295047)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(370.108125, 77.658125) rotate(5.294306130865115)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(539.904375, 131.33625) rotate(20.81497976014622)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(695.221875, 247.648125) rotate(57.832593601599875)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(789.6374999999999, 399.7825) rotate(58.41094612218859)" opacity="0.95">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(779.5124999999999, 395.555) rotate(-130.1207262169933)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(686.6156249999999, 263.1675) rotate(-121.14756894145425)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(515.9081249999999, 147.078125) rotate(-158.49198936692264)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(361.704375, 95.346875) rotate(-168.76875695909817)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+                    <g transform="translate(204.159375, 61.526875000000004) rotate(-167.60607616816984)" opacity="0.75">
+                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="#e11d48" />
+                    </g>
+                 
+        <g class="point-group" data-series="series_2" data-x="21.6" data-y="0" data-idx="0">
+          <circle cx="106.20000000000002" cy="40" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 101.20000000000002 35 H 111.20000000000002 V 45 H 101.20000000000002 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="43.1" data-y="-30" data-idx="1">
+          <circle cx="323.88750000000005" cy="73.375" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 318.88750000000005 68.375 H 328.88750000000005 V 78.375 H 318.88750000000005 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="51.4" data-y="-37" data-idx="2">
+          <circle cx="407.92499999999995" cy="81.1625" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 402.92499999999995 76.1625 H 412.92499999999995 V 86.1625 H 402.92499999999995 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="75.1" data-y="-119" data-idx="3">
+          <circle cx="647.8874999999999" cy="172.3875" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 642.8874999999999 167.3875 H 652.8874999999999 V 177.3875 H 642.8874999999999 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="83.6" data-y="-242" data-idx="4">
+          <circle cx="733.9499999999999" cy="309.22499999999997" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 728.9499999999999 304.22499999999997 H 738.9499999999999 V 314.22499999999997 H 728.9499999999999 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="93.6" data-y="-390" data-idx="5">
+          <circle cx="835.1999999999999" cy="473.875" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 830.1999999999999 468.875 H 840.1999999999999 V 478.875 H 830.1999999999999 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="93.6" data-y="-379" data-idx="6">
+          <circle cx="835.1999999999999" cy="461.6375" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 830.1999999999999 456.6375 H 840.1999999999999 V 466.6375 H 830.1999999999999 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="83.6" data-y="-271" data-idx="7">
+          <circle cx="733.9499999999999" cy="341.4875" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 728.9499999999999 336.4875 H 738.9499999999999 V 346.4875 H 728.9499999999999 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="75.1" data-y="-143" data-idx="8">
+          <circle cx="647.8874999999999" cy="199.0875" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 642.8874999999999 194.0875 H 652.8874999999999 V 204.0875 H 642.8874999999999 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="51.4" data-y="-58" data-idx="9">
+          <circle cx="407.92499999999995" cy="104.52499999999999" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 402.92499999999995 99.52499999999999 H 412.92499999999995 V 109.52499999999999 H 402.92499999999995 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="43.1" data-y="-43" data-idx="10">
+          <circle cx="323.88750000000005" cy="87.8375" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 318.88750000000005 82.8375 H 328.88750000000005 V 92.8375 H 318.88750000000005 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+        <g class="point-group" data-series="series_2" data-x="21.6" data-y="0" data-idx="11">
+          <circle cx="106.20000000000002" cy="40" r="14" fill="transparent" style="cursor: pointer;" />
+          <path d="M 101.20000000000002 35 H 111.20000000000002 V 45 H 101.20000000000002 Z" fill="#e11d48" stroke="#ffffff" stroke-width="2" class="chart-point" />
+          
+        </g>
+      
+      <g class="annotation-group">
+        <line x1="660" y1="136" x2="114.08244500115997" y2="41.36640433389555"
+              stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"
+              marker-end="url(#arrowNano)" />
+
+        <g class="draggable-badge" data-badge="nano" filter="url(#badgeShadow)">
+          <rect x="660" y="120" width="138" height="32" rx="8"
+                fill="rgba(255, 255, 255, 0.98)" stroke="#0284c7" stroke-width="1.8" />
+          <text x="729" y="141" fill="#0284c7" font-size="13" font-weight="700"
+                text-anchor="middle" direction="ltr" font-family="Vazirmatn">نانوکامپوزیت</text>
+          
+        </g>
+      </g>
+    
+      <g class="annotation-group">
+        <line x1="484.5" y1="320" x2="328.4389691938978" y2="94.4165674245671"
+              stroke="#e11d48" stroke-width="2.2" stroke-linecap="round"
+              marker-end="url(#arrowStarch)" />
+
+        <g class="draggable-badge" data-badge="starch" filter="url(#badgeShadow)">
+          <rect x="420" y="320" width="129" height="32" rx="8"
+                fill="rgba(255, 255, 255, 0.98)" stroke="#e11d48" stroke-width="1.8" />
+          <text x="484.5" y="341" fill="#e11d48" font-size="13" font-weight="700"
+                text-anchor="middle" direction="ltr" font-family="Vazirmatn">نشاسته خالص</text>
+          
+        </g>
+      </g>
+    
+</svg>
