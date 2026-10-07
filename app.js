@@ -619,7 +619,7 @@ function renderChart() {
                   stroke-width="1.2" rx="6" 
                   ${state.showCalloutBox ? 'filter="url(#badgeShadow)"' : ''} />
             <text x="${callout.x + cardW / 2}" y="${callout.y + 20}" fill="${col}" font-size="19" font-weight="700"
-                  text-anchor="middle" font-family="${FONT}">${sName}</text>
+                  text-anchor="middle" direction="${isFa ? 'rtl' : 'ltr'}" font-family="${FONT}">${sName}</text>
           </g>
         </g>
       `;
@@ -639,8 +639,8 @@ function renderChart() {
         <rect x="${legBoxX}" y="${legBoxY}" width="${legBoxW}" height="${legBoxH}" rx="8"
               fill="${colors.calloutBg}" stroke="${colors.calloutBorder}" stroke-width="1.4" />
         
-        <text x="${legBoxX + 16}" y="${legBoxY + 22}" fill="${colors.title}" font-size="12" font-weight="700"
-              direction="ltr" text-anchor="start" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">
+        <text x="${isFa ? legBoxX + legBoxW - 16 : legBoxX + 16}" y="${legBoxY + 22}" fill="${colors.title}" font-size="12" font-weight="700"
+              direction="${isFa ? 'rtl' : 'ltr'}" text-anchor="${isFa ? 'end' : 'start'}" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">
           ${isFa ? 'راهنمای نمونه‌ها:' : 'Legend / Samples:'}
         </text>
     `;
@@ -649,9 +649,10 @@ function renderChart() {
       const itemY = legBoxY + 44 + (idx * 25);
       const seriesColor = isDark ? s.colorDark : s.colorLight;
       const name = isFa ? s.nameFa : s.nameEn;
-      const lineX1 = legBoxX + 16;
-      const lineX2 = legBoxX + 42;
-      const markerCx = legBoxX + 29;
+      const lineX1 = isFa ? legBoxX + legBoxW - 42 : legBoxX + 16;
+      const lineX2 = isFa ? legBoxX + legBoxW - 16 : legBoxX + 42;
+      const markerCx = isFa ? legBoxX + legBoxW - 29 : legBoxX + 29;
+      const textX = isFa ? legBoxX + legBoxW - 55 : legBoxX + 50;
 
       if (state.plotMode === "scatter-line") {
         svgContent += `
@@ -668,9 +669,9 @@ function renderChart() {
       `;
 
       svgContent += `
-        <text x="${legBoxX + 50}" y="${itemY + 4}" fill="${s.visible ? colors.text : colors.axis}"
+        <text x="${textX}" y="${itemY + 4}" fill="${s.visible ? colors.text : colors.axis}"
               font-size="11.5" font-weight="600" opacity="${s.visible ? 1 : 0.35}"
-              direction="ltr" text-anchor="start"
+              direction="${isFa ? 'rtl' : 'ltr'}" text-anchor="${isFa ? 'end' : 'start'}"
               font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${name}</text>
       `;
     });
