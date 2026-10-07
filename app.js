@@ -585,7 +585,7 @@ function renderChart() {
     });
 
     // --- Trendlines ---
-    if (state.showTrendlines) {
+    if (state.showTrendlines && xVals.length >= 2) {
       let n = xVals.length;
       let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
       for(let i=0; i<n; i++) {
@@ -594,33 +594,36 @@ function renderChart() {
         sumXY += xVals[i] * yVals[i];
         sumXX += xVals[i] * xVals[i];
       }
-      let slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-      let intercept = (sumY - slope * sumX) / n;
+      let denom = (n * sumXX - sumX * sumX);
+      if (Math.abs(denom) > 1e-12) {
+        let slope = (n * sumXY - sumX * sumY) / denom;
+        let intercept = (sumY - slope * sumX) / n;
 
-      let yMean = sumY / n;
-      let ssTot = 0, ssRes = 0;
-      for(let i=0; i<n; i++) {
-        let yPred = slope * xVals[i] + intercept;
-        ssTot += Math.pow(yVals[i] - yMean, 2);
-        ssRes += Math.pow(yVals[i] - yPred, 2);
+        let yMean = sumY / n;
+        let ssTot = 0, ssRes = 0;
+        for(let i=0; i<n; i++) {
+          let yPred = slope * xVals[i] + intercept;
+          ssTot += Math.pow(yVals[i] - yMean, 2);
+          ssRes += Math.pow(yVals[i] - yPred, 2);
+        }
+        let rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
+        
+        const x1 = Math.min(...xVals);
+        const x2 = Math.max(...xVals);
+        const y1 = slope * x1 + intercept;
+        const y2 = slope * x2 + intercept;
+        
+        const px1 = mapX(x1);
+        const py1 = mapY(y1);
+        const px2 = mapX(x2);
+        const py2 = mapY(y2);
+
+        svgContent += `
+          <line x1="${px1}" y1="${py1}" x2="${px2}" y2="${py2}"
+                stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="0.8" />
+          <text x="${px2 - 10}" y="${py2 - 10}" fill="${seriesColor}" font-size="11" font-weight="bold" font-family="'Plus Jakarta Sans', Arial, sans-serif" text-anchor="end" direction="ltr">R² = ${rSquared.toFixed(3)}</text>
+        `;
       }
-      let rSquared = ssTot === 0 ? 1 : 1 - (ssRes / ssTot);
-      
-      const x1 = Math.min(...xVals);
-      const x2 = Math.max(...xVals);
-      const y1 = slope * x1 + intercept;
-      const y2 = slope * x2 + intercept;
-      
-      const px1 = mapX(x1);
-      const py1 = mapY(y1);
-      const px2 = mapX(x2);
-      const py2 = mapY(y2);
-
-      svgContent += `
-        <line x1="${px1}" y1="${py1}" x2="${px2}" y2="${py2}"
-              stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="0.8" />
-        <text x="${px2 - 10}" y="${py2 - 10}" fill="${seriesColor}" font-size="11" font-weight="bold" font-family="'Plus Jakarta Sans', Arial, sans-serif" text-anchor="end" direction="ltr">R² = ${rSquared.toFixed(3)}</text>
-      `;
     }
   });
 
@@ -760,12 +763,14 @@ function attachHoverListeners() {
 
       const seriesName = state.lang === "fa" ? s.nameFa : s.nameEn;
 
+      const xLabel = state.xTitle || (state.lang === 'fa' ? 'محور X' : 'X');
+      const yLabel = state.yTitle || (state.lang === 'fa' ? 'محور Y' : 'Y');
       tooltip.innerHTML = `
         <div style="font-weight: 700; color: ${state.theme === 'dark' ? s.colorDark : s.colorLight}; margin-bottom: 3px;">
           ${seriesName}
         </div>
-        <div>RH: <strong>${x}%</strong></div>
-        <div>Δf: <strong>${y} Hz</strong></div>
+        <div>${xLabel}: <strong>${x}</strong></div>
+        <div>${yLabel}: <strong>${y}</strong></div>
       `;
 
       const svgRect = svg.getBoundingClientRect();
@@ -1293,11 +1298,15 @@ function exportPng() {
 
 // --- 15. Export Vector SVG ---
 function exportSvg() {
-  const svgString = new XMLSerializer().serializeToString(svg);
-  const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+  let svgString = new XMLSerializer().serializeToString(svg);
+  if (!svgString.includes('xmlns="http://www.w3.org/2000/svg"')) {
+    svgString = svgString.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+  }
+  const fullSvg = `<?xml version="1.0" encoding="UTF-8"?>\n` + svgString;
+  const blob = new Blob([fullSvg], { type: "image/svg+xml;charset=utf-8" });
   const url = window.URL.createObjectURL(blob);
   const downloadLink = document.createElement("a");
-  downloadLink.download = `scatter-plot-RH-deltaF-${state.theme}-${state.lang}.svg`;
+  downloadLink.download = `academic-scatter-plot-${state.theme}-${state.lang}.svg`;
   downloadLink.href = url;
   document.body.appendChild(downloadLink);
   downloadLink.click();
@@ -1351,6 +1360,11 @@ function setLanguagePreset(newLang) {
   if (badgeNano) badgeNano.textContent = p.badgeNano;
   const badgeStarch = document.getElementById("badgeStarch");
   if (badgeStarch) badgeStarch.textContent = p.badgeStarch;
+
+  ['metricNanoTitle', 'metricNanoDesc', 'metricStarchTitle', 'metricStarchDesc', 'metricDiffTitle', 'metricDiffDesc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && p[id]) el.textContent = p[id];
+  });
 
   setupSeriesCheckboxes();
   renderDataTable();

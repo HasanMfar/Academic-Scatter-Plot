@@ -1,5 +1,8 @@
 *.xlsx
+!Clean_Hysteresis_Data.xlsx
 *.png
 *.zip
 chart_standalone.html
 node_modules/
+package.json
+package-lock.json
