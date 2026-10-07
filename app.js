@@ -1601,12 +1601,23 @@ function setupSeriesCheckboxes() {
     lbl.innerHTML = `
       <input type="checkbox" id="chk_${s.id}" ${s.visible ? "checked" : ""}>
       <span class="chk-box" style="border-color: ${state.theme === 'dark' ? s.colorDark : s.colorLight};"></span>
-      <span id="lbl_${s.id}">${state.lang === 'fa' ? s.nameFa : s.nameEn}</span>
     `;
     lbl.querySelector("input").addEventListener("change", (e) => {
       s.visible = e.target.checked;
       renderChart();
       renderLegend();
+    });
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.value = state.lang === 'fa' ? s.nameFa : s.nameEn;
+    nameInput.style.cssText = "background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 4px; padding: 2px 6px; font-family: inherit; font-size: 13px; width: 110px; margin-left: 5px;";
+    nameInput.addEventListener("input", (e) => {
+      s.nameFa = e.target.value;
+      s.nameEn = e.target.value;
+      renderChart();
+      renderLegend();
+      renderDataTable();
     });
 
     const colorPicker = document.createElement("input");
@@ -1626,6 +1637,7 @@ function setupSeriesCheckboxes() {
     });
 
     wrapper.appendChild(lbl);
+    wrapper.appendChild(nameInput);
     wrapper.appendChild(colorPicker);
     container.appendChild(wrapper);
   });
