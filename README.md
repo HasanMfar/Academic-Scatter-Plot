@@ -2,6 +2,8 @@
 
 [🇮🇷 برای مطالعه نسخه فارسی کلیک کنید](#-توضیحات-فارسی)
 
+**▶️ [نسخه آنلاین — بدون نیاز به دانلود](https://hasanmfar.github.io/Academic-Scatter-Plot/)** · Online demo, no install required
+
 <p align="center">
   <img src="App_Preview.png" alt="Academic Hysteresis Scatter Plot Interface" width="820">
 </p>
@@ -64,7 +66,7 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 
 ## 🛠️ How to Use
 
-1. Simply download this repository and open `index.html` in any modern web browser. (No server or installation needed!)
+1. Easiest: open the **[online version](https://hasanmfar.github.io/Academic-Scatter-Plot/)** — nothing to install. Or download this repository and open `index.html` in any modern web browser.
 2. In the right panel, generate and download an **Excel Template** based on your number of samples (or use `Clean_Hysteresis_Data.xlsx`).
 3. Fill the template with your data and upload it back.
 4. Customize your titles, markers, colors, and line widths.
@@ -77,6 +79,8 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 # 🇮🇷 توضیحات فارسی
 
 یک نرم‌افزار تحت وب زیبا، تعاملی و کاملاً آفلاین که برای دانشجویان، محققین و دانشگاهیان طراحی شده تا **نمودارهای پراکندگی (Scatter Plots) در سطح مقالات ISI** را بدون نیاز به هیچ‌گونه برنامه‌نویسی رسم کنند.
+
+**▶️ [نسخه آنلاین — بدون نیاز به دانلود](https://hasanmfar.github.io/Academic-Scatter-Plot/)**
 
 ## ✨ چرا این ابزار؟
 پژوهشگران معمولاً برای رسم یک نمودار ساده یا بررسی رفتار یک سنسور، مجبور به استفاده از نرم‌افزارهای سنگینی مثل OriginLab یا MATLAB می‌شوند. این ابزار یک **رابط کاربری ساده و با قابلیت کشیدن و رها کردن (Drag-and-Drop)** را درون مرورگر شما فراهم می‌کند تا تصاویر Ultra-HD مناسب چاپ در ژورنال‌های علمی را در چند ثانیه خروجی بگیرید.
@@ -125,7 +129,7 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 
 ## 🛠️ راهنمای استفاده
 
-۱. فایل‌های پروژه را دانلود کرده و فایل `index.html` را در مرورگر خود باز کنید (بدون نیاز به اینترنت و نصب!).
+۱. ساده‌ترین راه: **[نسخه آنلاین](https://hasanmfar.github.io/Academic-Scatter-Plot/)** را باز کنید — بدون نیاز به نصب. یا فایل‌های پروژه را دانلود کرده و فایل `index.html` را در مرورگر خود باز کنید (بدون نیاز به اینترنت و نصب!).
 ۲. از پنل سمت راست، تعداد نمونه‌های خود را مشخص کرده و **قالب خام اکسل** را دانلود کنید.
 ۳. قالب را با داده‌های خود پر کنید و مجدداً در برنامه آپلود نمایید.
 ۴. عناوین، رنگ‌ها، ضخامت خطوط و... را شخصی‌سازی کنید.
