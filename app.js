@@ -87,6 +87,103 @@ const state = {
   defaultCallouts: {
     inplotX: 160,
     inplotY: 280
+  },
+
+  // --- Layout: WHERE THE PLOT STARTS inside the canvas ---
+  layout: {
+    width: 960,
+    height: 560,
+    marginTop: 40,
+    marginRight: 60,
+    marginBottom: 75,
+    marginLeft: 90,
+    preset: "standard",
+    axisOrigin: "corner", // 'corner' (default) | 'zero' (axes cross at 0) | 'center'
+    reverseX: false,
+    reverseY: false
+  },
+
+  // --- Ticks & number labels ---
+  ticks: {
+    minor: 0,           // minor subdivisions per major interval (0 = off)
+    direction: "out",   // 'out' | 'in' | 'both'
+    length: 6,          // tick length in px
+    decimals: -1,       // -1 = auto (raw value), else fixed decimals
+    thousands: false,   // thousands separators
+    scientific: false,  // force 10^n notation for big/small numbers
+    xLabelRotate: 0,    // 0 | 45 | 90 (degrees, X labels)
+    labelEvery: 1,      // label every Nth major tick
+    xLog: false,
+    yLog: false
+  },
+
+  // --- Typography, background & grid ---
+  type: {
+    tickFont: 15,
+    axisTitleFont: 18,
+    legendFont: 11.5,
+    dataLabelFont: 10.5,
+    fontFamily: "auto",     // 'auto' | 'Arial' | 'Times' | 'Vazirmatn' | 'Courier' | 'Georgia'
+    plotBg: "",             // "" = theme default
+    transparentBg: false,
+    gridStyle: "dashed",    // 'dashed' | 'solid' | 'dotted'
+    gridOpacity: 1,
+    gridAxis: "both",       // 'both' | 'x' | 'y'
+    titlePlacement: "above" // 'above' (HTML bar) | 'inside' (inside SVG) | 'hidden'
+  },
+
+  // --- Curve & data shaping ---
+  data: {
+    smoothing: "straight",  // 'straight' | 'spline'
+    yTransform: "none",     // 'none' | 'baseline' | 'normalize' | 'mean'
+    sortByX: false,
+    showErrorBars: false
+  },
+
+  // --- Magnifier inset (academic zoom region) ---
+  zoom: {
+    enabled: false,
+    x0: null, x1: null, y0: null, y1: null, // data units (null = follow axis range)
+    boxW: 300, boxH: 190,
+    boxX: null, boxY: null,                 // null = default (top-right inside plot)
+    showRegionBox: true,
+    showTitles: false
+  }
+};
+
+// Journal presets: one click applies a full publication look
+const JOURNAL_PRESETS = {
+  nature: {
+    labelFa: "Nature", labelEn: "Nature",
+    frameStyle: "boxed", plotMode: "scatter-line",
+    layout: { width: 900, height: 560, marginTop: 40, marginRight: 70, marginBottom: 78, marginLeft: 92, axisOrigin: "corner" },
+    type: { fontFamily: "Arial", tickFont: 15, axisTitleFont: 18, legendFont: 12, dataLabelFont: 10.5, gridStyle: "dashed", gridOpacity: 0.7, titlePlacement: "above", transparentBg: false, plotBg: "" },
+    ticks: { direction: "in", length: 5, minor: 0, decimals: -1, xLabelRotate: 0, labelEvery: 1 },
+    markerSize: 9, lineWidth: 2.2
+  },
+  ieee: {
+    labelFa: "IEEE", labelEn: "IEEE",
+    frameStyle: "boxed", plotMode: "scatter-line",
+    layout: { width: 960, height: 540, marginTop: 36, marginRight: 60, marginBottom: 76, marginLeft: 88, axisOrigin: "corner" },
+    type: { fontFamily: "Arial", tickFont: 14, axisTitleFont: 17, legendFont: 11.5, dataLabelFont: 10, gridStyle: "solid", gridOpacity: 0.45, titlePlacement: "above", transparentBg: false, plotBg: "" },
+    ticks: { direction: "out", length: 6, minor: 1, decimals: -1, xLabelRotate: 0, labelEvery: 1 },
+    markerSize: 8, lineWidth: 2.4
+  },
+  elsevier: {
+    labelFa: "Elsevier", labelEn: "Elsevier",
+    frameStyle: "open", plotMode: "scatter-line",
+    layout: { width: 920, height: 580, marginTop: 44, marginRight: 55, marginBottom: 80, marginLeft: 95, axisOrigin: "corner" },
+    type: { fontFamily: "Times", tickFont: 15, axisTitleFont: 18, legendFont: 12, dataLabelFont: 10.5, gridStyle: "none", gridOpacity: 0.5, titlePlacement: "above", transparentBg: false, plotBg: "" },
+    ticks: { direction: "out", length: 6, minor: 0, decimals: -1, xLabelRotate: 0, labelEvery: 1 },
+    markerSize: 10, lineWidth: 2.6
+  },
+  acs: {
+    labelFa: "ACS", labelEn: "ACS",
+    frameStyle: "boxed", plotMode: "scatter-line",
+    layout: { width: 880, height: 560, marginTop: 40, marginRight: 64, marginBottom: 78, marginLeft: 90, axisOrigin: "zero" },
+    type: { fontFamily: "Arial", tickFont: 14, axisTitleFont: 17, legendFont: 11.5, dataLabelFont: 10, gridStyle: "dotted", gridOpacity: 0.55, titlePlacement: "above", transparentBg: false, plotBg: "" },
+    ticks: { direction: "in", length: 4, minor: 2, decimals: -1, xLabelRotate: 0, labelEvery: 1 },
+    markerSize: 8, lineWidth: 2.2
   }
 };
 
@@ -180,18 +277,246 @@ const chartBox = {
 };
 
 const plotArea = {
-  x: chartBox.marginLeft,
-  y: chartBox.marginTop,
-  width: chartBox.width - chartBox.marginLeft - chartBox.marginRight,
-  height: chartBox.height - chartBox.marginTop - chartBox.marginBottom
+  x: 90,
+  y: 40,
+  width: 810,
+  height: 445
 };
 
+// Recompute the plotting rectangle from state.layout — this is literally
+// "where the plot starts" (its left/top offset) and how big it is.
+function applyLayoutToGeometry() {
+  const L = state.layout;
+  chartBox.width = Math.max(360, Math.round(L.width) || 960);
+  chartBox.height = Math.max(260, Math.round(L.height) || 560);
+
+  const maxML = Math.max(30, chartBox.width - 120);
+  const maxMR = Math.max(20, chartBox.width - 120);
+  const maxMT = Math.max(20, chartBox.height - 100);
+  const maxMB = Math.max(30, chartBox.height - 100);
+
+  chartBox.marginLeft = Math.min(Math.max(0, L.marginLeft), maxML);
+  chartBox.marginRight = Math.min(Math.max(0, L.marginRight), maxMR);
+  chartBox.marginTop = Math.min(Math.max(0, L.marginTop), maxMT);
+  chartBox.marginBottom = Math.min(Math.max(0, L.marginBottom), maxMB);
+
+  plotArea.x = chartBox.marginLeft;
+  plotArea.y = chartBox.marginTop;
+  plotArea.width = Math.max(60, chartBox.width - chartBox.marginLeft - chartBox.marginRight);
+  plotArea.height = Math.max(60, chartBox.height - chartBox.marginTop - chartBox.marginBottom);
+
+  if (svg) svg.setAttribute("viewBox", `0 0 ${chartBox.width} ${chartBox.height}`);
+}
+
+// Effective axis range (guards log-scale inputs into positive territory)
+function axisRange(axis) {
+  const a = state.axis;
+  const log = axis === "x" ? state.ticks.xLog : state.ticks.yLog;
+  let min = axis === "x" ? a.xMin : a.yMin;
+  let max = axis === "x" ? a.xMax : a.yMax;
+  if (!(max > min)) max = min + 1;
+  if (log) {
+    const lo = min > 0 ? min : Math.max(1e-9, max / 1000);
+    const hi = max > lo ? max : lo * 10;
+    return { min: lo, max: hi, log: true };
+  }
+  return { min, max, log: false };
+}
+
+// Normalized position of a value along an axis (0..1), honoring log + reversal
+function xFrac(val) {
+  const r = axisRange("x");
+  let t;
+  if (r.log) {
+    const l0 = Math.log10(r.min), l1 = Math.log10(r.max);
+    t = (Math.log10(Math.max(val, r.min)) - l0) / (l1 - l0 || 1);
+  } else {
+    t = (val - r.min) / (r.max - r.min || 1);
+  }
+  if (state.layout.reverseX) t = 1 - t;
+  return t;
+}
+
+function yFrac(val) {
+  const r = axisRange("y");
+  let t;
+  if (r.log) {
+    const l0 = Math.log10(r.min), l1 = Math.log10(r.max);
+    t = (Math.log10(Math.max(val, r.min)) - l0) / (l1 - l0 || 1);
+  } else {
+    t = (val - r.min) / (r.max - r.min || 1);
+  }
+  if (state.layout.reverseY) t = 1 - t;
+  return t;
+}
+
 function mapX(val) {
-  return plotArea.x + ((val - state.axis.xMin) / (state.axis.xMax - state.axis.xMin)) * plotArea.width;
+  return plotArea.x + xFrac(val) * plotArea.width;
 }
 
 function mapY(val) {
-  return plotArea.y + ((state.axis.yMax - val) / (state.axis.yMax - state.axis.yMin)) * plotArea.height;
+  return plotArea.y + (1 - yFrac(val)) * plotArea.height;
+}
+
+// Inverse mapping (screen px -> data units), used by the magnifier rubber-band
+function unmapX(px) {
+  const r = axisRange("x");
+  let t = (px - plotArea.x) / (plotArea.width || 1);
+  if (state.layout.reverseX) t = 1 - t;
+  if (r.log) return Math.pow(10, Math.log10(r.min) + t * (Math.log10(r.max) - Math.log10(r.min)));
+  return r.min + t * (r.max - r.min);
+}
+
+function unmapY(py) {
+  const r = axisRange("y");
+  let t = 1 - (py - plotArea.y) / (plotArea.height || 1);
+  if (state.layout.reverseY) t = 1 - t;
+  if (r.log) return Math.pow(10, Math.log10(r.min) + t * (Math.log10(r.max) - Math.log10(r.min)));
+  return r.min + t * (r.max - r.min);
+}
+
+// Where the two labelled axes are drawn (corner / through zero / through center)
+function computeAxisGeometry() {
+  const mode = state.layout.axisOrigin;
+  const clampX = v => Math.min(Math.max(v, plotArea.x), plotArea.x + plotArea.width);
+  const clampY = v => Math.min(Math.max(v, plotArea.y), plotArea.y + plotArea.height);
+  let ax = plotArea.x;
+  let ay = plotArea.y + plotArea.height;
+
+  if (mode === "zero") {
+    ax = clampX(mapX(0));
+    ay = clampY(mapY(0));
+  } else if (mode === "center") {
+    const rx = axisRange("x");
+    const ry = axisRange("y");
+    if (state.ticks.xLog) ax = clampX(mapX(Math.sqrt(rx.min * rx.max)));
+    else ax = clampX(mapX((rx.min + rx.max) / 2));
+    if (state.ticks.yLog) ay = clampY(mapY(Math.sqrt(ry.min * ry.max)));
+    else ay = clampY(mapY((ry.min + ry.max) / 2));
+  }
+
+  return { x: ax, y: ay, mode };
+}
+
+// --- Display transforms (baseline zero / normalize / mean-center) ---
+function yTransformStats(s) {
+  const vals = (s && s.yValues ? s.yValues : []).filter(v => typeof v === "number" && isFinite(v));
+  if (!vals.length) return { offset: 0, scale: 1 };
+  const mode = state.data.yTransform;
+  if (mode === "baseline") return { offset: vals[0], scale: 1 };
+  if (mode === "mean") {
+    return { offset: vals.reduce((a, b) => a + b, 0) / vals.length, scale: 1 };
+  }
+  if (mode === "normalize") {
+    const mn = Math.min(...vals);
+    const mx = Math.max(...vals);
+    const span = Math.abs(mx - mn) || 1;
+    return { offset: mn, scale: 100 / span };
+  }
+  return { offset: 0, scale: 1 };
+}
+
+function displayY(s, idx) {
+  const t = yTransformStats(s);
+  const raw = s && s.yValues ? s.yValues[idx] : 0;
+  const v = typeof raw === "number" && isFinite(raw) ? raw : 0;
+  return (v - t.offset) * t.scale;
+}
+
+// --- Tick generation & number formatting ---
+function roundTick(v) {
+  return Math.round(v * 1e6) / 1e6;
+}
+
+function buildTicks(axis) {
+  const r = axisRange(axis);
+  const step = Math.max(0.0001, axis === "x" ? state.axis.xStep : state.axis.yStep);
+  const ticks = [];
+  const minors = [];
+
+  if (r.log) {
+    const loE = Math.floor(Math.log10(r.min));
+    const hiE = Math.ceil(Math.log10(r.max));
+    for (let e = loE; e <= hiE && ticks.length < 300; e++) {
+      const p = Math.pow(10, e);
+      if (p >= r.min * (1 - 1e-9) && p <= r.max * (1 + 1e-9)) ticks.push(p);
+      if (state.ticks.minor > 0) {
+        for (let m = 2; m <= 9; m++) {
+          const q = p * m;
+          if (q > r.min && q < r.max) minors.push(q);
+        }
+      }
+    }
+    if (ticks.length < 2) {
+      // Small log span: add 2/5 style steps so the axis is not empty
+      for (let e = loE; e <= hiE && ticks.length < 300; e++) {
+        [2, 3, 5, 7].forEach(m => {
+          const q = Math.pow(10, e) * m;
+          if (q > r.min && q < r.max && ticks.indexOf(q) === -1) ticks.push(q);
+        });
+      }
+      ticks.sort((a, b) => a - b);
+    }
+  } else {
+    for (let t = r.min, count = 0; t <= r.max + 1e-9 && count < 300; t += step, count++) {
+      ticks.push(roundTick(t));
+    }
+    if (state.ticks.minor > 0) {
+      const mstep = step / (state.ticks.minor + 1);
+      for (let t = r.min + mstep, count = 0; t < r.max - 1e-9 && count < 2000; t += mstep, count++) {
+        minors.push(roundTick(t));
+      }
+    }
+  }
+
+  return { ticks, minors, range: r };
+}
+
+const SUPER_MAP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+function supStr(n) {
+  return String(n).split("").map(c => SUPER_MAP[c] || c).join("");
+}
+
+function addThousands(str) {
+  const neg = str.startsWith("-");
+  let body = neg ? str.slice(1) : str;
+  const dot = body.indexOf(".");
+  let intPart = dot === -1 ? body : body.slice(0, dot);
+  const frac = dot === -1 ? "" : body.slice(dot);
+  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return (neg ? "-" : "") + intPart + frac;
+}
+
+function sciStr(v) {
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  let mant = v / Math.pow(10, e);
+  mant = Math.round(mant * 100) / 100;
+  if (Math.abs(mant) >= 10) mant = mant / 10;
+  const mstr = String(Math.round(mant * 100) / 100);
+  return `${mstr}×10${supStr(e)}`;
+}
+
+function fmtTick(v) {
+  const T = state.ticks;
+  if (typeof v !== "number") return String(v);
+  if (T.decimals >= 0) {
+    let s = v.toFixed(T.decimals);
+    if (s === `-0${T.decimals > 0 ? "." + "0".repeat(T.decimals) : ""}`) s = s.slice(1);
+    return T.thousands ? addThousands(s) : s;
+  }
+  if (T.scientific && v !== 0 && (Math.abs(v) >= 1e4 || Math.abs(v) < 1e-3)) {
+    return sciStr(v);
+  }
+  let s = `${v}`;
+  return T.thousands ? addThousands(s) : s;
+}
+
+// Tick drawing geometry: gives the start/end offsets of a tick mark
+function tickLine(axisPx, side, len) {
+  const T = state.ticks;
+  if (T.direction === "in") return { from: axisPx, to: axisPx - len * side };
+  if (T.direction === "both") return { from: axisPx + len * side, to: axisPx - len * side };
+  return { from: axisPx, to: axisPx + len * side };
 }
 
 function getMarkerSvg(type, cx, cy, size, fill, stroke) {
@@ -209,6 +534,10 @@ function getMarkerSvg(type, cx, cy, size, fill, stroke) {
     case "triangle":
       shapePath = `M ${cx} ${cy - r * 1.2} L ${cx + r * 1.15} ${cy + r * 0.9} L ${cx - r * 1.15} ${cy + r * 0.9} Z`;
       return `<path d="${shapePath}" fill="${fill}" stroke="${stroke || fill}" stroke-width="2" class="chart-point" />`;
+    case "cross":
+      return `<path d="M ${cx - r} ${cy - r} L ${cx + r} ${cy + r} M ${cx + r} ${cy - r} L ${cx - r} ${cy + r}" fill="none" stroke="${fill}" stroke-width="${Math.max(2, r * 0.6)}" stroke-linecap="round" class="chart-point" />`;
+    case "plus":
+      return `<path d="M ${cx - r} ${cy} L ${cx + r} ${cy} M ${cx} ${cy - r} L ${cx} ${cy + r}" fill="none" stroke="${fill}" stroke-width="${Math.max(2, r * 0.6)}" stroke-linecap="round" class="chart-point" />`;
     default:
       return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" />`;
   }
@@ -250,7 +579,7 @@ function getSeriesCallout(s, idx) {
     let ptIdx = 0;
     dataset.xValues.forEach((x, i) => { if (x > dataset.xValues[ptIdx]) ptIdx = i; });
     const tx = Math.round(mapX(dataset.xValues[ptIdx] ?? 80));
-    const ty = Math.round(mapY(s.yValues && s.yValues[ptIdx] != null ? s.yValues[ptIdx] : 0));
+    const ty = Math.round(mapY(displayY(s, ptIdx)));
     const clampX = v => Math.max(plotArea.x + 10, Math.min(v, plotArea.x + plotArea.width - 180));
     const clampY = v => Math.max(plotArea.y + 10, Math.min(v, plotArea.y + plotArea.height - 40));
     state.callouts[s.id] = {
@@ -264,11 +593,267 @@ function getSeriesCallout(s, idx) {
 }
 
 // --- 6. Render SVG Chart ---
+// Font families offered in the Type & Color panel
+const FAMILY_MAP = {
+  Arial: "Arial, Helvetica, sans-serif",
+  Times: "'Times New Roman', Times, serif",
+  Vazirmatn: "Vazirmatn, Tahoma, Arial, sans-serif",
+  Courier: "'Courier New', Courier, monospace",
+  Georgia: "Georgia, 'Times New Roman', serif"
+};
+
+function escapeXml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function polylineD(pts) {
+  return pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+}
+
+// Catmull-Rom -> cubic bezier, for the optional "spline" smoothing mode
+function buildSmoothPath(pts) {
+  if (pts.length < 3) return polylineD(pts);
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
+function pathFromPoints(pts) {
+  return state.data.smoothing === "spline" ? buildSmoothPath(pts) : polylineD(pts);
+}
+
+// Nice ticks for an arbitrary (possibly log) range — used by the magnifier inset
+function niceTickList(min, max, log, target = 4) {
+  const out = [];
+  if (log) {
+    const loE = Math.floor(Math.log10(Math.max(min, 1e-12)));
+    const hiE = Math.ceil(Math.log10(Math.max(max, min * 10)));
+    for (let e = loE; e <= hiE && out.length < 60; e++) {
+      const p = Math.pow(10, e);
+      if (p >= min * (1 - 1e-9) && p <= max * (1 + 1e-9)) out.push(p);
+    }
+    return out.length ? out : [min, max];
+  }
+  const step = getNiceStep(Math.max(1e-9, max - min), target);
+  const start = Math.ceil(min / step - 1e-9) * step;
+  for (let t = start, c = 0; t <= max + 1e-9 && c < 60; t += step, c++) out.push(roundTick(t));
+  return out.length ? out : [min, max];
+}
+
+// --- Magnifier (zoom inset) geometry ---
+function getZoomRegion() {
+  const rx = axisRange("x");
+  const ry = axisRange("y");
+  const z = state.zoom;
+  const num = (v, fb) => {
+    if (v === null || v === undefined || v === "") return fb;
+    const n = Number(v);
+    return isFinite(n) ? n : fb;
+  };
+  let x0 = num(z.x0, rx.min);
+  let x1 = num(z.x1, rx.max);
+  let y0 = num(z.y0, ry.min);
+  let y1 = num(z.y1, ry.max);
+  const reg = {
+    x0: Math.min(x0, x1), x1: Math.max(x0, x1),
+    y0: Math.min(y0, y1), y1: Math.max(y0, y1),
+    xLog: rx.log, yLog: ry.log
+  };
+  if (!(reg.x1 > reg.x0)) reg.x1 = reg.x0 + 1;
+  if (!(reg.y1 > reg.y0)) reg.y1 = reg.y0 + 1;
+  return reg;
+}
+
+function getZoomBox() {
+  const z = state.zoom;
+  const w = Math.max(120, Math.min(z.boxW, plotArea.width - 8));
+  const h = Math.max(80, Math.min(z.boxH, plotArea.height - 8));
+  let x = z.boxX;
+  let y = z.boxY;
+  if (x == null) x = plotArea.x + plotArea.width - w - 16;
+  if (y == null) y = plotArea.y + 16;
+  x = Math.min(Math.max(x, plotArea.x + 4), plotArea.x + plotArea.width - w - 4);
+  y = Math.min(Math.max(y, plotArea.y + 4), plotArea.y + plotArea.height - h - 4);
+  return { x, y, w, h };
+}
+
+// Region rectangle + connector lines on the main plot
+function renderZoomOverlay() {
+  const reg = getZoomRegion();
+  const box = getZoomBox();
+  const accent = state.theme === "dark" ? "#38bdf8" : "#0284c7";
+  const rx0 = mapX(reg.x0), rx1 = mapX(reg.x1);
+  const ry0 = mapY(reg.y0), ry1 = mapY(reg.y1);
+  const x0 = Math.min(rx0, rx1), x1 = Math.max(rx0, rx1);
+  const y0 = Math.min(ry0, ry1), y1 = Math.max(ry0, ry1);
+
+  let out = "";
+  if (state.zoom.showRegionBox) {
+    out += `<rect x="${x0}" y="${y0}" width="${Math.max(1, x1 - x0)}" height="${Math.max(1, y1 - y0)}"
+            fill="none" stroke="${accent}" stroke-width="1.4" stroke-dasharray="6,4" opacity="0.9" pointer-events="none" />`;
+    out += `<line x1="${x0}" y1="${y0}" x2="${box.x}" y2="${box.y}" stroke="${accent}" stroke-width="1" stroke-dasharray="3,3" opacity="0.5" pointer-events="none" />`;
+    out += `<line x1="${x1}" y1="${y1}" x2="${box.x + box.w}" y2="${box.y + box.h}" stroke="${accent}" stroke-width="1" stroke-dasharray="3,3" opacity="0.5" pointer-events="none" />`;
+  }
+  return out;
+}
+
+// The inset figure itself: frame, mini axes, ticks, series, magnification badge
+function renderZoomInset(colors, tickFont, uiFont) {
+  const reg = getZoomRegion();
+  const box = getZoomBox();
+  const accent = state.theme === "dark" ? "#38bdf8" : "#0284c7";
+  const isDark = state.theme === "dark";
+  const showT = state.zoom.showTitles;
+  const padL = showT ? 46 : 34;
+  const padB = showT ? 30 : 18;
+  const padT = 6, padR = 6;
+  const ix = box.x + padL;
+  const iy = box.y + padT;
+  const iw = Math.max(20, box.w - padL - padR);
+  const ih = Math.max(20, box.h - padT - padB);
+
+  const zfrac = (v, lo, hi, log) => {
+    let t;
+    if (log) {
+      const l0 = Math.log10(lo), l1 = Math.log10(hi);
+      t = (Math.log10(Math.max(v, lo)) - l0) / (l1 - l0 || 1);
+    } else {
+      t = (v - lo) / (hi - lo || 1);
+    }
+    return t;
+  };
+  const zx = v => {
+    let t = zfrac(v, reg.x0, reg.x1, reg.xLog);
+    if (state.layout.reverseX) t = 1 - t;
+    return ix + t * iw;
+  };
+  const zy = v => {
+    let t = zfrac(v, reg.y0, reg.y1, reg.yLog);
+    if (state.layout.reverseY) t = 1 - t;
+    return iy + (1 - t) * ih;
+  };
+
+  const smallFont = Math.max(7, state.type.tickFont - 5);
+  const xTicks = niceTickList(reg.x0, reg.x1, reg.xLog, 3);
+  const yTicks = niceTickList(reg.y0, reg.y1, reg.yLog, 3);
+
+  let out = `
+    <defs>
+      <clipPath id="zoomClip"><rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" /></clipPath>
+    </defs>
+    <g class="zoom-inset" pointer-events="none">
+      <rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="4"
+            fill="${colors.bg}" stroke="${accent}" stroke-width="1.6" />
+      <g clip-path="url(#zoomClip)">
+  `;
+
+  // Light grid inside the inset
+  yTicks.forEach(t => {
+    out += `<line x1="${ix}" y1="${zy(t)}" x2="${ix + iw}" y2="${zy(t)}" stroke="${colors.grid}" stroke-width="1" opacity="0.7" />`;
+  });
+  xTicks.forEach(t => {
+    out += `<line x1="${zx(t)}" y1="${iy}" x2="${zx(t)}" y2="${iy + ih}" stroke="${colors.grid}" stroke-width="1" opacity="0.7" />`;
+  });
+
+  // Series inside the inset
+  dataset.series.forEach(s => {
+    if (!s.visible) return;
+    const col = isDark ? s.colorDark : s.colorLight;
+    const op = typeof s.opacity === "number" ? Math.max(0.05, Math.min(1, s.opacity)) : 1;
+    const xVals = dataset.xValues;
+    const n = Math.min(xVals.length, (s.yValues || []).length);
+    if (!n) return;
+    let order = Array.from({ length: n }, (_, i) => i);
+    if (state.data.sortByX) order.sort((a, b) => xVals[a] - xVals[b]);
+    const pts = order.map(i => ({ x: zx(xVals[i]), y: zy(displayY(s, i)) }));
+
+    if (state.plotMode === "scatter-line" && pts.length > 1) {
+      out += `<path d="${pathFromPoints(pts)}" fill="none" stroke="${col}" stroke-width="${Math.max(1.2, state.lineWidth * 0.8)}"
+                stroke-linejoin="round" stroke-linecap="round" ${s.strokeDash ? `stroke-dasharray="${s.strokeDash}"` : ""} opacity="${0.92 * op}" />`;
+    }
+    const mk = Math.max(3.5, state.markerSize * 0.7);
+    for (let i = 0; i < n; i++) {
+      out += getMarkerSvg(s.marker, zx(xVals[i]), zy(displayY(s, i)), mk, col, col);
+    }
+  });
+
+  out += `
+      </g>
+
+      <!-- Inset mini-axes -->
+      <line x1="${ix}" y1="${iy}" x2="${ix}" y2="${iy + ih}" stroke="${colors.axis}" stroke-width="1.4" />
+      <line x1="${ix}" y1="${iy + ih}" x2="${ix + iw}" y2="${iy + ih}" stroke="${colors.axis}" stroke-width="1.4" />
+  `;
+
+  xTicks.forEach(t => {
+    const px = zx(t);
+    out += `<line x1="${px}" y1="${iy + ih}" x2="${px}" y2="${iy + ih + 4}" stroke="${colors.axis}" stroke-width="1.2" />`;
+    out += `<text x="${px}" y="${iy + ih + smallFont + 5}" fill="${colors.title}" font-size="${smallFont}"
+              font-family="${tickFont}" text-anchor="middle" direction="ltr">${fmtTick(t)}</text>`;
+  });
+  yTicks.forEach(t => {
+    const py = zy(t);
+    out += `<line x1="${ix - 4}" y1="${py}" x2="${ix}" y2="${py}" stroke="${colors.axis}" stroke-width="1.2" />`;
+    out += `<text x="${ix - 6}" y="${py + 3.5}" fill="${colors.title}" font-size="${smallFont}"
+              font-family="${tickFont}" text-anchor="end" direction="ltr">${fmtTick(t)}</text>`;
+  });
+
+  if (showT) {
+    out += `<text x="${ix + iw / 2}" y="${box.y + box.h - 5}" fill="${colors.title}" font-size="${Math.max(9, smallFont)}"
+              font-weight="700" text-anchor="middle" font-family="${uiFont}">${escapeXml(state.xTitle)}</text>`;
+    out += `<text x="${-(iy + ih / 2)}" y="${box.x + 11}" fill="${colors.title}" font-size="${Math.max(9, smallFont)}"
+              font-weight="700" text-anchor="middle" transform="rotate(-90)" font-family="${uiFont}">${escapeXml(state.yTitle)}</text>`;
+  }
+
+  // Magnification factor badge
+  const mainPx = Math.abs(mapX(reg.x1) - mapX(reg.x0)) || 1;
+  const mag = iw / mainPx;
+  if (mag > 1.05) {
+    const btxt = `×${mag.toFixed(mag < 10 ? 1 : 0)}`;
+    const bw = btxt.length * 8 + 12;
+    out += `
+      <rect x="${box.x + box.w - bw - 4}" y="${box.y + 3}" width="${bw}" height="15" rx="3"
+            fill="${accent}" opacity="0.92" />
+      <text x="${box.x + box.w - bw / 2 - 4}" y="${box.y + 14}" fill="#ffffff" font-size="10" font-weight="700"
+            text-anchor="middle" direction="ltr" font-family="${tickFont}">${btxt}</text>
+    `;
+  }
+
+  out += `</g>`;
+  return out;
+}
+
+
 function renderChart() {
+  applyLayoutToGeometry();
+
   const isDark = state.theme === "dark";
   const FONT = state.lang === "fa" ? "Tahoma, Vazirmatn, Arial, sans-serif" : "Arial, Helvetica, sans-serif";
+  const USER_FONT = state.type.fontFamily !== "auto" ? (FAMILY_MAP[state.type.fontFamily] || FONT) : FONT;
+  const TICK_FONT = state.type.fontFamily !== "auto"
+    ? (FAMILY_MAP[state.type.fontFamily] || "Arial, Helvetica, sans-serif")
+    : "Arial, Helvetica, sans-serif";
+
+  const baseBg = isDark ? "#0f172a" : "#ffffff";
+  const opaqueBg = state.type.plotBg || baseBg;
   const colors = {
-    bg: isDark ? "#0f172a" : "#ffffff",
+    bg: opaqueBg,
+    plotBg: state.type.transparentBg ? "none" : opaqueBg,
     grid: isDark ? "rgba(255, 255, 255, 0.08)" : "#e2e8f0",
     axis: isDark ? "#94a3b8" : "#334155",
     axisZero: isDark ? "rgba(255, 255, 255, 0.3)" : "#94a3b8",
@@ -278,27 +863,25 @@ function renderChart() {
     calloutBorder: isDark ? "rgba(148, 163, 184, 0.35)" : "#94a3b8"
   };
 
-  const xStep = Math.max(0.0001, state.axis.xStep || 10);
-  const yStep = Math.max(0.0001, state.axis.yStep || 50);
-  const xMin = state.axis.xMin;
-  const xMax = state.axis.xMax > xMin ? state.axis.xMax : xMin + 1;
-  const yMin = state.axis.yMin;
-  const yMax = state.axis.yMax > yMin ? state.axis.yMax : yMin + 1;
-
-  const xTicks = [];
-  for (let t = xMin, count = 0; t <= xMax + 1e-9 && count < 200; t += xStep, count++) {
-    xTicks.push(Math.round(t * 1e6) / 1e6);
-  }
-  const yTicks = [];
-  for (let t = yMin, count = 0; t <= yMax + 1e-9 && count < 200; t += yStep, count++) {
-    yTicks.push(Math.round(t * 1e6) / 1e6);
-  }
+  const geo = computeAxisGeometry();
+  const xT = buildTicks("x");
+  const yT = buildTicks("y");
+  const xTicks = xT.ticks;
+  const yTicks = yT.ticks;
+  const xMinors = xT.minors;
+  const yMinors = yT.minors;
+  const GRID_DASH = state.type.gridStyle === "solid" ? "" : (state.type.gridStyle === "dotted" ? "1,3" : "3,3");
+  const gridOp = Math.max(0.02, Math.min(1, state.type.gridOpacity));
+  const showXGrid = state.type.gridAxis === "both" || state.type.gridAxis === "x";
+  const showYGrid = state.type.gridAxis === "both" || state.type.gridAxis === "y";
+  const TICK_LEN = Math.max(2, state.ticks.length);
 
   let svgContent = `
     <defs>
       <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="130%">
         <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.35" />
       </filter>
+      <clipPath id="plotClip"><rect x="${plotArea.x}" y="${plotArea.y}" width="${plotArea.width}" height="${plotArea.height}" /></clipPath>
       ${dataset.series.map(s => {
         const col = isDark ? s.colorDark : s.colorLight;
         return `
@@ -311,29 +894,35 @@ function renderChart() {
 
     <!-- Plot Area Background -->
     <rect x="${plotArea.x}" y="${plotArea.y}" width="${plotArea.width}" height="${plotArea.height}" 
-          fill="${colors.bg}" rx="4" />
+          fill="${colors.plotBg}" rx="4" />
   `;
 
   // Grid Lines
   if (state.showGrid) {
-    yTicks.forEach(tick => {
-      const yPos = mapY(tick);
-      const isZero = tick === 0;
-      svgContent += `
-        <line x1="${plotArea.x}" y1="${yPos}" x2="${plotArea.x + plotArea.width}" y2="${yPos}"
-              stroke="${isZero ? colors.axisZero : colors.grid}"
-              stroke-width="${isZero ? 1.5 : 1}"
-              ${isZero ? '' : 'stroke-dasharray="3,3"'} />
-      `;
-    });
+    if (showYGrid) {
+      yTicks.forEach(tick => {
+        const yPos = mapY(tick);
+        const isZero = tick === 0;
+        svgContent += `
+          <line x1="${plotArea.x}" y1="${yPos}" x2="${plotArea.x + plotArea.width}" y2="${yPos}"
+                stroke="${isZero ? colors.axisZero : colors.grid}"
+                stroke-width="${isZero ? 1.5 : 1}"
+                stroke-opacity="${isZero ? 1 : gridOp}"
+                ${GRID_DASH ? `stroke-dasharray="${GRID_DASH}"` : ''} />
+        `;
+      });
+    }
 
-    xTicks.forEach(tick => {
-      const xPos = mapX(tick);
-      svgContent += `
-        <line x1="${xPos}" y1="${plotArea.y}" x2="${xPos}" y2="${plotArea.y + plotArea.height}"
-              stroke="${colors.grid}" stroke-width="1" stroke-dasharray="3,3" />
-      `;
-    });
+    if (showXGrid) {
+      xTicks.forEach(tick => {
+        const xPos = mapX(tick);
+        svgContent += `
+          <line x1="${xPos}" y1="${plotArea.y}" x2="${xPos}" y2="${plotArea.y + plotArea.height}"
+                stroke="${colors.grid}" stroke-width="1" stroke-opacity="${gridOp}"
+                ${GRID_DASH ? `stroke-dasharray="${GRID_DASH}"` : ''} />
+        `;
+      });
+    }
   }
 
   // Shaded Replicate Error Bands
@@ -345,12 +934,12 @@ function renderChart() {
         let bandD = "";
         dataset.xValues.forEach((x, i) => {
           const px = mapX(x);
-          const py = mapY(sA.yValues[i]);
+          const py = mapY(displayY(sA, i));
           bandD += i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
         });
         for (let i = dataset.xValues.length - 1; i >= 0; i--) {
           const px = mapX(dataset.xValues[i]);
-          const py = mapY(sB.yValues[i]);
+          const py = mapY(displayY(sB, i));
           bandD += ` L ${px} ${py}`;
         }
         bandD += " Z";
@@ -361,32 +950,27 @@ function renderChart() {
   }
 
   // Axes Framing
-  // Left Y-Axis
+  // Labelled Y-Axis (vertical) — sits at the corner, through zero or through center
   svgContent += `
-    <line x1="${plotArea.x}" y1="${plotArea.y}" x2="${plotArea.x}" y2="${plotArea.y + plotArea.height}"
+    <line x1="${geo.x}" y1="${plotArea.y}" x2="${geo.x}" y2="${plotArea.y + plotArea.height}"
           stroke="${colors.axis}" stroke-width="1.8" />
   `;
 
-  // Bottom X-Axis
+  // Labelled X-Axis (horizontal)
   svgContent += `
-    <line x1="${plotArea.x}" y1="${plotArea.y + plotArea.height}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y + plotArea.height}"
+    <line x1="${plotArea.x}" y1="${geo.y}" x2="${plotArea.x + plotArea.width}" y2="${geo.y}"
           stroke="${colors.axis}" stroke-width="1.8" />
   `;
 
   // Boxed Journal Frame: Top and Right Spines with Inward Ticks (Classic Nature/ACS ISI style)
   if (state.frameStyle === "boxed") {
-    // Top spine
     svgContent += `
       <line x1="${plotArea.x}" y1="${plotArea.y}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y}"
             stroke="${colors.axis}" stroke-width="1.5" />
-    `;
-    // Right spine
-    svgContent += `
       <line x1="${plotArea.x + plotArea.width}" y1="${plotArea.y}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y + plotArea.height}"
             stroke="${colors.axis}" stroke-width="1.5" />
     `;
 
-    // Inward ticks on Top and Right
     xTicks.forEach(tick => {
       const xPos = mapX(tick);
       svgContent += `
@@ -403,57 +987,117 @@ function renderChart() {
     });
   }
 
+  // Minor ticks (both axes)
+  if (state.ticks.minor > 0) {
+    xMinors.forEach(tick => {
+      const xPos = mapX(tick);
+      const t = tickLine(geo.y, 1, TICK_LEN * 0.55);
+      svgContent += `<line x1="${xPos}" y1="${t.from}" x2="${xPos}" y2="${t.to}" stroke="${colors.axis}" stroke-width="1" opacity="0.7" />`;
+    });
+    yMinors.forEach(tick => {
+      const yPos = mapY(tick);
+      const side = geo.x > plotArea.x + plotArea.width * 0.6 ? 1 : -1;
+      const t = tickLine(geo.x, side, TICK_LEN * 0.55);
+      svgContent += `<line x1="${t.from}" y1="${yPos}" x2="${t.to}" y2="${yPos}" stroke="${colors.axis}" stroke-width="1" opacity="0.7" />`;
+    });
+  }
+
   // Y Ticks & Labels
-  yTicks.forEach(tick => {
+  const yLabelRight = geo.x > plotArea.x + plotArea.width * 0.6;
+  const yLabelSide = yLabelRight ? 1 : -1;
+  yTicks.forEach((tick, i) => {
     const yPos = mapY(tick);
-    const tickStr = `${tick}`;
+    const tl = tickLine(geo.x, yLabelSide, TICK_LEN);
+    const anchor = yLabelRight ? "start" : "end";
+    const lblX = geo.x + (yLabelRight ? 12 : -12);
     svgContent += `
-      <line x1="${plotArea.x - 6}" y1="${yPos}" x2="${plotArea.x}" y2="${yPos}"
+      <line x1="${tl.from}" y1="${yPos}" x2="${tl.to}" y2="${yPos}"
             stroke="${colors.axis}" stroke-width="1.5" />
-      <text x="${plotArea.x - 12}" y="${yPos + 5}"
-            fill="${colors.title}" font-size="15" font-family="Arial, Helvetica, sans-serif"
-            text-anchor="end" direction="ltr">${tickStr}</text>
+      <text x="${lblX}" y="${yPos + 5}"
+            fill="${colors.title}" font-size="${state.type.tickFont}" font-family="${TICK_FONT}"
+            text-anchor="${anchor}" direction="ltr">${fmtTick(tick)}</text>
     `;
   });
 
-  // X Ticks & Labels
-  xTicks.forEach(tick => {
+  // X Ticks & Labels (rotation + label-skipping supported)
+  const xLabelY = geo.y + state.type.tickFont + 10;
+  const rot = state.ticks.xLabelRotate;
+  xTicks.forEach((tick, i) => {
     const xPos = mapX(tick);
-    svgContent += `
-      <line x1="${xPos}" y1="${plotArea.y + plotArea.height}" x2="${xPos}" y2="${plotArea.y + plotArea.height + 6}"
-            stroke="${colors.axis}" stroke-width="1.5" />
-      <text x="${xPos}" y="${plotArea.y + plotArea.height + 25}"
-            fill="${colors.title}" font-size="15" font-family="Arial, Helvetica, sans-serif"
-            text-anchor="middle" direction="ltr">${tick}</text>
-    `;
+    const tl = tickLine(geo.y, 1, TICK_LEN);
+    svgContent += `<line x1="${xPos}" y1="${tl.from}" x2="${xPos}" y2="${tl.to}" stroke="${colors.axis}" stroke-width="1.5" />`;
+
+    if (state.ticks.labelEvery > 1 && (i % state.ticks.labelEvery) !== 0) return;
+
+    if (rot) {
+      const anchor = rot === 90 ? "start" : "start";
+      const ly = rot === 90 ? geo.y + 8 : xLabelY;
+      svgContent += `
+        <text x="${xPos}" y="${ly}" fill="${colors.title}" font-size="${state.type.tickFont}"
+              font-family="${TICK_FONT}" text-anchor="${anchor}" direction="ltr"
+              transform="rotate(${rot} ${xPos} ${ly})">${fmtTick(tick)}</text>
+      `;
+    } else {
+      svgContent += `
+        <text x="${xPos}" y="${xLabelY}"
+              fill="${colors.title}" font-size="${state.type.tickFont}" font-family="${TICK_FONT}"
+              text-anchor="middle" direction="ltr">${fmtTick(tick)}</text>
+      `;
+    }
   });
 
   // Axis Titles
+  const axisTitleY = chartBox.height - Math.max(8, Math.round(chartBox.marginBottom * 0.21));
+  const yAxisTitleX = Math.max(12, Math.round(chartBox.marginLeft * 0.34));
   svgContent += `
-    <text x="${plotArea.x + plotArea.width / 2}" y="${chartBox.height - 16}"
-          fill="${colors.title}" font-size="18" font-weight="700" text-anchor="middle"
-          font-family="${FONT}">${state.xTitle}</text>
+    <text x="${plotArea.x + plotArea.width / 2}" y="${axisTitleY}"
+          fill="${colors.title}" font-size="${state.type.axisTitleFont}" font-weight="700" text-anchor="middle"
+          font-family="${USER_FONT}">${escapeXml(state.xTitle)}</text>
 
-    <text x="${- (plotArea.y + plotArea.height / 2)}" y="${30}"
-          fill="${colors.title}" font-size="18" font-weight="700" text-anchor="middle"
+    <text x="${- (plotArea.y + plotArea.height / 2)}" y="${yAxisTitleX}"
+          fill="${colors.title}" font-size="${state.type.axisTitleFont}" font-weight="700" text-anchor="middle"
           transform="rotate(-90)"
-          font-family="${FONT}">${state.yTitle}</text>
+          font-family="${USER_FONT}">${escapeXml(state.yTitle)}</text>
   `;
+
+  // Chart title drawn INSIDE the figure (used for exports / journal layouts)
+  const titleBar = document.querySelector ? document.querySelector(".chart-title-bar") : null;
+  if (titleBar) titleBar.style.display = state.type.titlePlacement === "above" ? "" : "none";
+  if (state.type.titlePlacement === "inside") {
+    const isFaT = state.lang === "fa";
+    const anchorT = isFaT ? "end" : "start";
+    const tx = isFaT ? plotArea.x + plotArea.width - 14 : plotArea.x + 14;
+    svgContent += `
+      <text x="${tx}" y="${plotArea.y + 26}" fill="${colors.title}" font-size="${state.type.axisTitleFont + 3}"
+            font-weight="800" text-anchor="${anchorT}" direction="${isFaT ? 'rtl' : 'ltr'}" font-family="${USER_FONT}">${escapeXml(state.chartTitle)}</text>
+    `;
+    if (state.chartSubtitle) {
+      svgContent += `
+        <text x="${tx}" y="${plotArea.y + 26 + state.type.axisTitleFont + 6}" fill="${colors.text}" font-size="${Math.max(11, state.type.axisTitleFont - 4)}"
+              text-anchor="${anchorT}" direction="${isFaT ? 'rtl' : 'ltr'}" font-family="${USER_FONT}">${escapeXml(state.chartSubtitle)}</text>
+      `;
+    }
+  }
 
   // Render Series
   dataset.series.forEach(s => {
     if (!s.visible) return;
 
     const seriesColor = isDark ? s.colorDark : s.colorLight;
+    const seriesOpacity = typeof s.opacity === "number" ? Math.max(0.05, Math.min(1, s.opacity)) : 1;
     const xVals = dataset.xValues;
     const yVals = s.yValues;
+    const dy = i => displayY(s, i); // Y after baseline/normalize/mean transform
 
     if (state.plotMode === "scatter-line") {
-      let pathD = "";
-      let pathDBack = "";
-      
+      // Point order (optional: sort by X before connecting)
+      let order = xVals.map((_, i) => i);
+      if (state.data.sortByX) order = order.slice().sort((a, b) => xVals[a] - xVals[b]);
+
+      const ptsFor = idxList => idxList.map(i => ({ x: mapX(xVals[i]), y: mapY(dy(i)) }));
+
       let maxIdx = xVals.length - 1;
-      if (state.showHysteresis) {
+      if (state.showHysteresis && !state.data.sortByX) {
          let maxX = -Infinity;
          for (let i = 0; i < xVals.length; i++) {
             if (xVals[i] > maxX) {
@@ -463,25 +1107,34 @@ function renderChart() {
          }
       }
 
-      xVals.forEach((xVal, idx) => {
-        const px = mapX(xVal);
-        const py = mapY(yVals[idx]);
-        
-        if (idx <= maxIdx) {
-           pathD += idx === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
-        } else {
-           pathDBack += idx === maxIdx + 1 ? `M ${mapX(xVals[maxIdx])} ${mapY(yVals[maxIdx])} L ${px} ${py}` : ` L ${px} ${py}`;
+      const fwdIdx = [];
+      const backIdx = [];
+      if (state.data.sortByX) {
+        order.forEach(i => fwdIdx.push(i));
+      } else {
+        for (let i = 0; i < xVals.length; i++) {
+          if (i <= maxIdx) fwdIdx.push(i);
+          else backIdx.push(i);
         }
-      });
+      }
+
+      const pathD = pathFromPoints(ptsFor(fwdIdx));
+      let pathDBack = "";
+      if (backIdx.length) {
+        const backPts = [{ x: mapX(xVals[maxIdx]), y: mapY(dy(maxIdx)) }].concat(ptsFor(backIdx));
+        pathDBack = pathFromPoints(backPts);
+      }
 
       // Forward Path
-      svgContent += `
-        <path d="${pathD}" fill="none" stroke="${seriesColor}" stroke-width="${state.lineWidth}"
-              stroke-linejoin="round" stroke-linecap="round"
-              ${s.strokeDash ? `stroke-dasharray="${s.strokeDash}"` : ""}
-              opacity="0.92" />
-      `;
-      
+      if (pathD) {
+        svgContent += `
+          <path d="${pathD}" fill="none" stroke="${seriesColor}" stroke-width="${state.lineWidth}"
+                stroke-linejoin="round" stroke-linecap="round"
+                ${s.strokeDash ? `stroke-dasharray="${s.strokeDash}"` : ""}
+                opacity="${0.92 * seriesOpacity}" />
+        `;
+      }
+
       // Backward Path
       if (pathDBack) {
          const backDash = state.showHysteresis ? "6,5" : (s.strokeDash || "");
@@ -489,30 +1142,30 @@ function renderChart() {
            <path d="${pathDBack}" fill="none" stroke="${seriesColor}" stroke-width="${state.lineWidth}"
                  stroke-linejoin="round" stroke-linecap="round"
                  ${backDash ? `stroke-dasharray="${backDash}"` : ""}
-                 opacity="0.92" />
+                 opacity="${0.92 * seriesOpacity}" />
          `;
       }
-      
+
       // Directional Arrows
-      if (state.showHysteresis) {
+      if (state.showHysteresis && !state.data.sortByX) {
          for (let i = 0; i < xVals.length - 1; i++) {
              const px1 = mapX(xVals[i]);
-             const py1 = mapY(yVals[i]);
-             const px2 = mapX(xVals[i+1]);
-             const py2 = mapY(yVals[i+1]);
-             
+             const py1 = mapY(dy(i));
+             const px2 = mapX(xVals[i + 1]);
+             const py2 = mapY(dy(i + 1));
+
              const dx = px2 - px1;
-             const dy = py2 - py1;
-             const dist = Math.sqrt(dx*dx + dy*dy);
-             
+             const dyP = py2 - py1;
+             const dist = Math.sqrt(dx * dx + dyP * dyP);
+
              if (dist > 25) {
                  const midX = px1 + dx * 0.55;
-                 const midY = py1 + dy * 0.55;
-                 const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                 const midY = py1 + dyP * 0.55;
+                 const angle = Math.atan2(dyP, dx) * 180 / Math.PI;
                  const isBack = i >= maxIdx;
-                 
+
                  svgContent += `
-                    <g transform="translate(${midX}, ${midY}) rotate(${angle})" opacity="${isBack ? 0.75 : 0.95}">
+                    <g transform="translate(${midX}, ${midY}) rotate(${angle})" opacity="${(isBack ? 0.75 : 0.95) * seriesOpacity}">
                        <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="${seriesColor}" />
                     </g>
                  `;
@@ -521,11 +1174,33 @@ function renderChart() {
       }
     }
 
+    // --- Error bars (per-series errValues from Excel, ± columns) ---
+    if (state.data.showErrorBars && s.errValues && s.errValues.length) {
+      const tstat = yTransformStats(s);
+      const cap = Math.max(4, state.markerSize * 0.65);
+      xVals.forEach((xVal, idx) => {
+        const e = s.errValues[idx];
+        if (typeof e !== "number" || !isFinite(e) || e <= 0) return;
+        const err = Math.abs(e) * tstat.scale;
+        const base = dy(idx);
+        const px = mapX(xVal);
+        const yTop = mapY(base + err);
+        const yBot = mapY(base - err);
+        svgContent += `
+          <g stroke="${seriesColor}" stroke-width="1.6" opacity="${0.9 * seriesOpacity}" stroke-linecap="round">
+            <line x1="${px}" y1="${yTop}" x2="${px}" y2="${yBot}" />
+            <line x1="${px - cap}" y1="${yTop}" x2="${px + cap}" y2="${yTop}" />
+            <line x1="${px - cap}" y1="${yBot}" x2="${px + cap}" y2="${yBot}" />
+          </g>
+        `;
+      });
+    }
+
     let turnIdx = 0;
     xVals.forEach((x, i) => { if (x > xVals[turnIdx]) turnIdx = i; });
     xVals.forEach((xVal, idx) => {
       const px = mapX(xVal);
-      const yVal = yVals[idx];
+      const yVal = dy(idx);
       const py = mapY(yVal);
       // Backward path points are drawn hollow so forward/backward are distinguishable in print
       const hollow = state.showHysteresis && idx > turnIdx;
@@ -534,12 +1209,12 @@ function renderChart() {
         : getMarkerSvg(s.marker, px, py, state.markerSize, seriesColor, seriesColor);
 
       svgContent += `
-        <g class="point-group" data-series="${s.id}" data-x="${xVal}" data-y="${yVal}" data-idx="${idx}">
+        <g class="point-group" data-series="${s.id}" data-x="${xVal}" data-y="${yVal}" data-idx="${idx}" opacity="${seriesOpacity}">
           <circle cx="${px}" cy="${py}" r="${state.markerSize + 4}" fill="transparent" style="cursor: pointer;" />
           ${pointSvg}
           ${state.showDataLabels ? `
-            <text x="${px}" y="${py - 10}" fill="${colors.text}" font-size="10.5"
-                  font-weight="700" text-anchor="middle" direction="ltr" font-family="'Plus Jakarta Sans', sans-serif">${yVal}</text>
+            <text x="${px}" y="${py - 10}" fill="${colors.text}" font-size="${state.type.dataLabelFont}"
+                  font-weight="700" text-anchor="middle" direction="ltr" font-family="${TICK_FONT}">${fmtTick(yVal)}</text>
           ` : ""}
         </g>
       `;
@@ -549,10 +1224,13 @@ function renderChart() {
     if (state.showTrendlines && xVals.length >= 2) {
       let n = xVals.length;
       let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-      for(let i=0; i<n; i++) {
+      const yDisp = [];
+      for (let i = 0; i < n; i++) {
+        const yv = dy(i);
+        yDisp.push(yv);
         sumX += xVals[i];
-        sumY += yVals[i];
-        sumXY += xVals[i] * yVals[i];
+        sumY += yv;
+        sumXY += xVals[i] * yv;
         sumXX += xVals[i] * xVals[i];
       }
       let denom = (n * sumXX - sumX * sumX);
@@ -562,18 +1240,18 @@ function renderChart() {
 
         let yMean = sumY / n;
         let ssTot = 0, ssRes = 0;
-        for(let i=0; i<n; i++) {
+        for (let i = 0; i < n; i++) {
           let yPred = slope * xVals[i] + intercept;
-          ssTot += Math.pow(yVals[i] - yMean, 2);
-          ssRes += Math.pow(yVals[i] - yPred, 2);
+          ssTot += Math.pow(yDisp[i] - yMean, 2);
+          ssRes += Math.pow(yDisp[i] - yPred, 2);
         }
         let rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
-        
+
         const x1 = Math.min(...xVals);
         const x2 = Math.max(...xVals);
         const y1 = slope * x1 + intercept;
         const y2 = slope * x2 + intercept;
-        
+
         const px1 = mapX(x1);
         const py1 = mapY(y1);
         const px2 = mapX(x2);
@@ -581,8 +1259,8 @@ function renderChart() {
 
         svgContent += `
           <line x1="${px1}" y1="${py1}" x2="${px2}" y2="${py2}"
-                stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="0.8" />
-          <text x="${px2 - 10}" y="${py2 - 10}" fill="${seriesColor}" font-size="11" font-weight="bold" font-family="'Plus Jakarta Sans', Arial, sans-serif" text-anchor="end" direction="ltr">R² = ${rSquared.toFixed(3)}</text>
+                stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="${0.8 * seriesOpacity}" />
+          <text x="${px2 - 10}" y="${py2 - 10}" fill="${seriesColor}" font-size="${state.type.legendFont}" font-weight="bold" font-family="${TICK_FONT}" text-anchor="end" direction="ltr">R² = ${rSquared.toFixed(3)}</text>
         `;
       }
     }
@@ -596,8 +1274,8 @@ function renderChart() {
       const callout = getSeriesCallout(s, sIdx);
       const col = isDark ? s.colorDark : s.colorLight;
       const sName = isFa ? s.nameFa : s.nameEn;
-      const cardW = Math.max(60, sName.length * 10.5 + 12);
-      const cardH = 28;
+      const cardW = Math.max(60, sName.length * (state.type.legendFont * 0.92) + 14);
+      const cardH = Math.max(28, state.type.legendFont + 17);
 
       const arrow = getBoxArrowPoints(callout.x, callout.y, cardW, cardH, callout.targetX, callout.targetY);
 
@@ -618,8 +1296,8 @@ function renderChart() {
                   stroke="${state.showCalloutBox ? colors.calloutBorder : 'transparent'}" 
                   stroke-width="1.2" rx="6" 
                   ${state.showCalloutBox ? 'filter="url(#badgeShadow)"' : ''} />
-            <text x="${callout.x + cardW / 2}" y="${callout.y + 20}" fill="${col}" font-size="19" font-weight="700"
-                  text-anchor="middle" direction="${isFa ? 'rtl' : 'ltr'}" font-family="${FONT}">${sName}</text>
+            <text x="${callout.x + cardW / 2}" y="${callout.y + cardH * 0.68}" fill="${col}" font-size="${Math.max(14, state.type.legendFont + 7.5)}" font-weight="700"
+                  text-anchor="middle" direction="${isFa ? 'rtl' : 'ltr'}" font-family="${USER_FONT}">${escapeXml(sName)}</text>
           </g>
         </g>
       `;
@@ -631,22 +1309,23 @@ function renderChart() {
     const isFa = state.lang === "fa";
     const legBoxX = state.callouts.inplotX;
     const legBoxY = state.callouts.inplotY;
+    const rowH = Math.max(20, state.type.legendFont + 13);
     const legBoxW = 230;
-    const legBoxH = Math.max(80, 44 + (dataset.series.length * 26));
+    const legBoxH = Math.max(80, 44 + (dataset.series.length * rowH));
 
     svgContent += `
       <g class="draggable-badge" data-badge="inplot" filter="url(#badgeShadow)">
         <rect x="${legBoxX}" y="${legBoxY}" width="${legBoxW}" height="${legBoxH}" rx="8"
               fill="${colors.calloutBg}" stroke="${colors.calloutBorder}" stroke-width="1.4" />
         
-        <text x="${isFa ? legBoxX + legBoxW - 16 : legBoxX + 16}" y="${legBoxY + 22}" fill="${colors.title}" font-size="12" font-weight="700"
-              direction="${isFa ? 'rtl' : 'ltr'}" text-anchor="${isFa ? 'end' : 'start'}" font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">
+        <text x="${isFa ? legBoxX + legBoxW - 16 : legBoxX + 16}" y="${legBoxY + 22}" fill="${colors.title}" font-size="${Math.max(10, state.type.legendFont + 0.5)}" font-weight="700"
+              direction="${isFa ? 'rtl' : 'ltr'}" text-anchor="${isFa ? 'end' : 'start'}" font-family="${USER_FONT}">
           ${isFa ? 'راهنمای نمونه‌ها:' : 'Legend / Samples:'}
         </text>
     `;
 
     dataset.series.forEach((s, idx) => {
-      const itemY = legBoxY + 44 + (idx * 25);
+      const itemY = legBoxY + 44 + (idx * rowH);
       const seriesColor = isDark ? s.colorDark : s.colorLight;
       const name = isFa ? s.nameFa : s.nameEn;
       const lineX1 = isFa ? legBoxX + legBoxW - 42 : legBoxX + 16;
@@ -670,9 +1349,9 @@ function renderChart() {
 
       svgContent += `
         <text x="${textX}" y="${itemY + 4}" fill="${s.visible ? colors.text : colors.axis}"
-              font-size="11.5" font-weight="600" opacity="${s.visible ? 1 : 0.35}"
+              font-size="${state.type.legendFont}" font-weight="600" opacity="${s.visible ? 1 : 0.35}"
               direction="${isFa ? 'rtl' : 'ltr'}" text-anchor="${isFa ? 'end' : 'start'}"
-              font-family="${isFa ? 'Vazirmatn' : 'Plus Jakarta Sans'}">${name}</text>
+              font-family="${USER_FONT}">${escapeXml(name)}</text>
       `;
     });
 
@@ -691,7 +1370,7 @@ function renderChart() {
     const row = (y, dash, hollow, label) => `
       <line x1="${lx}" x2="${lx + 44}" y1="${y}" y2="${y}" stroke="${keyCol}" stroke-width="2.4" ${dash ? 'stroke-dasharray="7,5"' : ""} />
       <circle cx="${lx + 22}" cy="${y}" r="5.5" fill="${hollow ? colors.bg : keyCol}" stroke="${keyCol}" stroke-width="2" />
-      <text x="${tx}" y="${y + 5}" font-size="15" fill="${keyCol}" text-anchor="${anc}" font-family="${FONT}">${label}</text>`;
+      <text x="${tx}" y="${y + 5}" font-size="${state.type.tickFont}" fill="${keyCol}" text-anchor="${anc}" font-family="${FONT}">${label}</text>`;
     svgContent += `
       <rect x="${kx}" y="${ky}" width="${kw}" height="${kh}" fill="${colors.bg}" stroke="${colors.calloutBorder}" stroke-width="1" />
       ${row(ky + 22, false, false, isFa ? "مسیر رفت" : "Forward")}
@@ -699,10 +1378,24 @@ function renderChart() {
     `;
   }
 
+  // --- Magnifier inset (academic zoom region) ---
+  if (state.zoom.enabled) {
+    svgContent += renderZoomOverlay();
+    svgContent += renderZoomInset(colors, TICK_FONT, USER_FONT);
+  }
+
+  // Rubber-band selection rectangle used to pick the magnified region
+  svgContent += `<rect id="zoomBandRect" x="0" y="0" width="0" height="0" style="display:none"
+        fill="${state.theme === 'dark' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(2, 132, 199, 0.12)'}"
+        stroke="${state.theme === 'dark' ? '#38bdf8' : '#0284c7'}" stroke-width="1.5" stroke-dasharray="5,4"
+        pointer-events="none" />`;
+
   svg.innerHTML = svgContent;
 
   attachHoverListeners();
   attachDragListeners();
+
+  if (state._booted) queueSave();
 }
 
 // --- 7. Interactive Hover Tooltips ---
@@ -844,8 +1537,8 @@ window.addEventListener("mousemove", e => {
       const callout = getSeriesCallout(s, idx);
       let newX = Math.round(coords.x - activeDrag.offsetX);
       let newY = Math.round(coords.y - activeDrag.offsetY);
-      newX = Math.max(50, Math.min(newX, 850));
-      newY = Math.max(20, Math.min(newY, 480));
+      newX = Math.max(20, Math.min(newX, chartBox.width - 60));
+      newY = Math.max(10, Math.min(newY, chartBox.height - 40));
       callout.x = newX;
       callout.y = newY;
       syncCalloutSliders(s.id);
@@ -857,8 +1550,8 @@ window.addEventListener("mousemove", e => {
   if (activeDrag.kind === "inplot") {
     let newX = Math.round(coords.x - activeDrag.offsetX);
     let newY = Math.round(coords.y - activeDrag.offsetY);
-    newX = Math.max(50, Math.min(newX, 680));
-    newY = Math.max(30, Math.min(newY, 420));
+    newX = Math.max(plotArea.x + 4, Math.min(newX, plotArea.x + plotArea.width - 240));
+    newY = Math.max(plotArea.y + 4, Math.min(newY, plotArea.y + plotArea.height - 90));
     state.callouts.inplotX = newX;
     state.callouts.inplotY = newY;
     if (rngInplotX) rngInplotX.value = newX;
@@ -916,7 +1609,7 @@ function setupCalloutsControls() {
           <span>${isFa ? 'محل کادر متن (X)' : 'Box X'}</span>
           <span id="lbl_bx_${s.id}">${callout.x} px</span>
         </div>
-        <input type="range" min="80" max="850" value="${callout.x}" id="rng_bx_${s.id}">
+        <input type="range" min="0" max="${Math.max(100, chartBox.width - 120)}" value="${callout.x}" id="rng_bx_${s.id}">
       </div>
 
       <div class="slider-control" style="margin-bottom: 6px;">
@@ -924,7 +1617,7 @@ function setupCalloutsControls() {
           <span>${isFa ? 'محل کادر متن (Y)' : 'Box Y'}</span>
           <span id="lbl_by_${s.id}">${callout.y} px</span>
         </div>
-        <input type="range" min="30" max="480" value="${callout.y}" id="rng_by_${s.id}">
+        <input type="range" min="0" max="${Math.max(80, chartBox.height - 80)}" value="${callout.y}" id="rng_by_${s.id}">
       </div>
 
       <div class="slider-control" style="margin-bottom: 6px;">
@@ -932,7 +1625,7 @@ function setupCalloutsControls() {
           <span>${isFa ? 'نوک فلش / نقطه اشاره (X)' : 'Target X'}</span>
           <span id="lbl_tx_${s.id}">${callout.targetX} px</span>
         </div>
-        <input type="range" min="90" max="850" value="${callout.targetX}" id="rng_tx_${s.id}">
+        <input type="range" min="${plotArea.x}" max="${plotArea.x + plotArea.width}" value="${callout.targetX}" id="rng_tx_${s.id}">
       </div>
 
       <div class="slider-control" style="margin-bottom: 0;">
@@ -940,7 +1633,7 @@ function setupCalloutsControls() {
           <span>${isFa ? 'نوک فلش / نقطه اشاره (Y)' : 'Target Y'}</span>
           <span id="lbl_ty_${s.id}">${callout.targetY} px</span>
         </div>
-        <input type="range" min="40" max="480" value="${callout.targetY}" id="rng_ty_${s.id}">
+        <input type="range" min="${plotArea.y}" max="${plotArea.y + plotArea.height}" value="${callout.targetY}" id="rng_ty_${s.id}">
       </div>
     `;
 
@@ -1032,6 +1725,7 @@ function renderLegend() {
   }
   legendContainer.style.display = "flex";
   legendContainer.innerHTML = "";
+  legendContainer.style.fontSize = `${state.type.legendFont}px`;
   const isDark = state.theme === "dark";
 
   dataset.series.forEach(s => {
@@ -1167,7 +1861,9 @@ function autoScaleAxis() {
   
   let allY = [];
   dataset.series.forEach(s => {
-    if (s.yValues && s.yValues.length) allY.push(...s.yValues);
+    if (s.yValues && s.yValues.length) {
+      for (let i = 0; i < s.yValues.length; i++) allY.push(displayY(s, i));
+    }
   });
   if (!allY.length) return;
   const minY = Math.min(...allY);
@@ -1333,7 +2029,21 @@ function parseSmartExcel(rawRows) {
     });
   });
 
-  return { xValues, series };
+  // Columns whose header looks like an error column (err / SD / SE / ± / خطا)
+  // are attached to the series on their left as ± error bars.
+  const errRe = /(^|[\s(\[])(err|error|sd|se|std|sigma|σ|±|خطا)/i;
+  const built = [];
+  let lastSeries = null;
+  series.forEach((s, i) => {
+    if (errRe.test(String(headers[i + 1] || "").trim())) {
+      if (lastSeries) lastSeries.errValues = s.yValues;
+      return;
+    }
+    lastSeries = s;
+    built.push(s);
+  });
+
+  return { xValues, series: built };
 }
 
 function importExcelFile(e) {
@@ -1385,6 +2095,8 @@ function importExcelFile(e) {
           colorLight: color.light,
           marker: marker,
           strokeDash: "",
+          opacity: 1,
+          errValues: s.errValues && s.errValues.length === s.yValues.length ? s.errValues : null,
           yValues: s.yValues,
           visible: true
         };
@@ -1454,8 +2166,12 @@ async function copyImageToClipboard() {
       canvas.height = chartBox.height * scale;
       const ctx = canvas.getContext("2d");
 
-      ctx.fillStyle = state.theme === "dark" ? "#0f172a" : "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (state.type.transparentBg) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = state.type.plotBg || (state.theme === "dark" ? "#0f172a" : "#ffffff");
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -1495,8 +2211,12 @@ function exportPng() {
     canvas.height = chartBox.height * scale;
     const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = state.theme === "dark" ? "#0f172a" : "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (state.type.transparentBg) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = state.type.plotBg || (state.theme === "dark" ? "#0f172a" : "#ffffff");
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
@@ -1568,9 +2288,11 @@ function setLanguagePreset(newLang) {
 
   if (langBtnText) langBtnText.textContent = newLang === "fa" ? "English" : "فارسی";
 
+  applyStaticLang();
   setupSeriesCheckboxes();
   setupCalloutsControls();
   renderDataTable();
+  syncUIFromState();
   renderChart();
   renderLegend();
 }
@@ -1641,6 +2363,77 @@ function setupSeriesCheckboxes() {
     wrapper.appendChild(nameInput);
     wrapper.appendChild(colorPicker);
     container.appendChild(wrapper);
+
+    // --- Per-series style row: marker shape / dash pattern / opacity ---
+    const isFaS = state.lang === "fa";
+    const styleRow = document.createElement("div");
+    styleRow.style.cssText = "display: flex; align-items: center; gap: 6px; margin: 0 0 10px 0; padding-right: 26px; flex-wrap: wrap;";
+    const selCss = "background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 4px; padding: 3px 4px; font-family: inherit; font-size: 12px; cursor: pointer;";
+
+    const markerSel = document.createElement("select");
+    markerSel.style.cssText = selCss;
+    markerSel.title = isFaS ? "شکل مارکر" : "Marker shape";
+    [["circle", "●"], ["square", "■"], ["diamond", "◆"], ["triangle", "▲"], ["cross", "✕"], ["plus", "＋"]]
+      .forEach(([v, glyph]) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = `${glyph} ${v}`;
+        markerSel.appendChild(o);
+      });
+    markerSel.value = s.marker || "circle";
+    markerSel.addEventListener("change", e => {
+      s.marker = e.target.value;
+      renderChart();
+      renderLegend();
+    });
+
+    const dashSel = document.createElement("select");
+    dashSel.style.cssText = selCss;
+    dashSel.title = isFaS ? "نوع خط" : "Line style";
+    [["", isFaS ? "― پیوسته" : "― solid"], ["6,5", isFaS ? "- - خط‌چین" : "- - dashed"],
+     ["2,3", isFaS ? "· · نقطه‌چین" : "· · dotted"], ["10,4,2,4", isFaS ? "-·-· نقطه-خط" : "-·-· dash-dot"],
+     ["12,4", isFaS ? "▬ خط بلند" : "▬ long dash"]]
+      .forEach(([v, label]) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = label;
+        dashSel.appendChild(o);
+      });
+    dashSel.value = s.strokeDash || "";
+    dashSel.addEventListener("change", e => {
+      s.strokeDash = e.target.value;
+      renderChart();
+      renderLegend();
+    });
+
+    const opWrap = document.createElement("label");
+    opWrap.style.cssText = "display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);";
+    opWrap.title = isFaS ? "شفافیت سری" : "Series opacity";
+    const opText = document.createElement("span");
+    opText.textContent = isFaS ? "شفافیت" : "α";
+    const opRange = document.createElement("input");
+    opRange.type = "range";
+    opRange.min = "10";
+    opRange.max = "100";
+    opRange.step = "5";
+    opRange.value = String(Math.round((typeof s.opacity === "number" ? s.opacity : 1) * 100));
+    opRange.style.width = "84px";
+    const opVal = document.createElement("span");
+    opVal.textContent = `${opRange.value}%`;
+    opRange.addEventListener("input", e => {
+      s.opacity = parseInt(e.target.value, 10) / 100;
+      opVal.textContent = `${e.target.value}%`;
+      renderChart();
+      renderLegend();
+    });
+    opWrap.appendChild(opText);
+    opWrap.appendChild(opRange);
+    opWrap.appendChild(opVal);
+
+    styleRow.appendChild(markerSel);
+    styleRow.appendChild(dashSel);
+    styleRow.appendChild(opWrap);
+    container.appendChild(styleRow);
   });
 }
 
@@ -1847,12 +2640,620 @@ function initEvents() {
   });
 }
 
+// --- 18. Layout / Ticks / Type / Curve / Magnifier controls, presets & persistence ---
+const $id = id => document.getElementById(id);
+
+function setChk(id, val) { const el = document.getElementById(id); if (el) el.checked = !!val; }
+function setSel(id, val) { const el = document.getElementById(id); if (el) el.value = String(val); }
+function setText(id, val) { const el = document.getElementById(id); if (el != null && el.textContent !== String(val)) el.textContent = val; }
+function setInp(id, val) { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = val; }
+
+function syncSeg(attr, value) {
+  document.querySelectorAll(`.segmented-control .seg-btn[data-${attr}]`).forEach(b => {
+    b.classList.toggle("active", b.getAttribute(`data-${attr}`) === String(value));
+  });
+}
+
+// Bilingual labels for every element carrying data-fa / data-en
+function applyStaticLang() {
+  const lang = state.lang === "en" ? "en" : "fa";
+  document.querySelectorAll("[data-fa][data-en]").forEach(el => {
+    const txt = el.getAttribute(`data-${lang}`);
+    if (txt != null) el.textContent = txt;
+  });
+}
+
+function updateExportSize() {
+  const dpi = parseInt(exportDpiSelect ? exportDpiSelect.value : "3", 10) * 100;
+  const scale = parseInt(exportDpiSelect ? exportDpiSelect.value : "3", 10);
+  const mmW = Math.round(chartBox.width * 0.254);
+  const mmH = Math.round(chartBox.height * 0.254);
+  setText("valExportSize", `${mmW} × ${mmH} mm  (Px: ${chartBox.width * scale} × ${chartBox.height * scale} @ ${dpi} DPI)`);
+}
+
+// Push the whole state into every control (used on boot, preset apply and import)
+function syncUIFromState() {
+  const L = state.layout, T = state.ticks, Y = state.type, D = state.data, Z = state.zoom;
+
+  document.body.className = `theme-${state.theme}`;
+  if (themeBtnText) themeBtnText.textContent = state.theme === "dark" ? "تم روشن دانشگاهی" : "تم تیره مدرن";
+  if (langBtnText) langBtnText.textContent = state.lang === "fa" ? "English" : "فارسی";
+
+  syncSeg("lang", state.lang);
+  syncSeg("mode", state.plotMode);
+  syncSeg("frame", state.frameStyle);
+  syncSeg("origin", L.axisOrigin);
+  syncSeg("titleplace", Y.titlePlacement);
+
+  if (inputChartTitle) inputChartTitle.value = state.chartTitle;
+  if (inputChartSubtitle) inputChartSubtitle.value = state.chartSubtitle;
+  if (inputXTitle) inputXTitle.value = state.xTitle;
+  if (inputYTitle) inputYTitle.value = state.yTitle;
+  if (displayChartTitle) displayChartTitle.textContent = state.chartTitle;
+  if (displayChartSubtitle) displayChartSubtitle.textContent = state.chartSubtitle;
+
+  if (rngMarkerSize) rngMarkerSize.value = state.markerSize;
+  setText("valMarkerSize", `${state.markerSize} px`);
+  if (rngLineWidth) rngLineWidth.value = state.lineWidth;
+  setText("valLineWidth", `${state.lineWidth} px`);
+
+  setInp("inpXMin", state.axis.xMin); setInp("inpXMax", state.axis.xMax); setInp("inpXStep", state.axis.xStep);
+  setInp("inpYMin", state.axis.yMin); setInp("inpYMax", state.axis.yMax); setInp("inpYStep", state.axis.yStep);
+
+  setChk("chkTrendline", state.showTrendlines);
+  setChk("chkShowCalloutBox", state.showCalloutBox);
+  setChk("chkHysteresis", state.showHysteresis);
+  setChk("chkShowAnnotations", state.showAnnotations);
+  setChk("chkShowErrorBand", state.showErrorBand);
+  setChk("chkShowInplotLegend", state.showInplotLegend);
+  setChk("chkShowBottomLegend", state.showBottomLegend);
+  setChk("chkShowDataLabels", state.showDataLabels);
+  setChk("chkShowGrid", state.showGrid);
+  if (grpInplotX) grpInplotX.style.display = state.showInplotLegend ? "block" : "none";
+  if (grpInplotY) grpInplotY.style.display = state.showInplotLegend ? "block" : "none";
+  if (rngInplotX) rngInplotX.value = state.callouts.inplotX || 160;
+  if (rngInplotY) rngInplotY.value = state.callouts.inplotY || 280;
+  setText("valInplotX", `${state.callouts.inplotX || 160} px`);
+  setText("valInplotY", `${state.callouts.inplotY || 280} px`);
+
+  // Layout
+  ["Top", "Right", "Bottom", "Left"].forEach(side => {
+    const key = `margin${side}`;
+    const el = document.getElementById(`rngMargin${side}`);
+    if (el) el.value = L[key];
+    setText(`valMargin${side}`, `${L[key]} px`);
+  });
+  setSel("selCanvasPreset", L.preset || "custom");
+  setChk("chkReverseX", L.reverseX);
+  setChk("chkReverseY", L.reverseY);
+
+  // Ticks
+  setSel("selMinorTicks", T.minor);
+  setSel("selTickDir", T.direction);
+  if (document.getElementById("rngTickLength")) document.getElementById("rngTickLength").value = T.length;
+  setText("valTickLength", `${T.length} px`);
+  setSel("selDecimals", T.decimals);
+  setChk("chkThousands", T.thousands);
+  setChk("chkScientific", T.scientific);
+  setSel("selLabelRotate", T.xLabelRotate);
+  setSel("selLabelEvery", T.labelEvery);
+  setChk("chkLogX", T.xLog);
+  setChk("chkLogY", T.yLog);
+
+  // Type & color
+  [["TickFont", Y.tickFont], ["AxisTitleFont", Y.axisTitleFont], ["LegendFont", Y.legendFont], ["DataLabelFont", Y.dataLabelFont]].forEach(([k, v]) => {
+    const el = document.getElementById(`rng${k}`);
+    if (el) el.value = v;
+    setText(`val${k}`, `${v} px`);
+  });
+  setSel("selFontFamily", Y.fontFamily);
+  const bgInp = document.getElementById("inpPlotBg");
+  if (bgInp) bgInp.value = Y.plotBg || (state.theme === "dark" ? "#0f172a" : "#ffffff");
+  setChk("chkTransparentBg", Y.transparentBg);
+  setSel("selGridStyle", Y.gridStyle);
+  if (document.getElementById("rngGridOpacity")) document.getElementById("rngGridOpacity").value = Math.round(Y.gridOpacity * 100);
+  setText("valGridOpacity", `${Math.round(Y.gridOpacity * 100)}%`);
+  setSel("selGridAxis", Y.gridAxis);
+
+  // Curve & data
+  setSel("selSmoothing", D.smoothing);
+  setSel("selYTransform", D.yTransform);
+  setChk("chkSortByX", D.sortByX);
+  setChk("chkErrorBars", D.showErrorBars);
+
+  // Magnifier
+  setChk("chkZoomEnabled", Z.enabled);
+  syncZoomInputs();
+  if (document.getElementById("rngZoomW")) document.getElementById("rngZoomW").value = Z.boxW;
+  setText("valZoomW", `${Math.round(Z.boxW)} px`);
+  if (document.getElementById("rngZoomH")) document.getElementById("rngZoomH").value = Z.boxH;
+  setText("valZoomH", `${Math.round(Z.boxH)} px`);
+  syncZoomBoxSliders();
+  setChk("chkZoomRegionBox", Z.showRegionBox);
+  setChk("chkZoomTitles", Z.showTitles);
+
+  updateExportSize();
+}
+
+// --- Magnifier helpers ---
+function syncZoomInputs() {
+  const reg = getZoomRegion();
+  setInp("inpZoomX0", roundTick(reg.x0));
+  setInp("inpZoomX1", roundTick(reg.x1));
+  setInp("inpZoomY0", roundTick(reg.y0));
+  setInp("inpZoomY1", roundTick(reg.y1));
+}
+
+function syncZoomBoxSliders() {
+  const box = getZoomBox();
+  const rx = document.getElementById("rngZoomBoxX");
+  const ry = document.getElementById("rngZoomBoxY");
+  if (rx) {
+    rx.min = Math.round(plotArea.x);
+    rx.max = Math.max(rx.min + 1, Math.round(plotArea.x + plotArea.width - box.w));
+    rx.value = Math.round(box.x);
+  }
+  if (ry) {
+    ry.min = Math.round(plotArea.y);
+    ry.max = Math.max(ry.min + 1, Math.round(plotArea.y + plotArea.height - box.h));
+    ry.value = Math.round(box.y);
+  }
+  setText("valZoomBoxX", `${Math.round(box.x)} px`);
+  setText("valZoomBoxY", `${Math.round(box.y)} px`);
+
+  const padX = 16, padY = 16;
+  const nearL = box.x <= plotArea.x + padX + 8;
+  const nearT = box.y <= plotArea.y + padY + 8;
+  const nearR = box.x >= plotArea.x + plotArea.width - box.w - padX - 8;
+  const nearB = box.y >= plotArea.y + plotArea.height - box.h - padY - 8;
+  let corner = "";
+  if (nearT && nearR) corner = "tr";
+  else if (nearT && nearL) corner = "tl";
+  else if (nearB && nearR) corner = "br";
+  else if (nearB && nearL) corner = "bl";
+  if (corner) syncSeg("corner", corner);
+}
+
+function setZoomRegion(x0, x1, y0, y1) {
+  state.zoom.x0 = x0; state.zoom.x1 = x1; state.zoom.y0 = y0; state.zoom.y1 = y1;
+  syncZoomInputs();
+  renderChart();
+}
+
+function resetZoomRegion() {
+  state.zoom.x0 = null; state.zoom.x1 = null; state.zoom.y0 = null; state.zoom.y1 = null;
+  syncZoomInputs();
+  renderChart();
+  showToast(state.lang === "fa" ? "ناحیه ذره‌بین به بازه کامل محور برگشت." : "Magnifier region reset to full axis range.");
+}
+
+function fitZoomToData() {
+  if (!dataset.xValues.length) return;
+  let yAll = [];
+  dataset.series.forEach(s => {
+    if (!s.visible || !s.yValues) return;
+    for (let i = 0; i < s.yValues.length; i++) yAll.push(displayY(s, i));
+  });
+  if (!yAll.length) return;
+  const xs = dataset.xValues.slice().sort((a, b) => a - b);
+  const x0 = xs[0], x1 = xs[xs.length - 1];
+  const y0 = Math.min(...yAll), y1 = Math.max(...yAll);
+  const padx = (x1 - x0) * 0.04 || 1;
+  const pady = (y1 - y0) * 0.1 || 1;
+  setZoomRegion(x0 - padx, x1 + padx, y0 - pady, y1 + pady);
+}
+
+let zoomBandDrag = null;
+
+function initZoomInteractions() {
+  if (!svg) return;
+
+  svg.addEventListener("mousedown", e => {
+    if (!state.zoom.enabled || activeDrag) return;
+    if (e.target && e.target.closest && e.target.closest(".point-group, .draggable-badge, .draggable-target, .zoom-inset")) return;
+    const c = getSvgCoords(e);
+    if (c.x < plotArea.x || c.x > plotArea.x + plotArea.width || c.y < plotArea.y || c.y > plotArea.y + plotArea.height) return;
+    zoomBandDrag = { x0: c.x, y0: c.y };
+    e.preventDefault();
+  });
+
+  window.addEventListener("mousemove", e => {
+    if (!zoomBandDrag) return;
+    const c = getSvgCoords(e);
+    const band = document.getElementById("zoomBandRect");
+    if (band) {
+      band.setAttribute("x", Math.min(zoomBandDrag.x0, c.x));
+      band.setAttribute("y", Math.min(zoomBandDrag.y0, c.y));
+      band.setAttribute("width", Math.abs(c.x - zoomBandDrag.x0));
+      band.setAttribute("height", Math.abs(c.y - zoomBandDrag.y0));
+      band.style.display = "block";
+    }
+  });
+
+  window.addEventListener("mouseup", e => {
+    if (!zoomBandDrag) return;
+    const c = getSvgCoords(e);
+    const band = document.getElementById("zoomBandRect");
+    if (band) band.style.display = "none";
+    const drag = zoomBandDrag;
+    zoomBandDrag = null;
+    if (Math.abs(c.x - drag.x0) < 10 || Math.abs(c.y - drag.y0) < 10) return;
+
+    const a = unmapX(drag.x0), b = unmapX(c.x);
+    const cy0 = unmapY(drag.y0), cy1 = unmapY(c.y);
+    setZoomRegion(Math.min(a, b), Math.max(a, b), Math.min(cy0, cy1), Math.max(cy0, cy1));
+    showToast(state.lang === "fa" ? "ناحیه بزرگ‌نمایی تنظیم شد." : "Magnified region updated.");
+  });
+
+  svg.addEventListener("dblclick", () => {
+    if (state.zoom.enabled) resetZoomRegion();
+  });
+}
+
+// --- Settings persistence (localStorage + JSON files) ---
+const SETTINGS_KEY = "freebuff.scatter.settings.v1";
+
+function serializeSettings() {
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    lang: state.lang,
+    theme: state.theme,
+    plotMode: state.plotMode,
+    frameStyle: state.frameStyle,
+    markerSize: state.markerSize,
+    lineWidth: state.lineWidth,
+    showErrorBand: state.showErrorBand,
+    showAnnotations: state.showAnnotations,
+    showInplotLegend: state.showInplotLegend,
+    showBottomLegend: state.showBottomLegend,
+    showDataLabels: state.showDataLabels,
+    showGrid: state.showGrid,
+    showHysteresis: state.showHysteresis,
+    showTrendlines: state.showTrendlines,
+    showCalloutBox: state.showCalloutBox,
+    chartTitle: state.chartTitle,
+    chartSubtitle: state.chartSubtitle,
+    xTitle: state.xTitle,
+    yTitle: state.yTitle,
+    axis: Object.assign({}, state.axis),
+    layout: Object.assign({}, state.layout),
+    ticks: Object.assign({}, state.ticks),
+    type: Object.assign({}, state.type),
+    data: Object.assign({}, state.data),
+    zoom: Object.assign({}, state.zoom),
+    callouts: JSON.parse(JSON.stringify(state.callouts)),
+    series: dataset.series.map(s => ({
+      id: s.id, nameFa: s.nameFa, nameEn: s.nameEn,
+      colorDark: s.colorDark, colorLight: s.colorLight,
+      marker: s.marker, strokeDash: s.strokeDash || "",
+      opacity: typeof s.opacity === "number" ? s.opacity : 1,
+      visible: !!s.visible
+    }))
+  };
+}
+
+function applySettings(obj) {
+  if (!obj || typeof obj !== "object") return false;
+  const s = obj.state && typeof obj.state === "object" ? obj.state : obj;
+  const scalars = ["lang", "theme", "plotMode", "frameStyle", "markerSize", "lineWidth",
+    "showErrorBand", "showAnnotations", "showInplotLegend", "showBottomLegend", "showDataLabels",
+    "showGrid", "showHysteresis", "showTrendlines", "showCalloutBox",
+    "chartTitle", "chartSubtitle", "xTitle", "yTitle"];
+  scalars.forEach(k => { if (s[k] !== undefined) state[k] = s[k]; });
+  ["axis", "layout", "ticks", "type", "data", "zoom"].forEach(k => {
+    if (s[k] && typeof s[k] === "object") Object.assign(state[k], s[k]);
+  });
+  if (s.callouts && typeof s.callouts === "object") state.callouts = s.callouts;
+  if (Array.isArray(s.series)) {
+    s.series.forEach(src => {
+      const t = dataset.series.find(x => x.id === src.id) || dataset.series[src.index];
+      if (!t) return;
+      ["nameFa", "nameEn", "colorDark", "colorLight", "marker", "strokeDash", "opacity", "visible"]
+        .forEach(k => { if (src[k] !== undefined) t[k] = src[k]; });
+    });
+  }
+  applyLayoutToGeometry();
+  applyStaticLang();
+  setupSeriesCheckboxes();
+  setupCalloutsControls();
+  syncUIFromState();
+  renderChart();
+  renderLegend();
+  return true;
+}
+
+let saveTimer = null;
+function queueSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(serializeSettings()));
+    } catch (e) { /* storage may be unavailable (private mode) */ }
+  }, 500);
+}
+
+function restoreSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return false;
+    return applySettings(JSON.parse(raw));
+  } catch (e) {
+    return false;
+  }
+}
+
+function exportSettingsFile() {
+  const blob = new Blob([JSON.stringify(serializeSettings(), null, 2)], { type: "application/json" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.download = `scatter-settings-${state.lang}-${state.theme}.json`;
+  a.href = url;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+  showToast(state.lang === "fa" ? "فایل تنظیمات دانلود شد." : "Settings file downloaded.");
+}
+
+function importSettingsFile(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const obj = JSON.parse(evt.target.result);
+      if (applySettings(obj)) {
+        showToast(state.lang === "fa" ? "تنظیمات با موفقیت بارگذاری شد." : "Settings loaded successfully.");
+      } else {
+        showToast(state.lang === "fa" ? "فایل تنظیمات معتبر نیست." : "Invalid settings file.");
+      }
+    } catch (err) {
+      showToast(state.lang === "fa" ? "خطا در خواندن فایل تنظیمات." : "Could not read the settings file.");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+function applyJournalPreset(key) {
+  const p = JOURNAL_PRESETS[key];
+  if (!p) return;
+  state.frameStyle = p.frameStyle;
+  state.plotMode = p.plotMode;
+  state.markerSize = p.markerSize;
+  state.lineWidth = p.lineWidth;
+  if (p.showGrid !== undefined) state.showGrid = p.showGrid;
+  Object.assign(state.layout, p.layout);
+  Object.assign(state.type, p.type);
+  Object.assign(state.ticks, p.ticks);
+  applyLayoutToGeometry();
+  syncUIFromState();
+  setupCalloutsControls();
+  renderChart();
+  renderLegend();
+  const name = state.lang === "fa" ? p.labelFa : p.labelEn;
+  showToast(state.lang === "fa" ? `پیش‌تنظیم «${name}» اعمال شد.` : `Preset "${name}" applied.`);
+}
+
+// Log axes need strictly positive bounds — nudge the minimum if needed
+function ensureLogBounds(axis) {
+  const minKey = axis === "x" ? "xMin" : "yMin";
+  const maxKey = axis === "x" ? "xMax" : "yMax";
+  if (state.axis[minKey] > 0) return;
+  const mx = state.axis[maxKey];
+  state.axis[minKey] = mx > 0 ? Math.pow(10, Math.floor(Math.log10(mx)) - 2) : 1;
+  if (!(state.axis[maxKey] > state.axis[minKey])) state.axis[maxKey] = state.axis[minKey] * 100;
+  const inp = document.getElementById(axis === "x" ? "inpXMin" : "inpYMin");
+  if (inp) inp.value = state.axis[minKey];
+  showToast(state.lang === "fa"
+    ? `مقیاس لگاریتمی به حداقل مثبت ${state.axis[minKey]} محدود شد.`
+    : `Log axis minimum clamped to ${state.axis[minKey]}.`);
+}
+
+// --- Wiring for every new control ---
+function initAdvancedEvents() {
+  const on = (id, ev, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(ev, fn);
+  };
+  const redraw = () => { renderChart(); };
+
+  // 1. Layout: margins
+  ["Top", "Right", "Bottom", "Left"].forEach(side => {
+    on(`rngMargin${side}`, "input", e => {
+      const v = parseInt(e.target.value, 10) || 0;
+      state.layout[`margin${side}`] = v;
+      setText(`valMargin${side}`, `${v} px`);
+      state.layout.preset = "custom";
+      setSel("selCanvasPreset", "custom");
+      setupCalloutsControls();
+      renderChart();
+      updateExportSize();
+    });
+  });
+
+  const CANVAS_PRESETS = {
+    standard: [960, 560], wide: [1200, 560], compact: [760, 480], square: [760, 760],
+    ratio43: [960, 720], ratio169: [1120, 630], double: [1280, 640]
+  };
+  on("selCanvasPreset", "change", e => {
+    const key = e.target.value;
+    state.layout.preset = key;
+    if (CANVAS_PRESETS[key]) {
+      state.layout.width = CANVAS_PRESETS[key][0];
+      state.layout.height = CANVAS_PRESETS[key][1];
+    }
+    applyLayoutToGeometry();
+    setupCalloutsControls();
+    syncZoomBoxSliders();
+    renderChart();
+    updateExportSize();
+  });
+
+  document.querySelectorAll(".segmented-control .seg-btn[data-origin]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.layout.axisOrigin = btn.getAttribute("data-origin");
+      syncSeg("origin", state.layout.axisOrigin);
+      renderChart();
+    });
+  });
+
+  on("chkReverseX", "change", e => { state.layout.reverseX = e.target.checked; renderChart(); });
+  on("chkReverseY", "change", e => { state.layout.reverseY = e.target.checked; renderChart(); });
+
+  // 2. Ticks & numbers
+  on("selMinorTicks", "change", e => { state.ticks.minor = parseInt(e.target.value, 10) || 0; renderChart(); });
+  on("selTickDir", "change", e => { state.ticks.direction = e.target.value; renderChart(); });
+  on("rngTickLength", "input", e => {
+    state.ticks.length = parseInt(e.target.value, 10) || 6;
+    setText("valTickLength", `${state.ticks.length} px`);
+    renderChart();
+  });
+  on("selDecimals", "change", e => { state.ticks.decimals = parseInt(e.target.value, 10); renderChart(); });
+  on("chkThousands", "change", e => { state.ticks.thousands = e.target.checked; renderChart(); });
+  on("chkScientific", "change", e => { state.ticks.scientific = e.target.checked; renderChart(); });
+  on("selLabelRotate", "change", e => { state.ticks.xLabelRotate = parseInt(e.target.value, 10) || 0; renderChart(); });
+  on("selLabelEvery", "change", e => { state.ticks.labelEvery = Math.max(1, parseInt(e.target.value, 10) || 1); renderChart(); });
+  on("chkLogX", "change", e => {
+    state.ticks.xLog = e.target.checked;
+    if (e.target.checked) ensureLogBounds("x");
+    renderChart(); syncZoomInputs();
+  });
+  on("chkLogY", "change", e => {
+    state.ticks.yLog = e.target.checked;
+    if (e.target.checked) ensureLogBounds("y");
+    renderChart(); syncZoomInputs();
+  });
+
+  // 3. Type & color
+  [["TickFont", "tickFont"], ["AxisTitleFont", "axisTitleFont"], ["LegendFont", "legendFont"], ["DataLabelFont", "dataLabelFont"]].forEach(([id, key]) => {
+    on(`rng${id}`, "input", e => {
+      state.type[key] = parseFloat(e.target.value);
+      setText(`val${id}`, `${state.type[key]} px`);
+      renderChart();
+    });
+  });
+  on("selFontFamily", "change", e => { state.type.fontFamily = e.target.value; renderChart(); });
+  on("inpPlotBg", "input", e => { state.type.plotBg = e.target.value; state.type.transparentBg = false; setChk("chkTransparentBg", false); renderChart(); });
+  on("btnClearPlotBg", "click", () => {
+    state.type.plotBg = "";
+    const bgInp = document.getElementById("inpPlotBg");
+    if (bgInp) bgInp.value = state.theme === "dark" ? "#0f172a" : "#ffffff";
+    renderChart();
+  });
+  on("chkTransparentBg", "change", e => { state.type.transparentBg = e.target.checked; renderChart(); });
+  on("selGridStyle", "change", e => { state.type.gridStyle = e.target.value; renderChart(); });
+  on("rngGridOpacity", "input", e => {
+    state.type.gridOpacity = (parseInt(e.target.value, 10) || 100) / 100;
+    setText("valGridOpacity", `${Math.round(state.type.gridOpacity * 100)}%`);
+    renderChart();
+  });
+  on("selGridAxis", "change", e => { state.type.gridAxis = e.target.value; renderChart(); });
+  document.querySelectorAll(".segmented-control .seg-btn[data-titleplace]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.type.titlePlacement = btn.getAttribute("data-titleplace");
+      syncSeg("titleplace", state.type.titlePlacement);
+      renderChart();
+    });
+  });
+
+  // 4. Curve & data shaping
+  on("selSmoothing", "change", e => { state.data.smoothing = e.target.value; renderChart(); });
+  on("selYTransform", "change", e => { state.data.yTransform = e.target.value; renderChart(); });
+  on("chkSortByX", "change", e => { state.data.sortByX = e.target.checked; renderChart(); });
+  on("chkErrorBars", "change", e => {
+    const hasErr = dataset.series.some(s => s.errValues && s.errValues.length);
+    state.data.showErrorBars = e.target.checked;
+    if (e.target.checked && !hasErr) {
+      showToast(state.lang === "fa"
+        ? "ستون خطایی در داده‌ها یافت نشد (نام ستون باید err/SD/± باشد)."
+        : "No error column found (header must contain err/SD/±). ");
+    }
+    renderChart();
+  });
+
+  // 5. Magnifier
+  on("chkZoomEnabled", "change", e => {
+    state.zoom.enabled = e.target.checked;
+    renderChart();
+    showToast(e.target.checked
+      ? (state.lang === "fa" ? "روی نمودار مستطیل بکشید تا ناحیه بزرگ‌نمایی شود." : "Drag a rectangle on the plot to choose the region.")
+      : "");
+  });
+  ["X0", "X1", "Y0", "Y1"].forEach(k => {
+    on(`inpZoom${k}`, "change", e => {
+      const v = parseFloat(e.target.value);
+      if (isNaN(v)) { syncZoomInputs(); return; }
+      const key = k === "X0" ? "x0" : k === "X1" ? "x1" : k === "Y0" ? "y0" : "y1";
+      state.zoom[key] = v;
+      renderChart();
+    });
+  });
+  on("btnZoomFit", "click", () => fitZoomToData());
+  on("btnZoomFull", "click", () => resetZoomRegion());
+  on("rngZoomW", "input", e => {
+    state.zoom.boxW = parseInt(e.target.value, 10) || 300;
+    setText("valZoomW", `${state.zoom.boxW} px`);
+    syncZoomBoxSliders();
+    renderChart();
+  });
+  on("rngZoomH", "input", e => {
+    state.zoom.boxH = parseInt(e.target.value, 10) || 190;
+    setText("valZoomH", `${state.zoom.boxH} px`);
+    syncZoomBoxSliders();
+    renderChart();
+  });
+  on("rngZoomBoxX", "input", e => { state.zoom.boxX = parseInt(e.target.value, 10); renderChart(); });
+  on("rngZoomBoxY", "input", e => { state.zoom.boxY = parseInt(e.target.value, 10); renderChart(); });
+  document.querySelectorAll(".segmented-control .seg-btn[data-corner]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const corner = btn.getAttribute("data-corner");
+      const box = getZoomBox();
+      const padX = 16, padY = 16;
+      state.zoom.boxX = corner.indexOf("l") !== -1
+        ? plotArea.x + padX
+        : plotArea.x + plotArea.width - box.w - padX;
+      state.zoom.boxY = corner.indexOf("t") !== -1
+        ? plotArea.y + padY
+        : plotArea.y + plotArea.height - box.h - padY;
+      syncSeg("corner", corner);
+      syncZoomBoxSliders();
+      renderChart();
+    });
+  });
+  on("chkZoomRegionBox", "change", e => { state.zoom.showRegionBox = e.target.checked; renderChart(); });
+  on("chkZoomTitles", "change", e => { state.zoom.showTitles = e.target.checked; renderChart(); });
+
+  // 6. Journal presets & settings files
+  document.querySelectorAll(".preset-btn[data-preset]").forEach(btn => {
+    btn.addEventListener("click", () => applyJournalPreset(btn.getAttribute("data-preset")));
+  });
+  on("btnExportSettings", "click", () => exportSettingsFile());
+  on("settingsImportInput", "change", e => importSettingsFile(e));
+  on("btnResetSettings", "click", () => {
+    if (state.lang === "fa" && !confirm("همه تنظیمات به حالت پیش‌فرض برمی‌گردد. ادامه می‌دهید؟")) return;
+    if (state.lang === "en" && !confirm("Reset all settings to defaults?")) return;
+    try { localStorage.removeItem(SETTINGS_KEY); } catch (err) { /* ignore */ }
+    window.location.reload();
+  });
+
+  if (exportDpiSelect) exportDpiSelect.addEventListener("change", () => updateExportSize());
+}
+
 // Initial Boot
 document.addEventListener("DOMContentLoaded", () => {
+  applyLayoutToGeometry();
+  restoreSettings();
+  applyStaticLang();
   setupSeriesCheckboxes();
   setupCalloutsControls();
   renderDataTable();
+  syncUIFromState();
   renderChart();
   renderLegend();
   initEvents();
+  initAdvancedEvents();
+  initZoomInteractions();
+  state._booted = true;
 });

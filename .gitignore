@@ -1,7 +1,10 @@
 *.xlsx
 !Clean_Hysteresis_Data.xlsx
+# README gallery: sample datasets + rendered previews
+!samples/*.xlsx
 *.png
 !Clean_Hysteresis_Plot.png
+!gallery/*.png
 *.zip
 chart_standalone.html
 node_modules/
