@@ -164,9 +164,39 @@ step('zoom inset box sliders', () => {
   if (!$('scatterPlotSvg').innerHTML.includes('zoom-inset')) throw new Error('inset gone');
 });
 
-step('journal presets apply', () => {
-  ['nature', 'ieee', 'elsevier', 'acs'].forEach(k => window.eval('applyJournalPreset("' + k + '")'));
+step('publication presets apply', () => {
+  const keys = JSON.parse(window.eval('JSON.stringify(Object.keys(JOURNAL_PRESETS))'));
+  if (keys.length !== 4) throw new Error('preset count ' + keys.length);
+  keys.forEach(k => {
+    window.eval('applyJournalPreset("' + k + '")');
+    const labels = JSON.parse(window.eval('JSON.stringify({fa: JOURNAL_PRESETS["' + k + '"].labelFa, en: JOURNAL_PRESETS["' + k + '"].labelEn, frame: state.frameStyle, size: state.markerSize})'));
+    if (!labels.fa || !labels.en) throw new Error(k + ' has no label');
+    if (!labels.frame || !labels.size) throw new Error(k + ' applied nothing');
+  });
   if (!$('scatterPlotSvg').innerHTML) throw new Error('empty after presets');
+});
+
+step('preset buttons match their keys and carry no journal brand names', () => {
+  const keys = JSON.parse(window.eval('JSON.stringify(Object.keys(JOURNAL_PRESETS))'));
+  const btns = Array.from(document.querySelectorAll('.preset-btn[data-preset]'));
+  if (btns.length !== keys.length) throw new Error('button count ' + btns.length + ' vs preset count ' + keys.length);
+  btns.forEach(b => {
+    const k = b.getAttribute('data-preset');
+    if (keys.indexOf(k) === -1) throw new Error('button points at unknown preset: ' + k);
+    if (!b.getAttribute('data-fa') || !b.getAttribute('data-en')) throw new Error('button ' + k + ' is not bilingual');
+    const txt = [b.textContent, b.getAttribute('data-fa'), b.getAttribute('data-en')].join(' ');
+    if (/nature|ieee|elsevier|acs/i.test(txt)) throw new Error('journal name still in button ' + k + ': ' + txt);
+  });
+});
+
+step('no journal brand names anywhere in the app sources', () => {
+  const bad = [];
+  ['app.js', 'index.html'].forEach(f => {
+    const txt = fs.readFileSync(path.join(root, f), 'utf8');
+    const hits = txt.match(/\b(nature|ieee|elsevier|acs)\b/gi);
+    if (hits) bad.push(f + ': ' + hits.join(', '));
+  });
+  if (bad.length) throw new Error(bad.join(' | '));
 });
 
 step('settings serialize/restore round trip', () => {

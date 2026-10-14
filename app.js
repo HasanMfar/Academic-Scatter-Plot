@@ -51,7 +51,7 @@ const state = {
   lang: "fa", // 'fa' or 'en'
   theme: "light", // 'dark' or 'light'
   plotMode: "scatter-line", // 'scatter-line' or 'scatter-only'
-  frameStyle: "boxed", // 'boxed' (Nature/ACS 4-sided) or 'open' (L-shape)
+  frameStyle: "boxed", // 'boxed' (four-sided frame) or 'open' (L-shape)
   markerSize: 10,
   lineWidth: 2.6,
   showErrorBand: false,
@@ -151,34 +151,34 @@ const state = {
   }
 };
 
-// Journal presets: one click applies a full publication look
+// Publication presets: one click applies a full figure look
 const JOURNAL_PRESETS = {
-  nature: {
-    labelFa: "Nature", labelEn: "Nature",
+  compact: {
+    labelFa: "جمع‌وجور", labelEn: "Compact",
     frameStyle: "boxed", plotMode: "scatter-line",
     layout: { width: 900, height: 560, marginTop: 40, marginRight: 70, marginBottom: 78, marginLeft: 92, axisOrigin: "corner" },
     type: { fontFamily: "Arial", tickFont: 15, axisTitleFont: 18, legendFont: 12, dataLabelFont: 10.5, gridStyle: "dashed", gridOpacity: 0.7, titlePlacement: "above", transparentBg: false, plotBg: "" },
     ticks: { direction: "in", length: 5, minor: 0, decimals: -1, xLabelRotate: 0, labelEvery: 1 },
     markerSize: 9, lineWidth: 2.2
   },
-  ieee: {
-    labelFa: "IEEE", labelEn: "IEEE",
+  doubleColumn: {
+    labelFa: "دو ستونی", labelEn: "Double-column",
     frameStyle: "boxed", plotMode: "scatter-line",
     layout: { width: 960, height: 540, marginTop: 36, marginRight: 60, marginBottom: 76, marginLeft: 88, axisOrigin: "corner" },
     type: { fontFamily: "Arial", tickFont: 14, axisTitleFont: 17, legendFont: 11.5, dataLabelFont: 10, gridStyle: "solid", gridOpacity: 0.45, titlePlacement: "above", transparentBg: false, plotBg: "" },
     ticks: { direction: "out", length: 6, minor: 1, decimals: -1, xLabelRotate: 0, labelEvery: 1 },
     markerSize: 8, lineWidth: 2.4
   },
-  elsevier: {
-    labelFa: "Elsevier", labelEn: "Elsevier",
+  openFrame: {
+    labelFa: "کادر باز سریف", labelEn: "Open frame, serif",
     frameStyle: "open", plotMode: "scatter-line",
     layout: { width: 920, height: 580, marginTop: 44, marginRight: 55, marginBottom: 80, marginLeft: 95, axisOrigin: "corner" },
     type: { fontFamily: "Times", tickFont: 15, axisTitleFont: 18, legendFont: 12, dataLabelFont: 10.5, gridStyle: "none", gridOpacity: 0.5, titlePlacement: "above", transparentBg: false, plotBg: "" },
     ticks: { direction: "out", length: 6, minor: 0, decimals: -1, xLabelRotate: 0, labelEvery: 1 },
     markerSize: 10, lineWidth: 2.6
   },
-  acs: {
-    labelFa: "ACS", labelEn: "ACS",
+  axesAtZero: {
+    labelFa: "محور از صفر", labelEn: "Axes at zero",
     frameStyle: "boxed", plotMode: "scatter-line",
     layout: { width: 880, height: 560, marginTop: 40, marginRight: 64, marginBottom: 78, marginLeft: 90, axisOrigin: "zero" },
     type: { fontFamily: "Arial", tickFont: 14, axisTitleFont: 17, legendFont: 11.5, dataLabelFont: 10, gridStyle: "dotted", gridOpacity: 0.55, titlePlacement: "above", transparentBg: false, plotBg: "" },
@@ -962,7 +962,7 @@ function renderChart() {
           stroke="${colors.axis}" stroke-width="1.8" />
   `;
 
-  // Boxed Journal Frame: Top and Right Spines with Inward Ticks (Classic Nature/ACS ISI style)
+  // Boxed Journal Frame: Top and Right Spines with Inward Ticks (classic ISI style)
   if (state.frameStyle === "boxed") {
     svgContent += `
       <line x1="${plotArea.x}" y1="${plotArea.y}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y}"

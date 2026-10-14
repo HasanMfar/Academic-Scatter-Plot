@@ -35,12 +35,12 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 
 <table>
 <tr>
-<td align="center"><img src="gallery/01_qcm_hysteresis.png" width="420"><br><sub><b>QCM humidity hysteresis</b> — Nature preset, forward/backward paths</sub></td>
+<td align="center"><img src="gallery/01_qcm_hysteresis.png" width="420"><br><sub><b>QCM humidity hysteresis</b> — boxed compact preset, forward/backward paths</sub></td>
 <td align="center"><img src="gallery/02_beer_lambert.png" width="420"><br><sub><b>Beer–Lambert calibration</b> — ±SD error bars, linear fit + R²</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="gallery/03_uvvis_spectra.png" width="420"><br><sub><b>UV-Vis spectra</b> — Elsevier open-frame style</sub></td>
-<td align="center"><img src="gallery/04_damped_oscillation.png" width="420"><br><sub><b>Damped oscillation</b> — ACS preset, axes through zero</sub></td>
+<td align="center"><img src="gallery/03_uvvis_spectra.png" width="420"><br><sub><b>UV-Vis spectra</b> — open-frame serif style</sub></td>
+<td align="center"><img src="gallery/04_damped_oscillation.png" width="420"><br><sub><b>Damped oscillation</b> — compact preset, axes through zero</sub></td>
 </tr>
 <tr>
 <td align="center"><img src="gallery/05_bode_log.png" width="420"><br><sub><b>Bode magnitude</b> — log frequency axis, dark theme</sub></td>

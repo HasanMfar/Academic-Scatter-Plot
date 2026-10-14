@@ -121,6 +121,12 @@ function grabSvg() {
 }
 
 function render(name, cfg) {
+  // applyJournalPreset() silently ignores unknown keys, which would quietly ship
+  // a gallery image in the wrong style, so fail loudly instead.
+  if (cfg.preset) {
+    const known = JSON.parse(window.eval('JSON.stringify(Object.keys(JOURNAL_PRESETS))'));
+    if (known.indexOf(cfg.preset) === -1) throw new Error('unknown preset "' + cfg.preset + '" (known: ' + known.join(', ') + ')');
+  }
   applyLook(cfg);
   const raw = $('scatterPlotSvg').innerHTML;
   const wantLegend = !!(cfg.flags && cfg.flags.showInplotLegend);
@@ -140,7 +146,7 @@ function render(name, cfg) {
 // --- The gallery ---
 const jobs = [
   ['01_qcm_hysteresis', 'QCM_Hysteresis.xlsx', {
-    lang: 'en', theme: 'light', preset: 'nature',
+    lang: 'en', theme: 'light', preset: 'compact',
     title: 'QCM Humidity Sensor Response',
     subtitle: 'Adsorption / desorption hysteresis of nanocomposite vs. pure starch films',
     xTitle: 'Relative Humidity, RH (%)', yTitle: 'Frequency Shift, Δf (Hz)',
@@ -149,7 +155,7 @@ const jobs = [
     layout: { width: 900, height: 560 }
   }],
   ['02_beer_lambert', 'BeerLambert_Calibration.xlsx', {
-    lang: 'en', theme: 'light', preset: 'ieee',
+    lang: 'en', theme: 'light', preset: 'doubleColumn',
     title: 'Beer–Lambert Calibration Curve',
     subtitle: 'Triplicate absorbance with ±SD error bars and linear fit',
     xTitle: 'Concentration (mM)', yTitle: 'Absorbance (a.u.)',
@@ -158,7 +164,7 @@ const jobs = [
     layout: { width: 900, height: 540 }
   }],
   ['03_uvvis_spectra', 'UVVis_Spectra.xlsx', {
-    lang: 'en', theme: 'light', preset: 'elsevier',
+    lang: 'en', theme: 'light', preset: 'openFrame',
     title: 'UV-Vis Absorption Spectra',
     subtitle: 'Three catalyst samples across the visible band',
     xTitle: 'Wavelength (nm)', yTitle: 'Absorbance (a.u.)',
@@ -168,7 +174,7 @@ const jobs = [
     layout: { width: 920, height: 560 }
   }],
   ['04_damped_oscillation', 'Damped_Oscillation.xlsx', {
-    lang: 'en', theme: 'light', preset: 'acs',
+    lang: 'en', theme: 'light', preset: 'axesAtZero',
     title: 'Underdamped Step Response',
     subtitle: 'Displacement of a mass–spring–damper for two damping ratios',
     xTitle: 'Time (s)', yTitle: 'Normalised Displacement',
@@ -178,7 +184,7 @@ const jobs = [
     layout: { width: 900, height: 540 }
   }],
   ['05_bode_log', 'Impedance_Bode.xlsx', {
-    lang: 'en', theme: 'dark', preset: 'nature',
+    lang: 'en', theme: 'dark', preset: 'compact',
     title: 'Bode Magnitude Plot',
     subtitle: 'Two-pole low-pass response with and without EMI (log frequency axis)',
     xTitle: 'Frequency (Hz)', yTitle: 'Gain (dB)',
@@ -189,7 +195,7 @@ const jobs = [
     layout: { width: 900, height: 540 }
   }],
   ['06_solar_iv', 'Solar_Cell_IV.xlsx', {
-    lang: 'en', theme: 'light', preset: 'nature',
+    lang: 'en', theme: 'light', preset: 'compact',
     title: 'Solar Cell I–V Characteristics',
     subtitle: 'Fill-factor knee region of two perovskite cells',
     xTitle: 'Voltage (V)', yTitle: 'Current (mA)',
@@ -198,7 +204,7 @@ const jobs = [
     layout: { width: 900, height: 560 }
   }],
   ['07_magnifier_inset', 'UVVis_Spectra.xlsx', {
-    lang: 'en', theme: 'light', preset: 'nature',
+    lang: 'en', theme: 'light', preset: 'compact',
     title: 'Magnifier Inset — Band Overlap',
     subtitle: 'Publication-style zoom region on the 480–560 nm crossing',
     xTitle: 'Wavelength (nm)', yTitle: 'Absorbance (a.u.)',
@@ -208,7 +214,7 @@ const jobs = [
     layout: { width: 960, height: 560 }
   }],
   ['08_fa_hysteresis', 'QCM_Hysteresis.xlsx', {
-    lang: 'fa', theme: 'light', preset: 'nature',
+    lang: 'fa', theme: 'light', preset: 'compact',
     title: 'پاسخ سنسور رطوبت QCM',
     subtitle: 'حلقه هیسترزیس جذب و واجذب — نانوکامپوزیت در برابر نشاسته خالص',
     xTitle: 'رطوبت نسبی (%)', yTitle: 'تغییر فرکانس (هرتز)',
