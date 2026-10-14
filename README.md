@@ -27,6 +27,7 @@ Often, researchers use complex software (like OriginLab or MATLAB) just to plot 
 - **🖱️ Drag & Drop Callouts:** Click and drag text labels directly on the chart to position them perfectly without overlapping your data.
 - **🌍 Bilingual & Dual Theme:** Switch seamlessly between **English (LTR)** and **Persian (RTL)**, and choose between an Academic Light theme or a Modern Dark theme.
 - **📁 Included Sample Template:** Try out `Clean_Hysteresis_Data.xlsx` included in the root directory for an instant demonstration of hysteresis loops.
+- **🧾 Plain-text Data Import:** `.csv`, `.tsv` and `.txt` files work too — comma, tab, semicolon, pipe or plain-space separated, with UTF-8 / UTF-16 / Windows-codepage text detected automatically, and `#` comment lines ignored.
 
 ## 🖼️ Gallery
 
@@ -68,7 +69,7 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 
 1. Easiest: open the **[online version](https://hasanmfar.github.io/Academic-Scatter-Plot/)** — nothing to install. Or download this repository and open `index.html` in any modern web browser.
 2. In the right panel, generate and download an **Excel Template** based on your number of samples (or use `Clean_Hysteresis_Data.xlsx`).
-3. Fill the template with your data and upload it back.
+3. Fill the template with your data and upload it back — or upload your own `.csv` / `.tsv` / `.txt` export (comma, tab, semicolon, pipe or space separated; first column = X, the rest = Y).
 4. Customize your titles, markers, colors, and line widths.
 5. Export and publish!
 
@@ -88,6 +89,7 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 ## 🚀 امکانات اصلی
 
 - **📊 اتصال مستقیم به اکسل:** فایل `.xlsx` خود را مستقیماً در برنامه آپلود کنید. برنامه به‌طور خودکار ستون‌ها را می‌خواند، به هر کدام رنگ و شکل هندسی مجزا اختصاص می‌دهد و نمودار را رسم می‌کند.
+- **🧾 ورود داده‌های متنی (CSV / TXT):** فایل‌های `.csv`، `.tsv` و `.txt` هم پشتیبانی می‌شوند؛ با جداکنندهٔ کاما، تب، نقطه‌ویرگول، خط عمودی یا فاصله. کدگذاری UTF-8، UTF-16 و کدپیج‌های ویندوزی خودکار تشخیص داده می‌شود و خطوط شروع‌شده با `#` نادیده گرفته می‌شوند.
 - **🔄 تشخیص هوشمند هیسترزیس (رفت و برگشت):** مسیرهای رفت و برگشت در داده‌های دوره‌ای (مثل پاسخ سنسورها) را به صورت هوشمند تشخیص داده و مسیر برگشت را با خط‌چین و فلش‌های جهت‌نما استایل‌دهی می‌کند.
 - **📈 رسم خط روند (Trendline) و R²:** محاسبه فرمول خط رگرسیون و ضریب تعیین R² با دقت بالا.
 - **⚡ تنظیم دستی و خودکار مقیاس محورها (Auto-Scale):** تعیین Min، Max و Step محورهای X و Y به دلخواه یا با یک کلیک بر روی دکمه تنظیم خودکار مقیاس.
@@ -131,7 +133,7 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 
 ۱. ساده‌ترین راه: **[نسخه آنلاین](https://hasanmfar.github.io/Academic-Scatter-Plot/)** را باز کنید — بدون نیاز به نصب. یا فایل‌های پروژه را دانلود کرده و فایل `index.html` را در مرورگر خود باز کنید (بدون نیاز به اینترنت و نصب!).
 ۲. از پنل سمت راست، تعداد نمونه‌های خود را مشخص کرده و **قالب خام اکسل** را دانلود کنید.
-۳. قالب را با داده‌های خود پر کنید و مجدداً در برنامه آپلود نمایید.
+۳. قالب را با داده‌های خود پر کنید و مجدداً در برنامه آپلود نمایید — یا فایل خروجی خودتان با پسوند `.csv`، `.tsv` یا `.txt` را آپلود کنید (با جداکنندهٔ کاما، تب، نقطه‌ویرگول، خط عمودی یا فاصله؛ ستون اول X و بقیه Y).
 ۴. عناوین، رنگ‌ها، ضخامت خطوط و... را شخصی‌سازی کنید.
 ۵. خروجی بگیرید و در مقاله‌ی خود استفاده کنید!
 

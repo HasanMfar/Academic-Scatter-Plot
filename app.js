@@ -2031,7 +2031,9 @@ function parseSmartExcel(rawRows) {
 
   // Columns whose header looks like an error column (err / SD / SE / ± / خطا)
   // are attached to the series on their left as ± error bars.
-  const errRe = /(^|[\s(\[])(err|error|sd|se|std|sigma|σ|±|خطا)/i;
+  // A column is an error column only when its own token is err/errors/SD/SE/STD/sigma/±/خطا.
+  // The trailing guard keeps names such as "Sensor", "Sensitivity" or "StdDev" as series.
+  const errRe = /(^|[\s(\[_])(?:±|σ)(?=$|[\s)\]_.,:;0-9])|(^|[\s(\[_])(?:±\s*)?(?:err(?:or)?s?|std|sd|se|sigma|خطا(?:ی|ها)?)(?![a-z])/i;
   const built = [];
   let lastSeries = null;
   series.forEach((s, i) => {
@@ -2046,12 +2048,18 @@ function parseSmartExcel(rawRows) {
   return { xValues, series: built };
 }
 
-// Shared import path: used by the file picker and by the bundled-sample loader.
-// Returns the number of imported X points (0 when the sheet had no usable data).
-function applyWorkbookData(workbook) {
+function workbookRows(workbook) {
   const ws = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: 0});
+  return XLSX.utils.sheet_to_json(ws, {header: 1, defval: 0});
+}
 
+function applyWorkbookData(workbook) {
+  return applyImportedRows(workbookRows(workbook));
+}
+
+// Shared import path: used by the file picker, the bundled-sample loader and the
+// plain-text reader. Returns the imported X point count (0 when unusable).
+function applyImportedRows(rows) {
   const parsed = parseSmartExcel(rows);
   if (!parsed.xValues || !parsed.xValues.length) {
     showToast(state.lang === "fa"
@@ -2125,6 +2133,95 @@ function applyWorkbookData(workbook) {
   return dataset.xValues.length;
 }
 
+// --- Plain-text data files: comma / tab / semicolon / pipe / whitespace separated ---
+const TEXT_FILE_RE = /\.(csv|tsv|txt|dat|prn|asc)$/i;
+
+function isTextDataFile(name) {
+  return TEXT_FILE_RE.test(String(name || ""));
+}
+
+// Text files from lab software are often UTF-16 or a Windows codepage, not UTF-8
+function decodeTextBuffer(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let text;
+  if (typeof TextDecoder === "undefined") {
+    // Last resort (very old browsers): byte-per-char decoding
+    text = Array.from(bytes).map(b => String.fromCharCode(b)).join("");
+  } else if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) {
+    text = new TextDecoder("utf-16le").decode(bytes.subarray(2));
+  } else if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) {
+    text = new TextDecoder("utf-16be").decode(bytes.subarray(2));
+  } else {
+    text = new TextDecoder("utf-8").decode(bytes);
+    if (text.indexOf("\uFFFD") !== -1) {
+      try { text = new TextDecoder("windows-1252").decode(bytes); } catch (err) { /* keep UTF-8 */ }
+    }
+  }
+  return text.replace(/^\uFEFF/, "");
+}
+
+// Split delimited text into raw rows, guessing the separator from the file itself
+function splitTextRows(text) {
+  const lines = String(text)
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .filter(l => l.trim() !== "" && l.trim().charAt(0) !== "#");
+  if (!lines.length) return [];
+
+  const sample = lines.slice(0, 25);
+  const consistentCols = splitter => {
+    const counts = sample.map(l => splitter(l).length);
+    const tally = {};
+    counts.forEach(n => { tally[n] = (tally[n] || 0) + 1; });
+    let mode = 0, hits = 0;
+    Object.keys(tally).forEach(k => {
+      const n = Number(k);
+      if (tally[k] > hits || (tally[k] === hits && n > mode)) { hits = tally[k]; mode = n; }
+    });
+    return mode >= 2 && hits >= Math.ceil(counts.length * 0.8) ? mode : 0;
+  };
+
+  const splitters = [
+    l => l.split(","),
+    l => l.split("\t"),
+    l => l.split(";"),
+    l => l.split("|"),
+    l => l.trim().split(/[ \t]+/)
+  ];
+  let split = splitters[splitters.length - 1];
+  for (const candidate of splitters) {
+    if (consistentCols(candidate)) { split = candidate; break; }
+  }
+
+  const rows = lines.map(l => split(l).map(cell => cell.trim()));
+
+  // A wide header (col1 units, col2 units …) must not add phantom columns to the data
+  if (rows.length > 1) {
+    const tally = {};
+    rows.forEach(r => { tally[r.length] = (tally[r.length] || 0) + 1; });
+    let mode = 0, hits = 0;
+    Object.keys(tally).forEach(k => {
+      const n = Number(k);
+      if (tally[k] > hits || (tally[k] === hits && n > mode)) { hits = tally[k]; mode = n; }
+    });
+    if (rows[0].length !== mode) rows.shift();
+  }
+  return rows;
+}
+
+// Raw rows of a text file: SheetJS first (quoted fields, tabs, numbers), with the
+// whitespace parser as fallback — SheetJS reads "X  Y  Z" as one single column.
+function textRows(text) {
+  let rows = [];
+  try {
+    rows = workbookRows(XLSX.read(text, {type: "string"}));
+  } catch (err) {
+    rows = [];
+  }
+  const oneColumn = !rows.length || rows.every(r => !r || r.length <= 1);
+  return oneColumn ? splitTextRows(text) : rows;
+}
+
 function importExcelFile(e) {
   const file = e.target.files[0];
   if (!file) {
@@ -2141,9 +2238,9 @@ function importExcelFile(e) {
   const reader = new FileReader();
   reader.onload = function(evt) {
     try {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, {type: "array"});
-      const points = applyWorkbookData(workbook);
+      const points = isTextDataFile(file.name)
+        ? applyImportedRows(textRows(decodeTextBuffer(evt.target.result)))
+        : applyWorkbookData(XLSX.read(new Uint8Array(evt.target.result), {type: "array"}));
       if (!points) return;
       showToast(state.lang === "fa"
         ? `فایل با موفقیت بارگذاری شد (${points} نقطه)`
@@ -2742,7 +2839,7 @@ function initEvents() {
     e.preventDefault();
     if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.name.match(/\.(xlsx|xls|csv)$/i)) {
+      if (/\.(xlsx|xls|csv|tsv|txt|dat|prn|asc)$/i.test(droppedFile.name)) {
         importExcelFile({ target: { files: [droppedFile], value: "" } });
       }
     }

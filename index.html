@@ -810,12 +810,12 @@
               </div>
 
               <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-highlight); margin-bottom: 15px;">
-                <label class="control-label" style="color: var(--primary-accent);">۲. آپلود فایل پر شده (.xlsx)</label>
-                <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">فایل را پر کرده و اینجا آپلود کنید تا نمودار کاملاً اتوماتیک با تعداد ستون‌های شما رسم شود!</span>
+                <label class="control-label" style="color: var(--primary-accent);">۲. آپلود فایل داده (اکسل یا متنی)</label>
+                <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">فایل را پر کرده و اینجا آپلود کنید تا نمودار کاملاً اتوماتیک با تعداد ستون‌های شما رسم شود. فایل‌های متنی با جداکنندهٔ کاما، تب، نقطه‌ویرگول و فاصله (.csv / .tsv / .txt) هم پشتیبانی می‌شوند.</span>
                 <label for="excelImportInput" class="btn btn-primary btn-sm-reset" style="display: block; text-align: center; cursor: pointer; margin-top: 0;">
-                  📤 انتخاب فایل اکسل
+                  📤 انتخاب فایل داده (xlsx / csv / txt)
                 </label>
-                <input type="file" id="excelImportInput" accept=".xlsx, .xls, .csv" style="display: none;">
+                <input type="file" id="excelImportInput" accept=".xlsx, .xls, .csv, .tsv, .txt, .dat, .prn" style="display: none;">
               </div>
 
               <div class="table-scroll">
@@ -857,6 +857,6 @@
       document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
     }
   </script>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

@@ -201,6 +201,35 @@ step('error column parsing', () => {
   if (!obj.series[0].errValues || obj.series[0].errValues[0] !== 0.2) throw new Error('err not attached');
 });
 
+step('series names that merely start with an error keyword survive', () => {
+  const obj = JSON.parse(window.eval(`
+    JSON.stringify(parseSmartExcel([
+      ['RH (%)', 'Sensor', 'Sensor SD', 'Sensitivity', '±'],
+      [20, 1.5, 0.2, 3, 0.1],
+      [40, 2.5, 0.3, 4, 0.2]
+    ]))
+  `));
+  const names = obj.series.map(s => s.nameEn);
+  if (JSON.stringify(names) !== JSON.stringify(['Sensor', 'Sensitivity'])) {
+    throw new Error('names ' + JSON.stringify(names));
+  }
+  if (!obj.series[0].errValues || obj.series[0].errValues[0] !== 0.2) throw new Error('SD column lost');
+  if (!obj.series[1].errValues || obj.series[1].errValues[0] !== 0.1) throw new Error('± column lost');
+});
+
+step('persian error column headers still attach', () => {
+  const obj = JSON.parse(window.eval(`
+    JSON.stringify(parseSmartExcel([
+      ['رطوبت (%)', 'نمونه ۱', 'خطای استاندارد', 'نمونه ۲'],
+      [20, 1.5, 0.2, 3],
+      [40, 2.5, 0.3, 4]
+    ]))
+  `));
+  const names = obj.series.map(s => s.nameFa);
+  if (JSON.stringify(names) !== JSON.stringify(['نمونه ۱', 'نمونه ۲'])) throw new Error('names ' + JSON.stringify(names));
+  if (!obj.series[0].errValues || obj.series[0].errValues[0] !== 0.2) throw new Error('persian err column lost');
+});
+
 step('per-series controls exist', () => {
   const sels = $('seriesCheckboxesContainer').querySelectorAll('select');
   if (sels.length < 4) throw new Error('expected marker+dash selects per series, got ' + sels.length);
