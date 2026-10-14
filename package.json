@@ -1,0 +1,15 @@
+{
+  "name": "academic-scatter-plot",
+  "private": true,
+  "description": "Client-side publication-ready scatter plot generator — dev tooling: jsdom test suites and asset generators",
+  "scripts": {
+    "test": "node temp_build/smoke.js && node temp_build/import_e2e.js && node temp_build/text_import_e2e.js && node temp_build/sample_loader_e2e.js",
+    "samples": "node temp_build/make_samples.js",
+    "gallery": "node temp_build/make_gallery.js"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "jsdom": "^30.1.2",
+    "xlsx": "^0.18.5"
+  }
+}

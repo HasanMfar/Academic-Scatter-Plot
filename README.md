@@ -90,7 +90,7 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 - **No build step, no framework** — three files do the job: [`index.html`](index.html), [`app.js`](app.js) and [`style.css`](style.css). Open `index.html` and it runs.
 - **Excel parsing** uses a vendored copy of [SheetJS](https://sheetjs.com/) (`xlsx.full.min.js`) with a CDN fallback, so reading your file needs no server round-trip.
 - **Charts are live SVG** — which is why exports are exact: vector `.svg` for Illustrator/Inkscape and PNG at 200/300/600 DPI for Word or LaTeX.
-- **Tests:** `npm install`, then `node temp_build/smoke.js` plus end-to-end suites for Excel import, text import and the sample picker (all under [`temp_build/`](temp_build)).
+- **Tests:** `npm install` then `npm test` — jsdom suites covering the render smoke test, Excel import, text import and the sample picker (all under [`temp_build/`](temp_build)).
 
 ---
 
@@ -165,7 +165,7 @@ Real figures rendered by the app itself — nothing here was drawn by hand. Ever
 
 - **بدون مرحلهٔ بیلد و بدون فریمورک** — کار اصلی را سه فایل انجام می‌دهند: [`index.html`](index.html)، [`app.js`](app.js) و [`style.css`](style.css). کافی است `index.html` را در مرورگر باز کنید.
 - **خواندن اکسل** با نسخهٔ محلی [SheetJS](https://sheetjs.com/) (`xlsx.full.min.js`) انجام می‌شود؛ نمودارها SVG واقعی‌اند، پس خروجی‌ها دقیق‌اند: PNG تا ۶۰۰ DPI برای Word/LaTeX و SVG برای Illustrator/Inkscape.
-- **تست‌ها:** `npm install` سپس `node temp_build/smoke.js` به‌همراه مجموعه‌تست‌های e2e برای ورود اکسل، ورود متنی و منوی نمونه‌ها (همه در [`temp_build/`](temp_build)).
+- **تست‌ها:** `npm install` سپس `npm test` — مجموعه‌تست‌های jsdom برای رندر اولیه، ورود اکسل، ورود متنی و منوی نمونه‌ها (همه در [`temp_build/`](temp_build)).
 
 ---
 *Open-source and crafted for the academic community.*
