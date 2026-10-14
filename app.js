@@ -1307,8 +1307,8 @@ function renderChart() {
   // In-Plot Scientific Legend Box
   if (state.showInplotLegend) {
     const isFa = state.lang === "fa";
-    const legBoxX = state.callouts.inplotX;
-    const legBoxY = state.callouts.inplotY;
+    const legBoxX = state.callouts.inplotX || 160;
+    const legBoxY = state.callouts.inplotY || 280;
     const rowH = Math.max(20, state.type.legendFont + 13);
     const legBoxW = 230;
     const legBoxH = Math.max(80, 44 + (dataset.series.length * rowH));
@@ -2046,97 +2046,244 @@ function parseSmartExcel(rawRows) {
   return { xValues, series: built };
 }
 
+// Shared import path: used by the file picker and by the bundled-sample loader.
+// Returns the number of imported X points (0 when the sheet had no usable data).
+function applyWorkbookData(workbook) {
+  const ws = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: 0});
+
+  const parsed = parseSmartExcel(rows);
+  if (!parsed.xValues || !parsed.xValues.length) {
+    showToast(state.lang === "fa"
+      ? "داده معتبری در فایل اکسل یافت نشد!"
+      : "No usable data was found in that Excel file.");
+    return 0;
+  }
+
+  const colorPalette = [
+    { dark: "#10b981", light: "#059669" }, // emerald (Nano)
+    { dark: "#f43f5e", light: "#e11d48" }, // rose (Starch)
+    { dark: "#06b6d4", light: "#0284c7" }, // cyan
+    { dark: "#f59e0b", light: "#d97706" }, // amber
+    { dark: "#8b5cf6", light: "#6d28d9" }, // violet
+    { dark: "#ec4899", light: "#be185d" }  // pink
+  ];
+  const markers = ["circle", "square", "diamond", "triangle", "cross"];
+
+  const newSeries = parsed.series.map((s, i) => {
+    const color = colorPalette[i % colorPalette.length];
+    const marker = markers[i % markers.length];
+    return {
+      id: `series_${i + 1}`,
+      nameFa: s.nameFa,
+      nameEn: s.nameEn,
+      group: `series_${i + 1}`,
+      colorDark: color.dark,
+      colorLight: color.light,
+      marker: marker,
+      strokeDash: "",
+      opacity: 1,
+      errValues: s.errValues && s.errValues.length === s.yValues.length ? s.errValues : null,
+      yValues: s.yValues,
+      visible: true
+    };
+  });
+
+  dataset.xValues = parsed.xValues;
+  dataset.series = newSeries;
+
+  // Configure direct callout arrows dynamically (keep the in-plot legend where the user put it)
+  state.callouts = {
+    inplotX: isFinite(state.callouts.inplotX) ? state.callouts.inplotX : 160,
+    inplotY: isFinite(state.callouts.inplotY) ? state.callouts.inplotY : 280
+  };
+  state.showAnnotations = true;
+  state.showInplotLegend = false;
+  state.showBottomLegend = false;
+  state.showHysteresis = true;
+
+  const chkHyst = document.getElementById("chkHysteresis");
+  if (chkHyst) chkHyst.checked = true;
+  const chkAnnotations = document.getElementById("chkShowAnnotations");
+  if (chkAnnotations) chkAnnotations.checked = true;
+  const chkInplot = document.getElementById("chkShowInplotLegend");
+  if (chkInplot) chkInplot.checked = false;
+  const chkBottom = document.getElementById("chkShowBottomLegend");
+  if (chkBottom) chkBottom.checked = false;
+
+  // Automatically scale axes
+  autoScaleAxis();
+  // A magnified region taken from the previous dataset would be meaningless now
+  if (state.zoom && state.zoom.enabled) fitZoomToData();
+
+  setupSeriesCheckboxes();
+  setupCalloutsControls();
+  renderDataTable();
+  renderChart();
+  renderLegend();
+
+  return dataset.xValues.length;
+}
+
 function importExcelFile(e) {
   const file = e.target.files[0];
   if (!file) {
     alert("هیچ فایلی انتخاب نشد.");
     return;
   }
-  
+
   if (typeof XLSX === "undefined") {
     alert("خطا: کتابخانه SheetJS بارگذاری نشده است. لطفاً صفحه را رفرش کنید یا اتصال اینترنت را چک کنید.");
     showToast("کتابخانه SheetJS بارگذاری نشده است. لطفاً صفحه را رفرش کنید.");
     return;
   }
-  
+
   const reader = new FileReader();
   reader.onload = function(evt) {
     try {
       const data = new Uint8Array(evt.target.result);
       const workbook = XLSX.read(data, {type: "array"});
-      const ws = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: 0});
-      
-      const parsed = parseSmartExcel(rows);
-      if (!parsed.xValues || !parsed.xValues.length) {
-        showToast("داده معتبری در فایل اکسل یافت نشد!");
-        return;
-      }
-
-      const colorPalette = [
-        { dark: "#10b981", light: "#059669" }, // emerald (Nano)
-        { dark: "#f43f5e", light: "#e11d48" }, // rose (Starch)
-        { dark: "#06b6d4", light: "#0284c7" }, // cyan
-        { dark: "#f59e0b", light: "#d97706" }, // amber
-        { dark: "#8b5cf6", light: "#6d28d9" }, // violet
-        { dark: "#ec4899", light: "#be185d" }  // pink
-      ];
-      const markers = ["circle", "square", "diamond", "triangle", "cross"];
-
-      const newSeries = parsed.series.map((s, i) => {
-        const color = colorPalette[i % colorPalette.length];
-        const marker = markers[i % markers.length];
-        return {
-          id: `series_${i + 1}`,
-          nameFa: s.nameFa,
-          nameEn: s.nameEn,
-          group: `series_${i + 1}`,
-          colorDark: color.dark,
-          colorLight: color.light,
-          marker: marker,
-          strokeDash: "",
-          opacity: 1,
-          errValues: s.errValues && s.errValues.length === s.yValues.length ? s.errValues : null,
-          yValues: s.yValues,
-          visible: true
-        };
-      });
-
-      dataset.xValues = parsed.xValues;
-      dataset.series = newSeries;
-
-      // Configure direct callout arrows dynamically
-      state.callouts = {};
-      state.showAnnotations = true;
-      state.showInplotLegend = false;
-      state.showBottomLegend = false;
-      state.showHysteresis = true;
-
-      const chkHyst = document.getElementById("chkHysteresis");
-      if (chkHyst) chkHyst.checked = true;
-      const chkAnnotations = document.getElementById("chkShowAnnotations");
-      if (chkAnnotations) chkAnnotations.checked = true;
-      const chkInplot = document.getElementById("chkShowInplotLegend");
-      if (chkInplot) chkInplot.checked = false;
-      const chkBottom = document.getElementById("chkShowBottomLegend");
-      if (chkBottom) chkBottom.checked = false;
-
-      // Automatically scale axes
-      autoScaleAxis();
-      
-      setupSeriesCheckboxes();
-      setupCalloutsControls();
-      renderDataTable();
-      renderChart();
-      renderLegend();
-      showToast(`فایل با موفقیت بارگذاری شد (${dataset.xValues.length} نقطه مسیر رفت و برگشت)`);
+      const points = applyWorkbookData(workbook);
+      if (!points) return;
+      showToast(state.lang === "fa"
+        ? `فایل با موفقیت بارگذاری شد (${points} نقطه)`
+        : `File imported successfully (${points} points)`);
     } catch(err) {
       console.error("Excel import error:", err);
-      showToast("خطا در بارگذاری اکسل: " + (err.message || "فایل نامعتبر"));
+      showToast((state.lang === "fa" ? "خطا در بارگذاری اکسل: " : "Excel import failed: ")
+        + (err.message || (state.lang === "fa" ? "فایل نامعتبر" : "invalid file")));
     }
   };
   reader.readAsArrayBuffer(file);
   e.target.value = ""; // Reset file input
+}
+
+// --- Bundled sample datasets: one-click demo data shipped in /samples ---
+// Captions and axis labels reuse the wording of the README gallery figures;
+// only options that differ from the plain import behaviour are listed.
+const SAMPLE_OPTIONS = {
+  "QCM_Hysteresis.xlsx": {
+    flags: { showHysteresis: true, showAnnotations: true },
+    title: { fa: "پاسخ سنسور رطوبت QCM", en: "QCM Humidity Sensor Response" },
+    subtitle: {
+      fa: "حلقه هیسترزیس جذب و واجذب — نانوکامپوزیت در برابر نشاسته خالص",
+      en: "Adsorption / desorption hysteresis of nanocomposite vs. pure starch films"
+    },
+    xTitle: { fa: "رطوبت نسبی (%)", en: "Relative Humidity, RH (%)" },
+    yTitle: { fa: "تغییر فرکانس (هرتز)", en: "Frequency Shift, Δf (Hz)" }
+  },
+  "BeerLambert_Calibration.xlsx": {
+    sortByX: true,
+    showErrorBars: true,
+    flags: { showTrendlines: true, showInplotLegend: true },
+    title: { fa: "منحنی کالیبراسیون بیر–لامبرت", en: "Beer–Lambert Calibration Curve" },
+    subtitle: {
+      fa: "جذب سه‌تکراره با میله‌های خطای ±SD و برازش خطی",
+      en: "Triplicate absorbance with ±SD error bars and linear fit"
+    },
+    xTitle: { fa: "غلظت (میلی‌مولار)", en: "Concentration (mM)" },
+    yTitle: { fa: "جذب (a.u.)", en: "Absorbance (a.u.)" }
+  },
+  "Damped_Oscillation.xlsx": {
+    sortByX: true,
+    flags: { showInplotLegend: true },
+    title: { fa: "پاسخ پله‌ای سیستم میرا", en: "Underdamped Step Response" },
+    subtitle: {
+      fa: "جابجایی جرم–فنر–میراگر برای دو نسبت میرایی",
+      en: "Displacement of a mass–spring–damper for two damping ratios"
+    },
+    xTitle: { fa: "زمان (ثانیه)", en: "Time (s)" },
+    yTitle: { fa: "جابجایی نرمال‌شده", en: "Normalised Displacement" }
+  },
+  "UVVis_Spectra.xlsx": {
+    sortByX: true,
+    flags: { showInplotLegend: true },
+    title: { fa: "طیف جذبی UV-Vis", en: "UV-Vis Absorption Spectra" },
+    subtitle: { fa: "سه نمونه کاتالیست در محدوده مرئی", en: "Three catalyst samples across the visible band" },
+    xTitle: { fa: "طول موج (نانومتر)", en: "Wavelength (nm)" },
+    yTitle: { fa: "جذب (a.u.)", en: "Absorbance (a.u.)" }
+  },
+  "Impedance_Bode.xlsx": {
+    sortByX: true,
+    xLog: true,
+    flags: { showInplotLegend: true },
+    title: { fa: "نمودار دامنه بُد", en: "Bode Magnitude Plot" },
+    subtitle: {
+      fa: "پاسخ پایین‌گذر دو قطبی، با و بدون نویز EMI (محور فرکانس لگاریتمی)",
+      en: "Two-pole low-pass response with and without EMI (log frequency axis)"
+    },
+    xTitle: { fa: "فرکانس (هرتز)", en: "Frequency (Hz)" },
+    yTitle: { fa: "بهره (دسی‌بل)", en: "Gain (dB)" }
+  },
+  "Solar_Cell_IV.xlsx": {
+    sortByX: true,
+    flags: { showAnnotations: true },
+    title: { fa: "منحنی مشخصه I–V سلول خورشیدی", en: "Solar Cell I–V Characteristics" },
+    subtitle: { fa: "ناحیه زانوی ضریب پرشدگی دو سلول پروسکایتی", en: "Fill-factor knee region of two perovskite cells" },
+    xTitle: { fa: "ولتاژ (ولت)", en: "Voltage (V)" },
+    yTitle: { fa: "جریان (میلی‌آمپر)", en: "Current (mA)" }
+  }
+};
+
+async function loadBundledSample(fileName) {
+  if (!fileName) return 0;
+  if (typeof XLSX === "undefined") {
+    showToast(state.lang === "fa" ? "کتابخانه SheetJS بارگذاری نشده است." : "SheetJS is not loaded.");
+    return 0;
+  }
+
+  const lang = state.lang === "en" ? "en" : "fa";
+  const sel = document.getElementById("selSampleDataset");
+  const opt = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+  const optLabel = opt ? opt.getAttribute(`data-${lang}`) : null;
+  const label = optLabel || fileName;
+
+  try {
+    const res = await fetch("samples/" + fileName, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const buffer = await res.arrayBuffer();
+    const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+
+    const points = applyWorkbookData(workbook);
+    if (!points) return 0;
+
+    const opts = SAMPLE_OPTIONS[fileName] || {};
+    const cap = v => (v && typeof v === "object" ? v[lang] : v);
+    // Each sample renders the way its README figure is drawn, independently of
+    // whatever data shaping was active before.
+    state.ticks.xLog = !!opts.xLog;
+    state.data.sortByX = !!opts.sortByX;
+    state.data.smoothing = "straight";
+    state.data.yTransform = "none";
+    state.data.showErrorBars = !!opts.showErrorBars;
+    // Display flags of the sample's README figure; journal style/theme stay as chosen
+    const flags = opts.flags || {};
+    state.showHysteresis = !!flags.showHysteresis;
+    state.showAnnotations = !!flags.showAnnotations;
+    state.showInplotLegend = !!flags.showInplotLegend;
+    state.showTrendlines = !!flags.showTrendlines;
+    state.showErrorBand = !!flags.showErrorBand;
+    state.showDataLabels = !!flags.showDataLabels;
+    if (opts.title) state.chartTitle = cap(opts.title);
+    if (opts.subtitle) state.chartSubtitle = cap(opts.subtitle);
+    if (opts.xTitle) state.xTitle = cap(opts.xTitle);
+    if (opts.yTitle) state.yTitle = cap(opts.yTitle);
+
+    syncUIFromState();
+    renderChart();
+    renderLegend();
+
+    showToast(lang === "fa"
+      ? `نمونه «${label}» بارگذاری شد — ${points} نقطه`
+      : `Sample "${label}" loaded — ${points} points`);
+    return points;
+  } catch (err) {
+    console.error("Sample load failed:", err);
+    showToast(lang === "fa"
+      ? "بارگذاری نمونه ناموفق بود؛ صفحه باید از روی سرور (نسخه آنلاین یا سرور محلی) باز شود."
+      : "Could not load the sample; the page must be served over HTTP (online version or a local server).");
+    return 0;
+  }
 }
 
 
@@ -2576,6 +2723,16 @@ function initEvents() {
   if (btnExportTemplate) btnExportTemplate.addEventListener("click", exportExcelTemplate);
   if (btnAddRow) btnAddRow.addEventListener("click", addRow);
   if (excelImportInput) excelImportInput.addEventListener("change", importExcelFile);
+
+  // Bundled sample datasets: picking one loads it, the button reloads the current pick
+  const selSampleDataset = document.getElementById("selSampleDataset");
+  const btnLoadSample = document.getElementById("btnLoadSample");
+  if (selSampleDataset) {
+    selSampleDataset.addEventListener("change", e => { if (e.target.value) loadBundledSample(e.target.value); });
+  }
+  if (btnLoadSample) {
+    btnLoadSample.addEventListener("click", () => loadBundledSample(selSampleDataset ? selSampleDataset.value : ""));
+  }
 
   // Drag and drop Excel files directly into window
   window.addEventListener("dragover", e => {

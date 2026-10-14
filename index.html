@@ -782,6 +782,25 @@
               <summary id="summaryDataTable" style="font-size: 1.05rem; font-weight: bold; color: var(--primary-accent); margin-bottom: 10px;">📊 ورود و خروج داده‌های اکسل</summary>
               
               <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                <label class="control-label" for="selSampleDataset" style="color: var(--primary-accent);" data-fa="بارگذاری سریع داده نمونه" data-en="Quick-load a sample dataset">بارگذاری سریع داده نمونه</label>
+                <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;" data-fa="یک مجموعه‌داده آماده را انتخاب کنید؛ فایل به‌صورت خودکار روی نمودار می‌آید." data-en="Pick a bundled dataset and it loads straight into the plot, no file needed.">یک مجموعه‌داده آماده را انتخاب کنید؛ فایل به‌صورت خودکار روی نمودار می‌آید.</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <select id="selSampleDataset" class="select-dpi" style="flex: 1 1 auto; min-width: 0;">
+                    <option value="" data-fa="— انتخاب نمونه —" data-en="— choose a sample —">— انتخاب نمونه —</option>
+                    <option value="QCM_Hysteresis.xlsx" data-fa="سنسور QCM — حلقه هیسترزیس" data-en="QCM sensor — hysteresis loop">سنسور QCM — حلقه هیسترزیس</option>
+                    <option value="BeerLambert_Calibration.xlsx" data-fa="کالیبراسیون بیر–لامبرت (با خطا)" data-en="Beer–Lambert calibration (with SD)">کالیبراسیون بیر–لامبرت (با خطا)</option>
+                    <option value="Damped_Oscillation.xlsx" data-fa="نوسان میرا — ۱۲۱ نقطه" data-en="Damped oscillation — 121 points">نوسان میرا — ۱۲۱ نقطه</option>
+                    <option value="UVVis_Spectra.xlsx" data-fa="طیف UV-Vis — سه نمونه" data-en="UV-Vis spectra — three samples">طیف UV-Vis — سه نمونه</option>
+                    <option value="Impedance_Bode.xlsx" data-fa="امپدانس بُد — محور لگاریتمی" data-en="Impedance Bode — log X axis">امپدانس بُد — محور لگاریتمی</option>
+                    <option value="Solar_Cell_IV.xlsx" data-fa="منحنی I–V سلول خورشیدی" data-en="Solar cell I–V curve">منحنی I–V سلول خورشیدی</option>
+                  </select>
+                  <button id="btnLoadSample" class="btn btn-primary btn-sm-reset" style="margin-top: 0; width: auto; flex: 0 0 auto; white-space: nowrap;">
+                    <span data-fa="بارگذاری" data-en="Load">بارگذاری</span>
+                  </button>
+                </div>
+              </div>
+
+              <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
                 <label class="control-label" style="color: var(--primary-accent);">۱. دانلود فایل خام (Template)</label>
                 <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
                   <span style="font-size: 13px; color: var(--text-muted);">تعداد ستون‌ها (نمونه‌ها):</span>
@@ -838,6 +857,6 @@
       document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
     }
   </script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
