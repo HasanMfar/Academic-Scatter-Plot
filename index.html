@@ -136,372 +136,464 @@
             <span id="settingsTitle">تنظیمات و سفارشی‌سازی</span>
           </h3>
 
-          <!-- Language Toggle for Titles -->
-          <div class="control-group">
-            <label class="control-label" id="labelTitleLang">زبان پیش‌فرض عنوان‌ها و برچسب‌ها</label>
-            <div class="segmented-control">
-              <button class="seg-btn active" data-lang="fa" id="btnTitleLangFa">فارسی</button>
-              <button class="seg-btn" data-lang="en" id="btnTitleLangEn">English</button>
+          <!-- Instant Search Box -->
+          <div class="sidebar-search-wrap">
+            <div class="sidebar-search-box">
+              <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="sidebarSearchInput" placeholder="جستجوی سریع تنظیمات..." data-fa="جستجوی سریع تنظیمات..." data-en="Search settings..." autocomplete="off">
+              <button id="btnSidebarSearchClear" class="search-clear-btn" title="پاک کردن جستجو" aria-label="Clear search" style="display:none;">✕</button>
             </div>
-            <small class="control-hint" id="hintTitleLang">با انتخاب زبان، متن‌های علمی استاندارد بارگذاری می‌شوند و قابل ویرایش هستند</small>
+            <div id="searchResultsBadge" class="search-badge" style="display: none;"></div>
           </div>
 
-          <!-- Plot Display Mode -->
-          <div class="control-group">
-            <label class="control-label" id="labelPlotMode">نوع نمایش داده‌ها</label>
-            <div class="segmented-control">
-              <button class="seg-btn active" data-mode="scatter-line" id="btnModeScatterLine">اسکتر + خط مستقیم</button>
-              <button class="seg-btn" data-mode="scatter-only" id="btnModeScatterOnly">فقط نقاط اسکتر</button>
+          <!-- 5 Segmented Navigation Tabs -->
+          <nav class="sidebar-tabs-nav" id="sidebarTabsNav" role="tablist" aria-label="تنظیمات پلات">
+            <button class="sidebar-tab-btn active" data-tab="pane-data" role="tab" aria-selected="true" id="tabBtnData">
+              <span class="tab-icon">📊</span>
+              <span class="tab-label" data-fa="داده‌ها" data-en="Data">داده‌ها</span>
+            </button>
+            <button class="sidebar-tab-btn" data-tab="pane-axes" role="tab" aria-selected="false" id="tabBtnAxes">
+              <span class="tab-icon">📐</span>
+              <span class="tab-label" data-fa="محورها" data-en="Axes">محورها</span>
+            </button>
+            <button class="sidebar-tab-btn" data-tab="pane-style" role="tab" aria-selected="false" id="tabBtnStyle">
+              <span class="tab-icon">🎨</span>
+              <span class="tab-label" data-fa="ظاهر" data-en="Style">ظاهر</span>
+            </button>
+            <button class="sidebar-tab-btn" data-tab="pane-labels" role="tab" aria-selected="false" id="tabBtnLabels">
+              <span class="tab-icon">🏷️</span>
+              <span class="tab-label" data-fa="عناوین" data-en="Labels">عناوین</span>
+            </button>
+            <button class="sidebar-tab-btn" data-tab="pane-tools" role="tab" aria-selected="false" id="tabBtnTools">
+              <span class="tab-icon">⚙️</span>
+              <span class="tab-label" data-fa="ابزارها" data-en="Tools">ابزارها</span>
+            </button>
+          </nav>
+
+          <!-- Scrollable Tabs Content -->
+          <div class="sidebar-tabs-content" id="sidebarTabsContent">
+            
+            <!-- PANE 1: DATA -->
+            <div class="sidebar-tab-pane active" id="pane-data" role="tabpanel" aria-labelledby="tabBtnData">
+              <!-- Table of Data & Excel Integration -->
+              <div class="control-group">
+                <details class="data-table-accordion" open>
+                  <summary id="summaryDataTable" style="font-size: 1.05rem; font-weight: bold; color: var(--primary-accent); margin-bottom: 10px;" data-fa="📊 ورود و خروج داده‌های اکسل" data-en="📊 Data import & export">📊 ورود و خروج داده‌های اکسل</summary>
+                  
+                  <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                    <label class="control-label" for="selSampleDataset" style="color: var(--primary-accent);" data-fa="بارگذاری سریع داده نمونه" data-en="Quick-load a sample dataset">بارگذاری سریع داده نمونه</label>
+                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;" data-fa="یک مجموعه‌داده آماده را انتخاب کنید؛ فایل به‌صورت خودکار روی نمودار می‌آید." data-en="Pick a bundled dataset and it loads straight into the plot, no file needed.">یک مجموعه‌داده آماده را انتخاب کنید؛ فایل به‌صورت خودکار روی نمودار می‌آید.</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <select id="selSampleDataset" class="select-dpi" style="flex: 1 1 auto; min-width: 0;">
+                        <option value="" data-fa="— انتخاب نمونه —" data-en="— choose a sample —">— انتخاب نمونه —</option>
+                        <option value="QCM_Hysteresis.xlsx" data-fa="سنسور QCM — حلقه هیسترزیس" data-en="QCM sensor — hysteresis loop">سنسور QCM — حلقه هیسترزیس</option>
+                        <option value="BeerLambert_Calibration.xlsx" data-fa="کالیبراسیون بیر–لامبرت (با خطا)" data-en="Beer–Lambert calibration (with SD)">کالیبراسیون بیر–لامبرت (با خطا)</option>
+                        <option value="Damped_Oscillation.xlsx" data-fa="نوسان میرا — ۱۲۱ نقطه" data-en="Damped oscillation — 121 points">نوسان میرا — ۱۲۱ نقطه</option>
+                        <option value="UVVis_Spectra.xlsx" data-fa="طیف UV-Vis — سه نمونه" data-en="UV-Vis spectra — three samples">طیف UV-Vis — سه نمونه</option>
+                        <option value="Impedance_Bode.xlsx" data-fa="امپدانس بُد — محور لگاریتمی" data-en="Impedance Bode — log X axis">امپدانس بُد — محور لگاریتمی</option>
+                        <option value="Solar_Cell_IV.xlsx" data-fa="منحنی I–V سلول خورشیدی" data-en="Solar cell I–V curve">منحنی I–V سلول خورشیدی</option>
+                      </select>
+                      <button id="btnLoadSample" class="btn btn-primary btn-sm-reset" style="margin-top: 0; width: auto; flex: 0 0 auto; white-space: nowrap;">
+                        <span data-fa="بارگذاری" data-en="Load">بارگذاری</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
+                    <label class="control-label" style="color: var(--primary-accent);">۱. دانلود فایل خام (Template)</label>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+                      <span style="font-size: 13px; color: var(--text-muted);">تعداد ستون‌ها (نمونه‌ها):</span>
+                      <input type="number" id="numSeriesInput" value="3" min="1" max="10" class="table-input" style="width: 50px; background: transparent; border: 1px solid var(--border-color);">
+                    </div>
+                    <button id="btnExportTemplate" class="btn btn-secondary btn-sm-reset" style="margin-top: 0;">📥 دانلود فایل اکسل خام</button>
+                  </div>
+
+                  <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-highlight); margin-bottom: 15px;">
+                    <label class="control-label" style="color: var(--primary-accent);">۲. آپلود فایل داده (اکسل یا متنی)</label>
+                    <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">فایل را پر کرده و اینجا آپلود کنید تا نمودار کاملاً اتوماتیک با تعداد ستون‌های شما رسم شود. فایل‌های متنی با جداکنندهٔ کاما، تب، نقطه‌ویرگول و فاصله (.csv / .tsv / .txt) هم پشتیبانی می‌شوند.</span>
+                    <label for="excelImportInput" class="btn btn-primary btn-sm-reset" style="display: block; text-align: center; cursor: pointer; margin-top: 0;">
+                      📤 انتخاب فایل داده (xlsx / csv / txt)
+                    </label>
+                    <input type="file" id="excelImportInput" accept=".xlsx, .xls, .csv, .tsv, .txt, .dat, .prn" style="display: none;">
+                  </div>
+
+                  <div class="table-scroll">
+                    <table class="raw-data-table" id="rawDataTable" style="width: 100%; text-align: center; border-collapse: collapse;">
+                      <thead id="dataTableHeader" style="position: sticky; top: 0; background: var(--bg-card);">
+                        <!-- Dynamically generated -->
+                      </thead>
+                      <tbody id="dataTableBody">
+                        <!-- Populated dynamically and editable by app.js -->
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button id="btnAddRow" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;" data-fa="افزودن سطر" data-en="Add row">افزودن سطر</button>
+                    <button id="btnApplyTableData" class="btn btn-primary btn-sm-reset" style="flex: 2; margin-top: 0;" data-fa="بروزرسانی تغییرات جدول" data-en="Apply table changes">بروزرسانی تغییرات جدول</button>
+                  </div>
+                  
+                </details>
+              </div>
+
+              <!-- Curve & data shaping -->
+              <div class="control-group" id="secCurve">
+                <label class="control-label" data-fa="شکل منحنی و پردازش داده" data-en="Curve shape & data shaping">شکل منحنی و پردازش داده</label>
+                <div class="input-field" style="margin-top: 6px;">
+                  <label for="selSmoothing" data-fa="اتصال نقاط" data-en="Connect points with">اتصال نقاط</label>
+                  <select id="selSmoothing" class="select-dpi" style="width: 100%;">
+                    <option value="straight" data-fa="خط مستقیم" data-en="Straight lines">خط مستقیم</option>
+                    <option value="spline" data-fa="منحنی نرم (Spline)" data-en="Smooth spline">منحنی نرم (Spline)</option>
+                  </select>
+                </div>
+                <div class="input-field">
+                  <label for="selYTransform" data-fa="تبدیل مقادیر Y" data-en="Y value transform">تبدیل مقادیر Y</label>
+                  <select id="selYTransform" class="select-dpi" style="width: 100%;">
+                    <option value="none" data-fa="بدون تغییر" data-en="None">بدون تغییر</option>
+                    <option value="baseline" data-fa="صفر کردن از اولین نقطه (Baseline)" data-en="Zero at first point (baseline)">صفر کردن از اولین نقطه (Baseline)</option>
+                    <option value="normalize" data-fa="نرمال‌سازی ۰ تا ۱۰۰٪" data-en="Normalize 0–100%">نرمال‌سازی ۰ تا ۱۰۰٪</option>
+                    <option value="mean" data-fa="کم کردن میانگین (Mean-center)" data-en="Center on mean">کم کردن میانگین (Mean-center)</option>
+                  </select>
+                </div>
+                <div class="checkbox-list">
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="chkSortByX">
+                    <span class="chk-box"></span>
+                    <span data-fa="مرتب‌سازی نقاط بر اساس X قبل از اتصال" data-en="Sort points by X before connecting">مرتب‌سازی نقاط بر اساس X قبل از اتصال</span>
+                  </label>
+                  <label class="custom-checkbox">
+                    <input type="checkbox" id="chkErrorBars">
+                    <span class="chk-box"></span>
+                    <span data-fa="نمایش میله‌های خطا (Error Bars)" data-en="Show error bars">نمایش میله‌های خطا (Error Bars)</span>
+                  </label>
+                </div>
+              </div>
             </div>
-            <small class="control-hint" id="hintPlotMode">بدون ترندلاین (دقیقاً طبق مقادیر تجربی)</small>
-          </div>
 
-          <!-- Journal Frame Style -->
-          <div class="control-group">
-            <label class="control-label" id="labelFrameStyle">سبک کادر نمودار (Journal Frame)</label>
-            <div class="segmented-control">
-              <button class="seg-btn active" data-frame="boxed" id="btnFrameBoxed">کادر کامل مقالات (Boxed)</button>
-              <button class="seg-btn" data-frame="open" id="btnFrameOpen">کادر باز (L-Shape)</button>
+            <!-- PANE 2: AXES -->
+            <div class="sidebar-tab-pane" id="pane-axes" role="tabpanel" aria-labelledby="tabBtnAxes">
+              <!-- Advanced Settings (Axis Scale & Limits) -->
+              <details class="accordion control-group" open>
+                <summary id="labelAdvancedOptions" data-fa="تنظیمات پیشرفته (محورها و خط روند)" data-en="Advanced settings (axes & trendline)">تنظیمات پیشرفته (محورها و خط روند)</summary>
+                <div class="accordion-content">
+                  
+                  <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                    <span style="font-weight: 600; display: block; margin-bottom: 8px;">تنظیم محور افقی (X)</span>
+                    <div style="display: flex; gap: 8px;">
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Min:</label><input type="number" id="inpXMin" value="20" class="table-input"></div>
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Max:</label><input type="number" id="inpXMax" value="100" class="table-input"></div>
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Step:</label><input type="number" id="inpXStep" value="10" class="table-input"></div>
+                    </div>
+                  </div>
+
+                  <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px;">
+                    <span style="font-weight: 600; display: block; margin-bottom: 8px;">تنظیم محور عمودی (Y)</span>
+                    <div style="display: flex; gap: 8px;">
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Min:</label><input type="number" id="inpYMin" value="-450" class="table-input"></div>
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Max:</label><input type="number" id="inpYMax" value="50" class="table-input"></div>
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Step:</label><input type="number" id="inpYStep" value="50" class="table-input"></div>
+                    </div>
+                  </div>
+
+                  <button id="btnAutoScaleAxis" class="btn btn-secondary btn-sm-reset" style="margin-top: 10px; width: 100%;">⚡ تنظیم خودکار مقیاس محورها (Auto Scale)</button>
+
+                  <div class="control-group" style="margin-top: 14px; margin-bottom: 12px;">
+                    <label class="control-label" data-fa="محل تلاقی محورها (Axis Origin)" data-en="Axis origin (where axes cross)">محل تلاقی محورها (Axis Origin)</label>
+                    <div class="segmented-control">
+                      <button class="seg-btn active" data-origin="corner" data-fa="گوشه (کلاسیک)" data-en="Corner (classic)">گوشه (کلاسیک)</button>
+                      <button class="seg-btn" data-origin="zero" data-fa="از صفر" data-en="Through zero">از صفر</button>
+                      <button class="seg-btn" data-origin="center" data-fa="از وسط" data-en="Through center">از وسط</button>
+                    </div>
+                  </div>
+
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkReverseX">
+                      <span class="chk-box"></span>
+                      <span data-fa="برعکس کردن محور افقی (Flip X)" data-en="Reverse X axis">برعکس کردن محور افقی (Flip X)</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkReverseY">
+                      <span class="chk-box"></span>
+                      <span data-fa="برعکس کردن محور عمودی (Flip Y)" data-en="Reverse Y axis">برعکس کردن محور عمودی (Flip Y)</span>
+                    </label>
+                  </div>
+
+                </div>
+              </details>
+
+              <!-- Ticks & Number labels -->
+              <details class="accordion control-group" id="secTicks" open>
+                <summary data-fa="تیک‌ها و اعداد محورها (Ticks & Numbers)" data-en="Ticks & number labels">تیک‌ها و اعداد محورها (Ticks &amp; Numbers)</summary>
+                <div class="accordion-content">
+
+                  <div class="input-field">
+                    <label for="selMinorTicks" data-fa="تیک‌های فرعی (Minor ticks)" data-en="Minor ticks">تیک‌های فرعی (Minor ticks)</label>
+                    <select id="selMinorTicks" class="select-dpi" style="width: 100%;">
+                      <option value="0" data-fa="خاموش" data-en="Off">خاموش</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="4">4</option>
+                    </select>
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selTickDir" data-fa="جهت تیک‌ها" data-en="Tick direction">جهت تیک‌ها</label>
+                    <select id="selTickDir" class="select-dpi" style="width: 100%;">
+                      <option value="out" data-fa="به بیرون" data-en="Outward">به بیرون</option>
+                      <option value="in" data-fa="به داخل" data-en="Inward">به داخل</option>
+                      <option value="both" data-fa="هر دو (دوطرفه)" data-en="Both sides">هر دو (دوطرفه)</option>
+                    </select>
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="طول تیک‌ها" data-en="Tick length">طول تیک‌ها</span>
+                      <span id="valTickLength">6 px</span>
+                    </div>
+                    <input type="range" id="rngTickLength" min="2" max="14" value="6">
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selDecimals" data-fa="رقم اعشار اعداد محور" data-en="Decimal places on axis labels">رقم اعشار اعداد محور</label>
+                    <select id="selDecimals" class="select-dpi" style="width: 100%;">
+                      <option value="-1" data-fa="خودکار (پیش‌فرض)" data-en="Auto (default)">خودکار (پیش‌فرض)</option>
+                      <option value="0">0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                    </select>
+                  </div>
+
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkThousands">
+                      <span class="chk-box"></span>
+                      <span data-fa="جداکننده هزارگان (1,000)" data-en="Thousands separator (1,000)">جداکننده هزارگان (1,000)</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkScientific">
+                      <span class="chk-box"></span>
+                      <span data-fa="نمایش علمی ×10ⁿ" data-en="Scientific ×10ⁿ notation">نمایش علمی ×10ⁿ</span>
+                    </label>
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selLabelRotate" data-fa="چرخش برچسب‌های افقی" data-en="Rotate X labels">چرخش برچسب‌های افقی</label>
+                    <select id="selLabelRotate" class="select-dpi" style="width: 100%;">
+                      <option value="0">0°</option>
+                      <option value="45">45°</option>
+                      <option value="90">90°</option>
+                    </select>
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selLabelEvery" data-fa="برچسب‌گذاری هر N تیک" data-en="Label every Nth tick">برچسب‌گذاری هر N تیک</label>
+                    <select id="selLabelEvery" class="select-dpi" style="width: 100%;">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="5">5</option>
+                    </select>
+                  </div>
+
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkLogX">
+                      <span class="chk-box"></span>
+                      <span data-fa="مقیاس لگاریتمی محور X" data-en="Logarithmic X axis">مقیاس لگاریتمی محور X</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkLogY">
+                      <span class="chk-box"></span>
+                      <span data-fa="مقیاس لگاریتمی محور Y" data-en="Logarithmic Y axis">مقیاس لگاریتمی محور Y</span>
+                    </label>
+                  </div>
+
+                </div>
+              </details>
             </div>
-            <small class="control-hint" id="hintFrameStyle">کادر ۴ جهته استاندارد مقالات ISI</small>
-          </div>
 
-          <!-- Curve & Marker Styling -->
-          <details class="accordion control-group">
-            <summary id="labelStyleSliders">تنظیمات نقاط و خطوط</summary>
-            <div class="accordion-content">
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span id="lblMarkerSize">اندازه مارکرها</span>
-                  <span id="valMarkerSize">10 px</span>
+            <!-- PANE 3: STYLE -->
+            <div class="sidebar-tab-pane" id="pane-style" role="tabpanel" aria-labelledby="tabBtnStyle">
+              <!-- Journal presets & settings persistence -->
+              <div class="control-group" id="secPresets">
+                <label class="control-label" data-fa="پیش‌تنظیم ژورنال‌ها و ذخیره تنظیمات" data-en="Journal presets & settings">پیش‌تنظیم ژورنال‌ها و ذخیره تنظیمات</label>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                  <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="compact" data-fa="جمع‌وجور" data-en="Compact" style="margin-top: 0;">جمع‌وجور</button>
+                  <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="doubleColumn" data-fa="دو ستونی" data-en="Double-column" style="margin-top: 0;">دو ستونی</button>
+                  <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="openFrame" data-fa="کادر باز سریف" data-en="Open frame, serif" style="margin-top: 0;">کادر باز سریف</button>
+                  <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="axesAtZero" data-fa="محور از صفر" data-en="Axes at zero" style="margin-top: 0;">محور از صفر</button>
                 </div>
-                <input type="range" id="rngMarkerSize" min="6" max="16" value="10">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span id="lblLineWidth">ضخامت خطوط</span>
-                  <span id="valLineWidth">2.6 px</span>
+                <div style="display: flex; gap: 6px; margin-top: 8px;">
+                  <button id="btnExportSettings" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;">⬇ <span data-fa="خروجی تنظیمات" data-en="Export settings">خروجی تنظیمات</span></button>
+                  <label for="settingsImportInput" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0; text-align: center; cursor: pointer;">⬆ <span data-fa="بارگذاری" data-en="Load">بارگذاری</span></label>
+                  <input type="file" id="settingsImportInput" accept=".json,application/json" style="display: none;">
                 </div>
-                <input type="range" id="rngLineWidth" min="1.2" max="4.5" step="0.2" value="2.6">
-              </div>
-            </div>
-          </details>
-
-          <!-- Series Toggles -->
-          <div class="control-group">
-            <label class="control-label" id="labelSeriesVisible">سری‌های داده فعال و رنگ‌ها</label>
-            <div class="checkbox-list" id="seriesCheckboxesContainer">
-              <!-- Dynamically populated by app.js -->
-            </div>
-          </div>
-
-          <!-- Advanced Settings (Axis & Trendline) -->
-          <details class="accordion control-group" open>
-            <summary id="labelAdvancedOptions">تنظیمات پیشرفته (محورها و خط روند)</summary>
-            <div class="accordion-content">
-              
-              <div style="margin-bottom: 15px; background: var(--bg-card-subtle); padding: 10px; border-radius: 6px;">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkTrendline">
-                  <span class="chk-box"></span>
-                  <span id="lblTrendline" style="font-weight: bold; color: var(--primary-accent);">رسم خط روند (Trendline) و R²</span>
-                </label>
-                <small style="display: block; margin-top: 5px; margin-bottom: 10px; color: var(--text-muted); font-size: 12px; margin-right: 28px;">نمایش خط بهترین برازش و فرمول رگرسیون خطی</small>
-                
-                <label class="custom-checkbox" style="margin-top: 10px;">
-                  <input type="checkbox" id="chkShowCalloutBox" checked>
-                  <span class="chk-box"></span>
-                  <span id="lblCalloutBox" style="font-weight: bold;">نمایش کادر پس‌زمینه متن راهنما</span>
-                </label>
+                <button id="btnResetSettings" class="btn btn-secondary btn-sm-reset" style="width: 100%; margin-top: 8px;"><span data-fa="بازنشانی کل تنظیمات" data-en="Reset all settings">بازنشانی کل تنظیمات</span></button>
+                <small class="control-hint" style="margin-top: 8px; display: block;" data-fa="تنظیمات به‌صورت خودکار در مرورگر ذخیره می‌شود (بدون ارسال به هیچ سروری)." data-en="Settings are auto-saved in your browser (never sent to a server).">تنظیمات به‌صورت خودکار در مرورگر ذخیره می‌شود (بدون ارسال به هیچ سروری).</small>
               </div>
 
-              <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-                <span style="font-weight: 600; display: block; margin-bottom: 8px;">تنظیم محور افقی (X)</span>
-                <div style="display: flex; gap: 8px;">
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Min:</label><input type="number" id="inpXMin" value="20" class="table-input"></div>
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Max:</label><input type="number" id="inpXMax" value="100" class="table-input"></div>
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Step:</label><input type="number" id="inpXStep" value="10" class="table-input"></div>
-                </div>
-              </div>
-
-              <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px;">
-                <span style="font-weight: 600; display: block; margin-bottom: 8px;">تنظیم محور عمودی (Y)</span>
-                <div style="display: flex; gap: 8px;">
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Min:</label><input type="number" id="inpYMin" value="-450" class="table-input"></div>
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Max:</label><input type="number" id="inpYMax" value="50" class="table-input"></div>
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Step:</label><input type="number" id="inpYStep" value="50" class="table-input"></div>
-                </div>
-              </div>
-
-              <button id="btnAutoScaleAxis" class="btn btn-secondary btn-sm-reset" style="margin-top: 10px; width: 100%;">⚡ تنظیم خودکار مقیاس محورها (Auto Scale)</button>
-
-            </div>
-          </details>
-
-          <!-- Layout: Where the plot starts -->
-          <details class="accordion control-group" open id="secLayout">
-            <summary data-fa="چیدمان و محل شروع پلات (Layout & Canvas)" data-en="Layout & Canvas — where the plot starts">چیدمان و محل شروع پلات (Layout &amp; Canvas)</summary>
-            <div class="accordion-content">
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="فاصله از بالا (Top margin)" data-en="Top margin">فاصله از بالا (Top margin)</span>
-                  <span id="valMarginTop">40 px</span>
-                </div>
-                <input type="range" id="rngMarginTop" min="0" max="240" value="40">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="فاصله از راست (Right margin)" data-en="Right margin">فاصله از راست (Right margin)</span>
-                  <span id="valMarginRight">60 px</span>
-                </div>
-                <input type="range" id="rngMarginRight" min="0" max="240" value="60">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="فاصله از پایین (Bottom margin)" data-en="Bottom margin">فاصله از پایین (Bottom margin)</span>
-                  <span id="valMarginBottom">75 px</span>
-                </div>
-                <input type="range" id="rngMarginBottom" min="0" max="240" value="75">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="فاصله از چپ (Left margin)" data-en="Left margin">فاصله از چپ (Left margin)</span>
-                  <span id="valMarginLeft">90 px</span>
-                </div>
-                <input type="range" id="rngMarginLeft" min="0" max="300" value="90">
-              </div>
-
-              <div class="input-field">
-                <label for="selCanvasPreset" data-fa="اندازه و نسبت بوم (Canvas & Aspect)" data-en="Canvas size & aspect ratio">اندازه و نسبت بوم (Canvas &amp; Aspect)</label>
-                <select id="selCanvasPreset" class="select-dpi" style="width: 100%;">
-                  <option value="standard">استاندارد — 960 × 560</option>
-                  <option value="wide">Wide — 1200 × 560</option>
-                  <option value="compact">Compact — 760 × 480</option>
-                  <option value="square">مربعی Square — 760 × 760</option>
-                  <option value="ratio43">4:3 — 960 × 720</option>
-                  <option value="ratio169">16:9 — 1120 × 630</option>
-                  <option value="double">Double-column — 1280 × 640</option>
-                  <option value="custom" data-fa="سفارشی (با اسلایدرها)" data-en="Custom (use the sliders)">سفارشی (با اسلایدرها)</option>
-                </select>
-              </div>
-
-              <div class="control-group" style="margin-bottom: 12px;">
-                <label class="control-label" data-fa="محل تلاقی محورها (Axis Origin)" data-en="Axis origin (where axes cross)">محل تلاقی محورها (Axis Origin)</label>
+              <!-- Plot Display Mode -->
+              <div class="control-group">
+                <label class="control-label" id="labelPlotMode">نوع نمایش داده‌ها</label>
                 <div class="segmented-control">
-                  <button class="seg-btn active" data-origin="corner" data-fa="گوشه (کلاسیک)" data-en="Corner (classic)">گوشه (کلاسیک)</button>
-                  <button class="seg-btn" data-origin="zero" data-fa="از صفر" data-en="Through zero">از صفر</button>
-                  <button class="seg-btn" data-origin="center" data-fa="از وسط" data-en="Through center">از وسط</button>
+                  <button class="seg-btn active" data-mode="scatter-line" id="btnModeScatterLine">اسکتر + خط مستقیم</button>
+                  <button class="seg-btn" data-mode="scatter-only" id="btnModeScatterOnly">فقط نقاط اسکتر</button>
+                </div>
+                <small class="control-hint" id="hintPlotMode">بدون ترندلاین (دقیقاً طبق مقادیر تجربی)</small>
+              </div>
+
+              <!-- Journal Frame Style -->
+              <div class="control-group">
+                <label class="control-label" id="labelFrameStyle">سبک کادر نمودار (Journal Frame)</label>
+                <div class="segmented-control">
+                  <button class="seg-btn active" data-frame="boxed" id="btnFrameBoxed">کادر کامل مقالات (Boxed)</button>
+                  <button class="seg-btn" data-frame="open" id="btnFrameOpen">کادر باز (L-Shape)</button>
+                </div>
+                <small class="control-hint" id="hintFrameStyle">کادر ۴ جهته استاندارد مقالات ISI</small>
+              </div>
+
+              <!-- Curve & Marker Styling -->
+              <details class="accordion control-group" open>
+                <summary id="labelStyleSliders" data-fa="تنظیمات نقاط و خطوط" data-en="Points & lines">تنظیمات نقاط و خطوط</summary>
+                <div class="accordion-content">
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span id="lblMarkerSize">اندازه مارکرها</span>
+                      <span id="valMarkerSize">10 px</span>
+                    </div>
+                    <input type="range" id="rngMarkerSize" min="6" max="16" value="10">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span id="lblLineWidth">ضخامت خطوط</span>
+                      <span id="valLineWidth">2.6 px</span>
+                    </div>
+                    <input type="range" id="rngLineWidth" min="1.2" max="4.5" step="0.2" value="2.6">
+                  </div>
+                </div>
+              </details>
+
+              <!-- Series Toggles -->
+              <div class="control-group">
+                <label class="control-label" id="labelSeriesVisible">سری‌های داده فعال و رنگ‌ها</label>
+                <div class="checkbox-list" id="seriesCheckboxesContainer">
+                  <!-- Dynamically populated by app.js -->
                 </div>
               </div>
 
-              <div class="checkbox-list">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkReverseX">
-                  <span class="chk-box"></span>
-                  <span data-fa="برعکس کردن محور افقی (Flip X)" data-en="Reverse X axis">برعکس کردن محور افقی (Flip X)</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkReverseY">
-                  <span class="chk-box"></span>
-                  <span data-fa="برعکس کردن محور عمودی (Flip Y)" data-en="Reverse Y axis">برعکس کردن محور عمودی (Flip Y)</span>
-                </label>
-              </div>
+              <!-- Typography, background & grid -->
+              <details class="accordion control-group" id="secType" open>
+                <summary data-fa="تایپوگرافی، پس‌زمینه و شبکه (Type & Color)" data-en="Typography, background & grid">تایپوگرافی، پس‌زمینه و شبکه (Type &amp; Color)</summary>
+                <div class="accordion-content">
 
-              <small class="control-hint" style="margin-top: 8px; display: block;">
-                <span data-fa="اندازه خروجی چاپی:" data-en="Printed figure size:">اندازه خروجی چاپی:</span>
-                <b id="valExportSize">—</b>
-              </small>
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="اندازه فونت اعداد محور" data-en="Tick label size">اندازه فونت اعداد محور</span>
+                      <span id="valTickFont">15 px</span>
+                    </div>
+                    <input type="range" id="rngTickFont" min="9" max="26" value="15">
+                  </div>
 
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="اندازه فونت عنوان محورها" data-en="Axis title size">اندازه فونت عنوان محورها</span>
+                      <span id="valAxisTitleFont">18 px</span>
+                    </div>
+                    <input type="range" id="rngAxisTitleFont" min="10" max="34" value="18">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="اندازه فونت راهنما و کادرها" data-en="Legend & callout size">اندازه فونت راهنما و کادرها</span>
+                      <span id="valLegendFont">11.5 px</span>
+                    </div>
+                    <input type="range" id="rngLegendFont" min="8" max="22" step="0.5" value="11.5">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="اندازه فونت اعداد روی نقاط" data-en="Data label size">اندازه فونت اعداد روی نقاط</span>
+                      <span id="valDataLabelFont">10.5 px</span>
+                    </div>
+                    <input type="range" id="rngDataLabelFont" min="7" max="20" step="0.5" value="10.5">
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selFontFamily" data-fa="خانواده فونت (Font family)" data-en="Font family">خانواده فونت (Font family)</label>
+                    <select id="selFontFamily" class="select-dpi" style="width: 100%;">
+                      <option value="auto" data-fa="پیش‌فرض زبان" data-en="Language default">پیش‌فرض زبان</option>
+                      <option value="Arial">Arial / Helvetica</option>
+                      <option value="Times">Times New Roman</option>
+                      <option value="Vazirmatn">Vazirmatn / Tahoma</option>
+                      <option value="Courier">Courier New</option>
+                      <option value="Georgia">Georgia</option>
+                    </select>
+                  </div>
+
+                  <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                    <label for="inpPlotBg" style="font-size: 13px; font-weight: 600;" data-fa="رنگ پس‌زمینه پلات:" data-en="Plot background:">رنگ پس‌زمینه پلات:</label>
+                    <input type="color" id="inpPlotBg" value="#ffffff" style="width: 42px; height: 28px; border: 1px solid var(--border-color); background: none; cursor: pointer;">
+                    <button id="btnClearPlotBg" class="btn btn-secondary btn-sm-reset" style="margin-top: 0;" data-fa="پیش‌فرض تم" data-en="Theme default">پیش‌فرض تم</button>
+                  </div>
+
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkTransparentBg">
+                      <span class="chk-box"></span>
+                      <span data-fa="پس‌زمینه شفاف در خروجی (Transparent PNG)" data-en="Transparent background on export">پس‌زمینه شفاف در خروجی (Transparent PNG)</span>
+                    </label>
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selGridStyle" data-fa="سبک خطوط راهنما" data-en="Grid line style">سبک خطوط راهنما</label>
+                    <select id="selGridStyle" class="select-dpi" style="width: 100%;">
+                      <option value="dashed" data-fa="خط‌چین" data-en="Dashed">خط‌چین</option>
+                      <option value="solid" data-fa="پیوسته" data-en="Solid">پیوسته</option>
+                      <option value="dotted" data-fa="نقطه‌چین" data-en="Dotted">نقطه‌چین</option>
+                    </select>
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="شفافیت شبکه" data-en="Grid opacity">شفافیت شبکه</span>
+                      <span id="valGridOpacity">100%</span>
+                    </div>
+                    <input type="range" id="rngGridOpacity" min="5" max="100" step="5" value="100">
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selGridAxis" data-fa="شبکه برای کدام محور" data-en="Grid for which axis">شبکه برای کدام محور</label>
+                    <select id="selGridAxis" class="select-dpi" style="width: 100%;">
+                      <option value="both" data-fa="هر دو محور" data-en="Both axes">هر دو محور</option>
+                      <option value="y" data-fa="فقط عمودی" data-en="Y axis only">فقط عمودی</option>
+                      <option value="x" data-fa="فقط افقی" data-en="X axis only">فقط افقی</option>
+                    </select>
+                  </div>
+
+                </div>
+              </details>
             </div>
-          </details>
 
-          <!-- Ticks & Number labels -->
-          <details class="accordion control-group" id="secTicks">
-            <summary data-fa="تیک‌ها و اعداد محورها (Ticks & Numbers)" data-en="Ticks & number labels">تیک‌ها و اعداد محورها (Ticks &amp; Numbers)</summary>
-            <div class="accordion-content">
-
-              <div class="input-field">
-                <label for="selMinorTicks" data-fa="تیک‌های فرعی (Minor ticks)" data-en="Minor ticks">تیک‌های فرعی (Minor ticks)</label>
-                <select id="selMinorTicks" class="select-dpi" style="width: 100%;">
-                  <option value="0" data-fa="خاموش" data-en="Off">خاموش</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-
-              <div class="input-field">
-                <label for="selTickDir" data-fa="جهت تیک‌ها" data-en="Tick direction">جهت تیک‌ها</label>
-                <select id="selTickDir" class="select-dpi" style="width: 100%;">
-                  <option value="out" data-fa="به بیرون" data-en="Outward">به بیرون</option>
-                  <option value="in" data-fa="به داخل" data-en="Inward">به داخل</option>
-                  <option value="both" data-fa="هر دو (دوطرفه)" data-en="Both sides">هر دو (دوطرفه)</option>
-                </select>
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="طول تیک‌ها" data-en="Tick length">طول تیک‌ها</span>
-                  <span id="valTickLength">6 px</span>
+            <!-- PANE 4: LABELS & LEGEND -->
+            <div class="sidebar-tab-pane" id="pane-labels" role="tabpanel" aria-labelledby="tabBtnLabels">
+              <!-- Language Toggle for Titles -->
+              <div class="control-group">
+                <label class="control-label" id="labelTitleLang">زبان پیش‌فرض عنوان‌ها و برچسب‌ها</label>
+                <div class="segmented-control">
+                  <button class="seg-btn active" data-lang="fa" id="btnTitleLangFa">فارسی</button>
+                  <button class="seg-btn" data-lang="en" id="btnTitleLangEn">English</button>
                 </div>
-                <input type="range" id="rngTickLength" min="2" max="14" value="6">
+                <small class="control-hint" id="hintTitleLang">با انتخاب زبان، متن‌های علمی استاندارد بارگذاری می‌شوند و قابل ویرایش هستند</small>
               </div>
 
-              <div class="input-field">
-                <label for="selDecimals" data-fa="رقم اعشار اعداد محور" data-en="Decimal places on axis labels">رقم اعشار اعداد محور</label>
-                <select id="selDecimals" class="select-dpi" style="width: 100%;">
-                  <option value="-1" data-fa="خودکار (پیش‌فرض)" data-en="Auto (default)">خودکار (پیش‌فرض)</option>
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-
-              <div class="checkbox-list">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkThousands">
-                  <span class="chk-box"></span>
-                  <span data-fa="جداکننده هزارگان (1,000)" data-en="Thousands separator (1,000)">جداکننده هزارگان (1,000)</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkScientific">
-                  <span class="chk-box"></span>
-                  <span data-fa="نمایش علمی ×10ⁿ" data-en="Scientific ×10ⁿ notation">نمایش علمی ×10ⁿ</span>
-                </label>
-              </div>
-
-              <div class="input-field">
-                <label for="selLabelRotate" data-fa="چرخش برچسب‌های افقی" data-en="Rotate X labels">چرخش برچسب‌های افقی</label>
-                <select id="selLabelRotate" class="select-dpi" style="width: 100%;">
-                  <option value="0">0°</option>
-                  <option value="45">45°</option>
-                  <option value="90">90°</option>
-                </select>
-              </div>
-
-              <div class="input-field">
-                <label for="selLabelEvery" data-fa="برچسب‌گذاری هر N تیک" data-en="Label every Nth tick">برچسب‌گذاری هر N تیک</label>
-                <select id="selLabelEvery" class="select-dpi" style="width: 100%;">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="5">5</option>
-                </select>
-              </div>
-
-              <div class="checkbox-list">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkLogX">
-                  <span class="chk-box"></span>
-                  <span data-fa="مقیاس لگاریتمی محور X" data-en="Logarithmic X axis">مقیاس لگاریتمی محور X</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkLogY">
-                  <span class="chk-box"></span>
-                  <span data-fa="مقیاس لگاریتمی محور Y" data-en="Logarithmic Y axis">مقیاس لگاریتمی محور Y</span>
-                </label>
-              </div>
-
-            </div>
-          </details>
-
-          <!-- Typography, background & grid -->
-          <details class="accordion control-group" id="secType">
-            <summary data-fa="تایپوگرافی، پس‌زمینه و شبکه (Type & Color)" data-en="Typography, background & grid">تایپوگرافی، پس‌زمینه و شبکه (Type &amp; Color)</summary>
-            <div class="accordion-content">
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="اندازه فونت اعداد محور" data-en="Tick label size">اندازه فونت اعداد محور</span>
-                  <span id="valTickFont">15 px</span>
-                </div>
-                <input type="range" id="rngTickFont" min="9" max="26" value="15">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="اندازه فونت عنوان محورها" data-en="Axis title size">اندازه فونت عنوان محورها</span>
-                  <span id="valAxisTitleFont">18 px</span>
-                </div>
-                <input type="range" id="rngAxisTitleFont" min="10" max="34" value="18">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="اندازه فونت راهنما و کادرها" data-en="Legend & callout size">اندازه فونت راهنما و کادرها</span>
-                  <span id="valLegendFont">11.5 px</span>
-                </div>
-                <input type="range" id="rngLegendFont" min="8" max="22" step="0.5" value="11.5">
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="اندازه فونت اعداد روی نقاط" data-en="Data label size">اندازه فونت اعداد روی نقاط</span>
-                  <span id="valDataLabelFont">10.5 px</span>
-                </div>
-                <input type="range" id="rngDataLabelFont" min="7" max="20" step="0.5" value="10.5">
-              </div>
-
-              <div class="input-field">
-                <label for="selFontFamily" data-fa="خانواده فونت (Font family)" data-en="Font family">خانواده فونت (Font family)</label>
-                <select id="selFontFamily" class="select-dpi" style="width: 100%;">
-                  <option value="auto" data-fa="پیش‌فرض زبان" data-en="Language default">پیش‌فرض زبان</option>
-                  <option value="Arial">Arial / Helvetica</option>
-                  <option value="Times">Times New Roman</option>
-                  <option value="Vazirmatn">Vazirmatn / Tahoma</option>
-                  <option value="Courier">Courier New</option>
-                  <option value="Georgia">Georgia</option>
-                </select>
-              </div>
-
-              <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
-                <label for="inpPlotBg" style="font-size: 13px; font-weight: 600;" data-fa="رنگ پس‌زمینه پلات:" data-en="Plot background:">رنگ پس‌زمینه پلات:</label>
-                <input type="color" id="inpPlotBg" value="#ffffff" style="width: 42px; height: 28px; border: 1px solid var(--border-color); background: none; cursor: pointer;">
-                <button id="btnClearPlotBg" class="btn btn-secondary btn-sm-reset" style="margin-top: 0;" data-fa="پیش‌فرض تم" data-en="Theme default">پیش‌فرض تم</button>
-              </div>
-
-              <div class="checkbox-list">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkTransparentBg">
-                  <span class="chk-box"></span>
-                  <span data-fa="پس‌زمینه شفاف در خروجی (Transparent PNG)" data-en="Transparent background on export">پس‌زمینه شفاف در خروجی (Transparent PNG)</span>
-                </label>
-              </div>
-
-              <div class="input-field">
-                <label for="selGridStyle" data-fa="سبک خطوط راهنما" data-en="Grid line style">سبک خطوط راهنما</label>
-                <select id="selGridStyle" class="select-dpi" style="width: 100%;">
-                  <option value="dashed" data-fa="خط‌چین" data-en="Dashed">خط‌چین</option>
-                  <option value="solid" data-fa="پیوسته" data-en="Solid">پیوسته</option>
-                  <option value="dotted" data-fa="نقطه‌چین" data-en="Dotted">نقطه‌چین</option>
-                </select>
-              </div>
-
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="شفافیت شبکه" data-en="Grid opacity">شفافیت شبکه</span>
-                  <span id="valGridOpacity">100%</span>
-                </div>
-                <input type="range" id="rngGridOpacity" min="5" max="100" step="5" value="100">
-              </div>
-
-              <div class="input-field">
-                <label for="selGridAxis" data-fa="شبکه برای کدام محور" data-en="Grid for which axis">شبکه برای کدام محور</label>
-                <select id="selGridAxis" class="select-dpi" style="width: 100%;">
-                  <option value="both" data-fa="هر دو محور" data-en="Both axes">هر دو محور</option>
-                  <option value="y" data-fa="فقط عمودی" data-en="Y axis only">فقط عمودی</option>
-                  <option value="x" data-fa="فقط افقی" data-en="X axis only">فقط افقی</option>
-                </select>
-              </div>
-
-              <div class="control-group" style="margin-bottom: 0;">
+              <!-- Chart Title Placement -->
+              <div class="control-group" style="margin-bottom: 12px;">
                 <label class="control-label" data-fa="محل عنوان نمودار" data-en="Chart title placement">محل عنوان نمودار</label>
                 <div class="segmented-control">
                   <button class="seg-btn active" data-titleplace="above" data-fa="بالای نمودار" data-en="Above chart">بالای نمودار</button>
@@ -511,331 +603,291 @@
                 <small class="control-hint" data-fa="عنوان «داخل تصویر» در خروجی PNG/SVG هم دیده می‌شود" data-en="'Inside figure' is also included in PNG/SVG exports">عنوان «داخل تصویر» در خروجی PNG/SVG هم دیده می‌شود</small>
               </div>
 
-            </div>
-          </details>
+              <!-- Titles Customization -->
+              <details class="accordion control-group" open>
+                <summary id="labelTitlesCustom" data-fa="شخصی‌سازی عنوان‌ها و محورها" data-en="Titles & axis labels">شخصی‌سازی عنوان‌ها و محورها</summary>
+                <div class="accordion-content">
+                  <div class="input-field">
+                    <label for="inputChartTitle" id="lblInpTitle">عنوان نمودار:</label>
+                    <input type="text" id="inputChartTitle" value="نمودار اسکتر پلات تحلیلی">
+                  </div>
 
-          <!-- Curve & data shaping -->
-          <div class="control-group" id="secCurve">
-            <label class="control-label" data-fa="شکل منحنی و پردازش داده" data-en="Curve shape & data shaping">شکل منحنی و پردازش داده</label>
-            <div class="input-field" style="margin-top: 6px;">
-              <label for="selSmoothing" data-fa="اتصال نقاط" data-en="Connect points with">اتصال نقاط</label>
-              <select id="selSmoothing" class="select-dpi" style="width: 100%;">
-                <option value="straight" data-fa="خط مستقیم" data-en="Straight lines">خط مستقیم</option>
-                <option value="spline" data-fa="منحنی نرم (Spline)" data-en="Smooth spline">منحنی نرم (Spline)</option>
-              </select>
-            </div>
-            <div class="input-field">
-              <label for="selYTransform" data-fa="تبدیل مقادیر Y" data-en="Y value transform">تبدیل مقادیر Y</label>
-              <select id="selYTransform" class="select-dpi" style="width: 100%;">
-                <option value="none" data-fa="بدون تغییر" data-en="None">بدون تغییر</option>
-                <option value="baseline" data-fa="صفر کردن از اولین نقطه (Baseline)" data-en="Zero at first point (baseline)">صفر کردن از اولین نقطه (Baseline)</option>
-                <option value="normalize" data-fa="نرمال‌سازی ۰ تا ۱۰۰٪" data-en="Normalize 0–100%">نرمال‌سازی ۰ تا ۱۰۰٪</option>
-                <option value="mean" data-fa="کم کردن میانگین (Mean-center)" data-en="Center on mean">کم کردن میانگین (Mean-center)</option>
-              </select>
-            </div>
-            <div class="checkbox-list">
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkSortByX">
-                <span class="chk-box"></span>
-                <span data-fa="مرتب‌سازی نقاط بر اساس X قبل از اتصال" data-en="Sort points by X before connecting">مرتب‌سازی نقاط بر اساس X قبل از اتصال</span>
-              </label>
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chkErrorBars">
-                <span class="chk-box"></span>
-                <span data-fa="نمایش میله‌های خطا (Error Bars)" data-en="Show error bars">نمایش میله‌های خطا (Error Bars)</span>
-              </label>
-            </div>
-          </div>
+                  <div class="input-field">
+                    <label for="inputChartSubtitle" id="lblInpSubtitle">زیرعنوان نمودار:</label>
+                    <input type="text" id="inputChartSubtitle" value="مسیر رفت و برگشت داده‌ها (Hysteresis Scatter Plot)">
+                  </div>
 
-          <!-- Magnifier inset -->
-          <details class="accordion control-group" id="secMagnifier">
-            <summary data-fa="ذره‌بین و بزرگ‌نمایی ناحیه (Magnifier Inset)" data-en="Magnifier inset (zoom region)">ذره‌بین و بزرگ‌نمایی ناحیه (Magnifier Inset)</summary>
-            <div class="accordion-content">
+                  <div class="input-field">
+                    <label for="inputXTitle" id="lblInpX">عنوان محور افقی (X):</label>
+                    <input type="text" id="inputXTitle" value="RH (%)">
+                  </div>
 
-              <div class="checkbox-list">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkZoomEnabled">
-                  <span class="chk-box"></span>
-                  <span style="font-weight: bold; color: var(--primary-accent);" data-fa="فعال‌سازی ذره‌بین (نمودار فرعی بزرگ‌نمایی)" data-en="Enable magnifier inset">فعال‌سازی ذره‌بین (نمودار فرعی بزرگ‌نمایی)</span>
-                </label>
-              </div>
-
-              <div class="drag-instruction-toast" style="margin-top: 8px;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <span data-fa="روی نمودار با ماوس یک مستطیل بکشید تا ناحیه بزرگ‌نمایی انتخاب شود (دو کلیک = بازنشانی)." data-en="Drag a rectangle on the plot to choose the magnified region (double-click resets).">روی نمودار با ماوس یک مستطیل بکشید تا ناحیه بزرگ‌نمایی انتخاب شود (دو کلیک = بازنشانی).</span>
-              </div>
-
-              <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px; margin: 10px 0;">
-                <span style="font-weight: 600; display: block; margin-bottom: 8px;" data-fa="ناحیه بزرگ‌نمایی (محدوده داده)" data-en="Magnified region (data range)">ناحیه بزرگ‌نمایی (محدوده داده)</span>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>X0</label><input type="number" id="inpZoomX0" step="any" class="table-input"></div>
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>X1</label><input type="number" id="inpZoomX1" step="any" class="table-input"></div>
+                  <div class="input-field">
+                    <label for="inputYTitle" id="lblInpY">عنوان محور عمودی (Y):</label>
+                    <input type="text" id="inputYTitle" value="Δf (Hz)">
+                  </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Y0</label><input type="number" id="inpZoomY0" step="any" class="table-input"></div>
-                  <div class="input-field" style="margin: 0; flex: 1;"><label>Y1</label><input type="number" id="inpZoomY1" step="any" class="table-input"></div>
+              </details>
+
+              <!-- Show/Hide Elements -->
+              <details class="accordion control-group" open>
+                <summary id="labelDisplayOpts" data-fa="عناصر دیداری" data-en="Chart elements">عناصر دیداری</summary>
+                <div class="accordion-content">
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkHysteresis" onchange="window.toggleHysteresis && window.toggleHysteresis(this.checked)" checked>
+                      <span class="chk-box"></span>
+                      <span id="lblHysteresis" style="color: var(--primary-accent); font-weight: bold;">تشخیص رفت و برگشت (هیسترزیس)</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkShowAnnotations" onchange="window.toggleAnnotations && window.toggleAnnotations(this.checked)" checked>
+                      <span class="chk-box"></span>
+                      <span id="lblAnnotations">برچسب‌ها و فلش‌های نام‌گذاری</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkShowErrorBand" onchange="window.toggleErrorBand && window.toggleErrorBand(this.checked)">
+                      <span class="chk-box"></span>
+                      <span id="lblErrorBand">باند سایه‌دار محدوده تکرارها (Shaded Band)</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkShowInplotLegend" onchange="window.toggleInplotLegend && window.toggleInplotLegend(this.checked)">
+                      <span class="chk-box"></span>
+                      <span id="lblInplotLegend">نمایش راهنمای نمونه‌ها داخل پلات</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkShowBottomLegend" onchange="window.toggleBottomLegend && window.toggleBottomLegend(this.checked)">
+                      <span class="chk-box"></span>
+                      <span id="lblBottomLegend">نمایش راهنمای نمونه‌ها پایین نمودار</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkShowDataLabels" onchange="window.toggleDataLabels && window.toggleDataLabels(this.checked)">
+                      <span class="chk-box"></span>
+                      <span id="lblDataLabels">نمایش عدد روی نقاط</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkShowGrid" onchange="window.toggleGrid && window.toggleGrid(this.checked)" checked>
+                      <span class="chk-box"></span>
+                      <span id="lblGrid">خطوط راهنمای زمینه (Grid)</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkTrendline">
+                      <span class="chk-box"></span>
+                      <span id="lblTrendline" style="font-weight: bold; color: var(--primary-accent);">رسم خط روند (Trendline) و R²</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkShowCalloutBox" checked>
+                      <span class="chk-box"></span>
+                      <span id="lblCalloutBox" style="font-weight: bold;">نمایش کادر پس‌زمینه متن راهنما</span>
+                    </label>
+                  </div>
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                  <button id="btnZoomFit" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;" data-fa="fit با داده‌ها" data-en="Fit to data">fit با داده‌ها</button>
-                  <button id="btnZoomFull" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;" data-fa="کل محور" data-en="Full axis">کل محور</button>
-                </div>
-              </div>
+              </details>
 
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="عرض نمودار فرعی" data-en="Inset width">عرض نمودار فرعی</span>
-                  <span id="valZoomW">300 px</span>
-                </div>
-                <input type="range" id="rngZoomW" min="140" max="480" value="300">
-              </div>
+              <!-- Callouts Position & Placement -->
+              <details class="accordion control-group">
+                <summary id="labelPosControl" data-fa="تنظیم محل قرارگیری فلش‌ها و کادر نمونه‌ها" data-en="Callout & arrow positions">تنظیم محل قرارگیری فلش‌ها و کادر نمونه‌ها</summary>
+                <div class="accordion-content">
+                  <div class="drag-instruction-toast">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="5 9 2 12 5 15"></polyline>
+                      <polyline points="9 5 12 2 15 5"></polyline>
+                      <polyline points="15 19 12 22 9 19"></polyline>
+                      <polyline points="19 9 22 12 19 15"></polyline>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                      <line x1="12" y1="2" x2="12" y2="22"></line>
+                    </svg>
+                    <span id="hintDragDrop">هم <b>کادر هر نمونه</b> و هم <b>نوک فلش (نقطه هدف)</b> را می‌توانید مستقیماً با ماوس روی نمودار جابجا کنید (Drag & Drop) یا از اسلایدرهای زیر برای هر نمونه استفاده نمایید:</span>
+                  </div>
 
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="ارتفاع نمودار فرعی" data-en="Inset height">ارتفاع نمودار فرعی</span>
-                  <span id="valZoomH">190 px</span>
-                </div>
-                <input type="range" id="rngZoomH" min="90" max="340" value="190">
-              </div>
+                  <!-- Dynamically populated for each series/sample by app.js -->
+                  <div id="calloutsControlsContainer" style="margin-bottom: 12px;"></div>
 
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="محل افقی نمودار فرعی" data-en="Inset position X">محل افقی نمودار فرعی</span>
-                  <span id="valZoomBoxX">—</span>
-                </div>
-                <input type="range" id="rngZoomBoxX" min="0" max="960" value="640">
-              </div>
+                  <!-- In-Plot Legend Position -->
+                  <div class="slider-control" id="grpInplotX">
+                    <div class="slider-control-header">
+                      <span id="lblInplotPosX">راهنمای داخل پلات - افقی (X)</span>
+                      <span id="valInplotX">160 px</span>
+                    </div>
+                    <input type="range" id="rngInplotX" min="80" max="680" value="160">
+                  </div>
 
-              <div class="slider-control">
-                <div class="slider-control-header">
-                  <span data-fa="محل عمودی نمودار فرعی" data-en="Inset position Y">محل عمودی نمودار فرعی</span>
-                  <span id="valZoomBoxY">—</span>
-                </div>
-                <input type="range" id="rngZoomBoxY" min="0" max="560" value="56">
-              </div>
+                  <div class="slider-control" id="grpInplotY">
+                    <div class="slider-control-header">
+                      <span id="lblInplotPosY">راهنمای داخل پلات - عمودی (Y)</span>
+                      <span id="valInplotY">280 px</span>
+                    </div>
+                    <input type="range" id="rngInplotY" min="30" max="420" value="280">
+                  </div>
 
-              <div class="control-group" style="margin-bottom: 10px;">
-                <label class="control-label" data-fa="گوشه قرارگیری" data-en="Corner">گوشه قرارگیری</label>
-                <div class="segmented-control">
-                  <button class="seg-btn" data-corner="tl" data-fa="بالا-چپ" data-en="Top-left">بالا-چپ</button>
-                  <button class="seg-btn active" data-corner="tr" data-fa="بالا-راست" data-en="Top-right">بالا-راست</button>
-                  <button class="seg-btn" data-corner="bl" data-fa="پایین-چپ" data-en="Bottom-left">پایین-چپ</button>
-                  <button class="seg-btn" data-corner="br" data-fa="پایین-راست" data-en="Bottom-right">پایین-راست</button>
-                </div>
-              </div>
-
-              <div class="checkbox-list">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkZoomRegionBox" checked>
-                  <span class="chk-box"></span>
-                  <span data-fa="نمایش کادر ناحیه انتخاب‌شده روی نمودار اصلی" data-en="Show the selected region box on the main plot">نمایش کادر ناحیه انتخاب‌شده روی نمودار اصلی</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkZoomTitles">
-                  <span class="chk-box"></span>
-                  <span data-fa="نمایش عنوان محورها داخل ذره‌بین" data-en="Show axis titles inside the inset">نمایش عنوان محورها داخل ذره‌بین</span>
-                </label>
-              </div>
-
-            </div>
-          </details>
-
-          <!-- Journal presets & settings persistence -->
-          <div class="control-group" id="secPresets">
-            <label class="control-label" data-fa="پیش‌تنظیم ژورنال‌ها و ذخیره تنظیمات" data-en="Journal presets & settings">پیش‌تنظیم ژورنال‌ها و ذخیره تنظیمات</label>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
-              <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="compact" data-fa="جمع‌وجور" data-en="Compact" style="margin-top: 0;">جمع‌وجور</button>
-              <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="doubleColumn" data-fa="دو ستونی" data-en="Double-column" style="margin-top: 0;">دو ستونی</button>
-              <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="openFrame" data-fa="کادر باز سریف" data-en="Open frame, serif" style="margin-top: 0;">کادر باز سریف</button>
-              <button class="btn btn-secondary btn-sm-reset preset-btn" data-preset="axesAtZero" data-fa="محور از صفر" data-en="Axes at zero" style="margin-top: 0;">محور از صفر</button>
-            </div>
-            <div style="display: flex; gap: 6px; margin-top: 8px;">
-              <button id="btnExportSettings" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;">⬇ <span data-fa="خروجی تنظیمات" data-en="Export settings">خروجی تنظیمات</span></button>
-              <label for="settingsImportInput" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0; text-align: center; cursor: pointer;">⬆ <span data-fa="بارگذاری" data-en="Load">بارگذاری</span></label>
-              <input type="file" id="settingsImportInput" accept=".json,application/json" style="display: none;">
-            </div>
-            <button id="btnResetSettings" class="btn btn-secondary btn-sm-reset" style="width: 100%; margin-top: 8px;"><span data-fa="بازنشانی کل تنظیمات" data-en="Reset all settings">بازنشانی کل تنظیمات</span></button>
-            <small class="control-hint" style="margin-top: 8px; display: block;" data-fa="تنظیمات به‌صورت خودکار در مرورگر ذخیره می‌شود (بدون ارسال به هیچ سروری)." data-en="Settings are auto-saved in your browser (never sent to a server).">تنظیمات به‌صورت خودکار در مرورگر ذخیره می‌شود (بدون ارسال به هیچ سروری).</small>
-          </div>
-
-          <!-- Show/Hide Elements -->
-          <details class="accordion control-group">
-            <summary id="labelDisplayOpts">عناصر دیداری</summary>
-            <div class="accordion-content">
-              <div class="checkbox-list">
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkHysteresis" onchange="window.toggleHysteresis && window.toggleHysteresis(this.checked)" checked>
-                  <span class="chk-box"></span>
-                  <span id="lblHysteresis" style="color: var(--primary-accent); font-weight: bold;">تشخیص رفت و برگشت (هیسترزیس)</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkShowAnnotations" onchange="window.toggleAnnotations && window.toggleAnnotations(this.checked)" checked>
-                  <span class="chk-box"></span>
-                  <span id="lblAnnotations">برچسب‌ها و فلش‌های نام‌گذاری</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkShowErrorBand" onchange="window.toggleErrorBand && window.toggleErrorBand(this.checked)">
-                  <span class="chk-box"></span>
-                  <span id="lblErrorBand">باند سایه‌دار محدوده تکرارها (Shaded Band)</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkShowInplotLegend" onchange="window.toggleInplotLegend && window.toggleInplotLegend(this.checked)">
-                  <span class="chk-box"></span>
-                  <span id="lblInplotLegend">نمایش راهنمای نمونه‌ها داخل پلات</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkShowBottomLegend" onchange="window.toggleBottomLegend && window.toggleBottomLegend(this.checked)">
-                  <span class="chk-box"></span>
-                  <span id="lblBottomLegend">نمایش راهنمای نمونه‌ها پایین نمودار</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkShowDataLabels" onchange="window.toggleDataLabels && window.toggleDataLabels(this.checked)">
-                  <span class="chk-box"></span>
-                  <span id="lblDataLabels">نمایش عدد روی نقاط</span>
-                </label>
-                <label class="custom-checkbox">
-                  <input type="checkbox" id="chkShowGrid" onchange="window.toggleGrid && window.toggleGrid(this.checked)" checked>
-                  <span class="chk-box"></span>
-                  <span id="lblGrid">خطوط راهنمای زمینه (Grid)</span>
-                </label>
-              </div>
-            </div>
-          </details>
-
-          <!-- Titles Customization -->
-          <details class="accordion control-group">
-            <summary id="labelTitlesCustom">شخصی‌سازی عنوان‌ها و محورها</summary>
-            <div class="accordion-content">
-              <div class="input-field">
-                <label for="inputChartTitle" id="lblInpTitle">عنوان نمودار:</label>
-                <input type="text" id="inputChartTitle" value="نمودار اسکتر پلات تحلیلی">
-              </div>
-
-              <div class="input-field">
-                <label for="inputChartSubtitle" id="lblInpSubtitle">زیرعنوان نمودار:</label>
-                <input type="text" id="inputChartSubtitle" value="مسیر رفت و برگشت داده‌ها (Hysteresis Scatter Plot)">
-              </div>
-
-              <div class="input-field">
-                <label for="inputXTitle" id="lblInpX">عنوان محور افقی (X):</label>
-                <input type="text" id="inputXTitle" value="RH (%)">
-              </div>
-
-              <div class="input-field">
-                <label for="inputYTitle" id="lblInpY">عنوان محور عمودی (Y):</label>
-                <input type="text" id="inputYTitle" value="Δf (Hz)">
-              </div>
-            </div>
-          </details>
-
-          <!-- Callouts Position & Placement -->
-          <details class="accordion control-group">
-            <summary id="labelPosControl">تنظیم محل قرارگیری فلش‌ها و کادر نمونه‌ها</summary>
-            <div class="accordion-content">
-              <div class="drag-instruction-toast">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="5 9 2 12 5 15"></polyline>
-                  <polyline points="9 5 12 2 15 5"></polyline>
-                  <polyline points="15 19 12 22 9 19"></polyline>
-                  <polyline points="19 9 22 12 19 15"></polyline>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <line x1="12" y1="2" x2="12" y2="22"></line>
-                </svg>
-                <span id="hintDragDrop">هم <b>کادر هر نمونه</b> و هم <b>نوک فلش (نقطه هدف)</b> را می‌توانید مستقیماً با ماوس روی نمودار جابجا کنید (Drag & Drop) یا از اسلایدرهای زیر برای هر نمونه استفاده نمایید:</span>
-              </div>
-
-              <!-- Dynamically populated for each series/sample by app.js -->
-              <div id="calloutsControlsContainer" style="margin-bottom: 12px;"></div>
-
-              <!-- In-Plot Legend Position -->
-              <div class="slider-control" id="grpInplotX">
-                <div class="slider-control-header">
-                  <span id="lblInplotPosX">راهنمای داخل پلات - افقی (X)</span>
-                  <span id="valInplotX">160 px</span>
-                </div>
-                <input type="range" id="rngInplotX" min="80" max="680" value="160">
-              </div>
-
-              <div class="slider-control" id="grpInplotY">
-                <div class="slider-control-header">
-                  <span id="lblInplotPosY">راهنمای داخل پلات - عمودی (Y)</span>
-                  <span id="valInplotY">280 px</span>
-                </div>
-                <input type="range" id="rngInplotY" min="30" max="420" value="280">
-              </div>
-
-              <button id="btnResetPositions" class="btn btn-secondary btn-sm-reset">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                  <path d="M3 3v5h5"></path>
-                </svg>
-                <span id="btnResetText">بازنشانی محل فلش‌ها و راهنما به حالت پیش‌فرض</span>
-              </button>
-            </div>
-          </details>
-
-          <!-- Table of Data & Excel Integration -->
-          <div class="control-group">
-            <details class="data-table-accordion" open>
-              <summary id="summaryDataTable" style="font-size: 1.05rem; font-weight: bold; color: var(--primary-accent); margin-bottom: 10px;">📊 ورود و خروج داده‌های اکسل</summary>
-              
-              <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
-                <label class="control-label" for="selSampleDataset" style="color: var(--primary-accent);" data-fa="بارگذاری سریع داده نمونه" data-en="Quick-load a sample dataset">بارگذاری سریع داده نمونه</label>
-                <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;" data-fa="یک مجموعه‌داده آماده را انتخاب کنید؛ فایل به‌صورت خودکار روی نمودار می‌آید." data-en="Pick a bundled dataset and it loads straight into the plot, no file needed.">یک مجموعه‌داده آماده را انتخاب کنید؛ فایل به‌صورت خودکار روی نمودار می‌آید.</span>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                  <select id="selSampleDataset" class="select-dpi" style="flex: 1 1 auto; min-width: 0;">
-                    <option value="" data-fa="— انتخاب نمونه —" data-en="— choose a sample —">— انتخاب نمونه —</option>
-                    <option value="QCM_Hysteresis.xlsx" data-fa="سنسور QCM — حلقه هیسترزیس" data-en="QCM sensor — hysteresis loop">سنسور QCM — حلقه هیسترزیس</option>
-                    <option value="BeerLambert_Calibration.xlsx" data-fa="کالیبراسیون بیر–لامبرت (با خطا)" data-en="Beer–Lambert calibration (with SD)">کالیبراسیون بیر–لامبرت (با خطا)</option>
-                    <option value="Damped_Oscillation.xlsx" data-fa="نوسان میرا — ۱۲۱ نقطه" data-en="Damped oscillation — 121 points">نوسان میرا — ۱۲۱ نقطه</option>
-                    <option value="UVVis_Spectra.xlsx" data-fa="طیف UV-Vis — سه نمونه" data-en="UV-Vis spectra — three samples">طیف UV-Vis — سه نمونه</option>
-                    <option value="Impedance_Bode.xlsx" data-fa="امپدانس بُد — محور لگاریتمی" data-en="Impedance Bode — log X axis">امپدانس بُد — محور لگاریتمی</option>
-                    <option value="Solar_Cell_IV.xlsx" data-fa="منحنی I–V سلول خورشیدی" data-en="Solar cell I–V curve">منحنی I–V سلول خورشیدی</option>
-                  </select>
-                  <button id="btnLoadSample" class="btn btn-primary btn-sm-reset" style="margin-top: 0; width: auto; flex: 0 0 auto; white-space: nowrap;">
-                    <span data-fa="بارگذاری" data-en="Load">بارگذاری</span>
+                  <button id="btnResetPositions" class="btn btn-secondary btn-sm-reset">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                      <path d="M3 3v5h5"></path>
+                    </svg>
+                    <span id="btnResetText">بازنشانی محل فلش‌ها و راهنما به حالت پیش‌فرض</span>
                   </button>
                 </div>
-              </div>
+              </details>
+            </div>
 
-              <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;">
-                <label class="control-label" style="color: var(--primary-accent);">۱. دانلود فایل خام (Template)</label>
-                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
-                  <span style="font-size: 13px; color: var(--text-muted);">تعداد ستون‌ها (نمونه‌ها):</span>
-                  <input type="number" id="numSeriesInput" value="3" min="1" max="10" class="table-input" style="width: 50px; background: transparent; border: 1px solid var(--border-color);">
+            <!-- PANE 5: TOOLS & CANVAS -->
+            <div class="sidebar-tab-pane" id="pane-tools" role="tabpanel" aria-labelledby="tabBtnTools">
+              <!-- Magnifier inset -->
+              <details class="accordion control-group" id="secMagnifier" open>
+                <summary data-fa="ذره‌بین و بزرگ‌نمایی ناحیه (Magnifier Inset)" data-en="Magnifier inset (zoom region)">ذره‌بین و بزرگ‌نمایی ناحیه (Magnifier Inset)</summary>
+                <div class="accordion-content">
+
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkZoomEnabled">
+                      <span class="chk-box"></span>
+                      <span style="font-weight: bold; color: var(--primary-accent);" data-fa="فعال‌سازی ذره‌بین (نمودار فرعی بزرگ‌نمایی)" data-en="Enable magnifier inset">فعال‌سازی ذره‌بین (نمودار فرعی بزرگ‌نمایی)</span>
+                    </label>
+                  </div>
+
+                  <div class="drag-instruction-toast" style="margin-top: 8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span data-fa="روی نمودار با ماوس یک مستطیل بکشید تا ناحیه بزرگ‌نمایی انتخاب شود (دو کلیک = بازنشانی)." data-en="Drag a rectangle on the plot to choose the magnified region (double-click resets).">روی نمودار با ماوس یک مستطیل بکشید تا ناحیه بزرگ‌نمایی انتخاب شود (دو کلیک = بازنشانی).</span>
+                  </div>
+
+                  <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px; margin: 10px 0;">
+                    <span style="font-weight: 600; display: block; margin-bottom: 8px;" data-fa="ناحیه بزرگ‌نمایی (محدوده داده)" data-en="Magnified region (data range)">ناحیه بزرگ‌نمایی (محدوده داده)</span>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>X0</label><input type="number" id="inpZoomX0" step="any" class="table-input"></div>
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>X1</label><input type="number" id="inpZoomX1" step="any" class="table-input"></div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Y0</label><input type="number" id="inpZoomY0" step="any" class="table-input"></div>
+                      <div class="input-field" style="margin: 0; flex: 1;"><label>Y1</label><input type="number" id="inpZoomY1" step="any" class="table-input"></div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                      <button id="btnZoomFit" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;" data-fa="fit با داده‌ها" data-en="Fit to data">fit با داده‌ها</button>
+                      <button id="btnZoomFull" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;" data-fa="کل محور" data-en="Full axis">کل محور</button>
+                    </div>
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="عرض نمودار فرعی" data-en="Inset width">عرض نمودار فرعی</span>
+                      <span id="valZoomW">300 px</span>
+                    </div>
+                    <input type="range" id="rngZoomW" min="140" max="480" value="300">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="ارتفاع نمودار فرعی" data-en="Inset height">ارتفاع نمودار فرعی</span>
+                      <span id="valZoomH">190 px</span>
+                    </div>
+                    <input type="range" id="rngZoomH" min="90" max="340" value="190">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="محل افقی نمودار فرعی" data-en="Inset position X">محل افقی نمودار فرعی</span>
+                      <span id="valZoomBoxX">—</span>
+                    </div>
+                    <input type="range" id="rngZoomBoxX" min="0" max="960" value="640">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="محل عمودی نمودار فرعی" data-en="Inset position Y">محل عمودی نمودار فرعی</span>
+                      <span id="valZoomBoxY">—</span>
+                    </div>
+                    <input type="range" id="rngZoomBoxY" min="0" max="560" value="56">
+                  </div>
+
+                  <div class="control-group" style="margin-bottom: 10px;">
+                    <label class="control-label" data-fa="گوشه قرارگیری" data-en="Corner">گوشه قرارگیری</label>
+                    <div class="segmented-control">
+                      <button class="seg-btn" data-corner="tl" data-fa="بالا-چپ" data-en="Top-left">بالا-چپ</button>
+                      <button class="seg-btn active" data-corner="tr" data-fa="بالا-راست" data-en="Top-right">بالا-راست</button>
+                      <button class="seg-btn" data-corner="bl" data-fa="پایین-چپ" data-en="Bottom-left">پایین-چپ</button>
+                      <button class="seg-btn" data-corner="br" data-fa="پایین-راست" data-en="Bottom-right">پایین-راست</button>
+                    </div>
+                  </div>
+
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkZoomRegionBox" checked>
+                      <span class="chk-box"></span>
+                      <span data-fa="نمایش کادر ناحیه انتخاب‌شده روی نمودار اصلی" data-en="Show the selected region box on the main plot">نمایش کادر ناحیه انتخاب‌شده روی نمودار اصلی</span>
+                    </label>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkZoomTitles">
+                      <span class="chk-box"></span>
+                      <span data-fa="نمایش عنوان محورها داخل ذره‌بین" data-en="Show axis titles inside the inset">نمایش عنوان محورها داخل ذره‌بین</span>
+                    </label>
+                  </div>
+
                 </div>
-                <button id="btnExportTemplate" class="btn btn-secondary btn-sm-reset" style="margin-top: 0;">📥 دانلود فایل اکسل خام</button>
-              </div>
+              </details>
 
-              <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-highlight); margin-bottom: 15px;">
-                <label class="control-label" style="color: var(--primary-accent);">۲. آپلود فایل داده (اکسل یا متنی)</label>
-                <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">فایل را پر کرده و اینجا آپلود کنید تا نمودار کاملاً اتوماتیک با تعداد ستون‌های شما رسم شود. فایل‌های متنی با جداکنندهٔ کاما، تب، نقطه‌ویرگول و فاصله (.csv / .tsv / .txt) هم پشتیبانی می‌شوند.</span>
-                <label for="excelImportInput" class="btn btn-primary btn-sm-reset" style="display: block; text-align: center; cursor: pointer; margin-top: 0;">
-                  📤 انتخاب فایل داده (xlsx / csv / txt)
-                </label>
-                <input type="file" id="excelImportInput" accept=".xlsx, .xls, .csv, .tsv, .txt, .dat, .prn" style="display: none;">
-              </div>
+              <!-- Layout: Where the plot starts -->
+              <details class="accordion control-group" open id="secLayout">
+                <summary data-fa="چیدمان و محل شروع پلات (Layout & Canvas)" data-en="Layout & Canvas — where the plot starts">چیدمان و محل شروع پلات (Layout &amp; Canvas)</summary>
+                <div class="accordion-content">
 
-              <div class="table-scroll">
-                <table class="raw-data-table" id="rawDataTable" style="width: 100%; text-align: center; border-collapse: collapse;">
-                  <thead id="dataTableHeader" style="position: sticky; top: 0; background: var(--bg-card);">
-                    <!-- Dynamically generated -->
-                  </thead>
-                  <tbody id="dataTableBody">
-                    <!-- Populated dynamically and editable by app.js -->
-                  </tbody>
-                </table>
-              </div>
-              <div style="display: flex; gap: 8px; margin-top: 10px;">
-                <button id="btnAddRow" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;">افزودن سطر</button>
-                <button id="btnApplyTableData" class="btn btn-primary btn-sm-reset" style="flex: 2; margin-top: 0;">بروزرسانی تغییرات جدول</button>
-              </div>
-              
-            </details>
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="فاصله از بالا (Top margin)" data-en="Top margin">فاصله از بالا (Top margin)</span>
+                      <span id="valMarginTop">40 px</span>
+                    </div>
+                    <input type="range" id="rngMarginTop" min="0" max="240" value="40">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="فاصله از راست (Right margin)" data-en="Right margin">فاصله از راست (Right margin)</span>
+                      <span id="valMarginRight">60 px</span>
+                    </div>
+                    <input type="range" id="rngMarginRight" min="0" max="240" value="60">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="فاصله از پایین (Bottom margin)" data-en="Bottom margin">فاصله از پایین (Bottom margin)</span>
+                      <span id="valMarginBottom">75 px</span>
+                    </div>
+                    <input type="range" id="rngMarginBottom" min="0" max="240" value="75">
+                  </div>
+
+                  <div class="slider-control">
+                    <div class="slider-control-header">
+                      <span data-fa="فاصله از چپ (Left margin)" data-en="Left margin">فاصله از چپ (Left margin)</span>
+                      <span id="valMarginLeft">90 px</span>
+                    </div>
+                    <input type="range" id="rngMarginLeft" min="0" max="300" value="90">
+                  </div>
+
+                  <div class="input-field">
+                    <label for="selCanvasPreset" data-fa="اندازه و نسبت بوم (Canvas & Aspect)" data-en="Canvas size & aspect ratio">اندازه و نسبت بوم (Canvas &amp; Aspect)</label>
+                    <select id="selCanvasPreset" class="select-dpi" style="width: 100%;">
+                      <option value="standard">استاندارد — 960 × 560</option>
+                      <option value="wide">Wide — 1200 × 560</option>
+                      <option value="compact">Compact — 760 × 480</option>
+                      <option value="square">مربعی Square — 760 × 760</option>
+                      <option value="ratio43">4:3 — 960 × 720</option>
+                      <option value="ratio169">16:9 — 1120 × 630</option>
+                      <option value="double">Double-column — 1280 × 640</option>
+                      <option value="custom" data-fa="سفارشی (با اسلایدرها)" data-en="Custom (use the sliders)">سفارشی (با اسلایدرها)</option>
+                    </select>
+                  </div>
+
+                  <small class="control-hint" style="margin-top: 8px; display: block;">
+                    <span data-fa="اندازه خروجی چاپی:" data-en="Printed figure size:">اندازه خروجی چاپی:</span>
+                    <b id="valExportSize" dir="ltr" style="unicode-bidi: embed; display: inline-block;">—</b>
+                  </small>
+
+                </div>
+              </details>
+            </div>
+
           </div>
-
         </div>
       </aside>
 
@@ -843,7 +895,7 @@
   </div>
 
   <!-- Toast Notification on Copy -->
-  <div id="appToast" class="app-toast">
+  <div id="appToast" class="app-toast" role="status" aria-live="polite">
     <svg class="toast-icon-check" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>

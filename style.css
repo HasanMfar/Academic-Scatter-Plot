@@ -205,19 +205,6 @@ html[dir="ltr"] body {
   transform: translateY(-1px);
 }
 
-/* Layout Grid */
-.main-layout {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 1080px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-  }
-}
 
 /* Chart Section */
 .chart-section {
@@ -434,6 +421,20 @@ html[dir="ltr"] body {
   line-height: 1.4;
 }
 
+/* Layout Grid */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 390px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1120px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Sidebar & Controls */
 .sidebar-section {
   display: flex;
@@ -447,8 +448,46 @@ html[dir="ltr"] body {
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 22px 20px;
+  padding: 20px 18px;
   box-shadow: var(--shadow-card);
+}
+
+@media (min-width: 1121px) {
+  .chart-section {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+  }
+  .sidebar-card {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-tabs-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+    padding-left: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+  .sidebar-tabs-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sidebar-tabs-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-tabs-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+  }
+  .sidebar-tabs-content::-webkit-scrollbar-thumb:hover {
+    background: var(--text-dim);
+  }
 }
 
 .sidebar-title {
@@ -458,13 +497,199 @@ html[dir="ltr"] body {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-main);
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+/* Sidebar Search Box */
+.sidebar-search-wrap {
+  margin-bottom: 12px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sidebar-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-search-box input {
+  width: 100%;
+  padding: 8px 34px 8px 30px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+html[dir="rtl"] .sidebar-search-box input {
+  padding: 8px 34px 8px 30px;
+}
+
+html[dir="ltr"] .sidebar-search-box input {
+  padding: 8px 30px 8px 34px;
+}
+
+.sidebar-search-box input:focus {
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.sidebar-search-box .search-icon {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  color: var(--text-dim);
+}
+
+html[dir="ltr"] .sidebar-search-box .search-icon {
+  right: auto;
+  left: 10px;
+}
+
+.sidebar-search-box .search-clear-btn {
+  position: absolute;
+  left: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+html[dir="ltr"] .sidebar-search-box .search-clear-btn {
+  left: auto;
+  right: 8px;
+}
+
+.sidebar-search-box .search-clear-btn:hover {
+  color: var(--text-main);
+}
+
+.search-badge {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--primary-accent);
+  background: var(--primary-glow);
+  border: 1px solid rgba(79, 70, 229, 0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-top: 6px;
+  display: inline-block;
+  animation: tabFadeIn 0.2s ease;
+}
+
+/* Sidebar Tabs Navigation */
+.sidebar-tabs-nav {
+  display: flex;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 3px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.sidebar-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 7px 2px;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 0;
+  user-select: none;
+}
+
+.sidebar-tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(125, 125, 125, 0.08);
+}
+
+.sidebar-tab-btn.active {
+  background: var(--primary-accent);
+  color: #ffffff !important;
+  box-shadow: 0 3px 10px var(--primary-glow);
+}
+
+.sidebar-tab-btn.active .tab-label {
+  color: #ffffff !important;
+}
+
+.sidebar-tab-btn .tab-icon {
+  font-size: 1.12rem;
+  line-height: 1;
+}
+
+.sidebar-tab-btn .tab-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.72rem;
+}
+
+/* Tab Content & Panes */
+.sidebar-tabs-content {
+  position: relative;
+}
+
+.sidebar-tab-pane {
+  display: none;
+}
+
+.sidebar-tab-pane.active {
+  display: block;
+  animation: tabFadeIn 0.2s ease-out;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Highlight for searched controls */
+.search-matched {
+  outline: 2px solid var(--primary-accent) !important;
+  box-shadow: 0 0 12px var(--primary-glow) !important;
+  border-radius: 8px;
+  transition: all 0.25s ease;
 }
 
 .control-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .control-label {
@@ -866,5 +1091,34 @@ html[dir="ltr"] body {
 }
 .draggable-target:hover .target-hit-area {
   fill-opacity: 0.25;
+}
+
+/* --- UX hardening: sticky preview, focus rings, RTL-safe numbers --- */
+@media (min-width: 1081px) {
+  .chart-section {
+    align-self: stretch;
+  }
+
+  .chart-card {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+/* Visible keyboard focus everywhere (buttons previously had outline: none) */
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary-accent) !important;
+  outline-offset: 2px;
+}
+
+/* Negative values must render as "-450", not "450-", inside RTL containers */
+input[type="number"] {
+  direction: ltr;
+  text-align: center;
 }
 

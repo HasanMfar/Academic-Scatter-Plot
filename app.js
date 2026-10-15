@@ -578,18 +578,29 @@ function getSeriesCallout(s, idx) {
     // Default: point at the max-X (turning) point of the series, label up-left of it
     let ptIdx = 0;
     dataset.xValues.forEach((x, i) => { if (x > dataset.xValues[ptIdx]) ptIdx = i; });
-    const tx = Math.round(mapX(dataset.xValues[ptIdx] ?? 80));
-    const ty = Math.round(mapY(displayY(s, ptIdx)));
-    const clampX = v => Math.max(plotArea.x + 10, Math.min(v, plotArea.x + plotArea.width - 180));
-    const clampY = v => Math.max(plotArea.y + 10, Math.min(v, plotArea.y + plotArea.height - 40));
+    const dataX = dataset.xValues[ptIdx] ?? 80;
+    const dataY = displayY(s, ptIdx);
     state.callouts[s.id] = {
-      x: clampX(tx - 230 - (idx % 2) * 60),
-      y: clampY(ty - 90 + (idx % 2) * 40),
-      targetX: tx,
-      targetY: ty
+      dataX: dataX,
+      dataY: dataY,
+      offsetDx: -230 - (idx % 2) * 60,
+      offsetDy: -90 + (idx % 2) * 40
     };
   }
-  return state.callouts[s.id];
+  const c = state.callouts[s.id];
+  if (c.dataX === undefined) {
+    c.dataX = typeof c.targetX === "number" ? unmapX(c.targetX) : (dataset.xValues[0] ?? 80);
+    c.dataY = typeof c.targetY === "number" ? unmapY(c.targetY) : displayY(s, 0);
+    c.offsetDx = (typeof c.x === "number" && typeof c.targetX === "number") ? c.x - c.targetX : -230;
+    c.offsetDy = (typeof c.y === "number" && typeof c.targetY === "number") ? c.y - c.targetY : -90;
+  }
+  c.targetX = Math.round(mapX(c.dataX));
+  c.targetY = Math.round(mapY(c.dataY));
+  const rawX = c.targetX + (c.offsetDx ?? -200);
+  const rawY = c.targetY + (c.offsetDy ?? -60);
+  c.x = Math.max(10, Math.min(rawX, chartBox.width - 60));
+  c.y = Math.max(10, Math.min(rawY, chartBox.height - 40));
+  return c;
 }
 
 // --- 6. Render SVG Chart ---
@@ -950,27 +961,22 @@ function renderChart() {
   }
 
   // Axes Framing
-  // Labelled Y-Axis (vertical) — sits at the corner, through zero or through center
-  svgContent += `
-    <line x1="${geo.x}" y1="${plotArea.y}" x2="${geo.x}" y2="${plotArea.y + plotArea.height}"
-          stroke="${colors.axis}" stroke-width="1.8" />
-  `;
-
-  // Labelled X-Axis (horizontal)
-  svgContent += `
-    <line x1="${plotArea.x}" y1="${geo.y}" x2="${plotArea.x + plotArea.width}" y2="${geo.y}"
-          stroke="${colors.axis}" stroke-width="1.8" />
-  `;
-
-  // Boxed Journal Frame: Top and Right Spines with Inward Ticks (classic ISI style)
   if (state.frameStyle === "boxed") {
+    // Full enclosing rectangular frame for publication boxed style
     svgContent += `
-      <line x1="${plotArea.x}" y1="${plotArea.y}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y}"
-            stroke="${colors.axis}" stroke-width="1.5" />
-      <line x1="${plotArea.x + plotArea.width}" y1="${plotArea.y}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y + plotArea.height}"
-            stroke="${colors.axis}" stroke-width="1.5" />
+      <rect x="${plotArea.x}" y="${plotArea.y}" width="${plotArea.width}" height="${plotArea.height}"
+            fill="none" stroke="${colors.axis}" stroke-width="1.8" />
     `;
-
+    // If axes cross internally (center or zero), draw internal cross axes
+    if (geo.mode !== "corner") {
+      svgContent += `
+        <line x1="${geo.x}" y1="${plotArea.y}" x2="${geo.x}" y2="${plotArea.y + plotArea.height}"
+              stroke="${colors.axis}" stroke-width="1.5" stroke-dasharray="6,4" />
+        <line x1="${plotArea.x}" y1="${geo.y}" x2="${plotArea.x + plotArea.width}" y2="${geo.y}"
+              stroke="${colors.axis}" stroke-width="1.5" stroke-dasharray="6,4" />
+      `;
+    }
+    // Top and right spines with inward ticks (classic ISI style)
     xTicks.forEach(tick => {
       const xPos = mapX(tick);
       svgContent += `
@@ -985,6 +991,25 @@ function renderChart() {
               stroke="${colors.axis}" stroke-width="1.2" />
       `;
     });
+  } else {
+    // Open style:
+    if (geo.mode === "corner") {
+      // Classic open L-frame (left and bottom spines)
+      svgContent += `
+        <line x1="${plotArea.x}" y1="${plotArea.y}" x2="${plotArea.x}" y2="${plotArea.y + plotArea.height}"
+              stroke="${colors.axis}" stroke-width="1.8" />
+        <line x1="${plotArea.x}" y1="${plotArea.y + plotArea.height}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y + plotArea.height}"
+              stroke="${colors.axis}" stroke-width="1.8" />
+      `;
+    } else {
+      // Internal cross axes
+      svgContent += `
+        <line x1="${geo.x}" y1="${plotArea.y}" x2="${geo.x}" y2="${plotArea.y + plotArea.height}"
+              stroke="${colors.axis}" stroke-width="1.8" />
+        <line x1="${plotArea.x}" y1="${geo.y}" x2="${plotArea.x + plotArea.width}" y2="${geo.y}"
+              stroke="${colors.axis}" stroke-width="1.8" />
+      `;
+    }
   }
 
   // Minor ticks (both axes)
@@ -1015,7 +1040,8 @@ function renderChart() {
             stroke="${colors.axis}" stroke-width="1.5" />
       <text x="${lblX}" y="${yPos + 5}"
             fill="${colors.title}" font-size="${state.type.tickFont}" font-family="${TICK_FONT}"
-            text-anchor="${anchor}" direction="ltr">${fmtTick(tick)}</text>
+            text-anchor="${anchor}" direction="ltr"
+            paint-order="stroke fill" stroke="${colors.bg}" stroke-width="3.5" stroke-linejoin="round">${fmtTick(tick)}</text>
     `;
   });
 
@@ -1035,13 +1061,15 @@ function renderChart() {
       svgContent += `
         <text x="${xPos}" y="${ly}" fill="${colors.title}" font-size="${state.type.tickFont}"
               font-family="${TICK_FONT}" text-anchor="${anchor}" direction="ltr"
+              paint-order="stroke fill" stroke="${colors.bg}" stroke-width="3.5" stroke-linejoin="round"
               transform="rotate(${rot} ${xPos} ${ly})">${fmtTick(tick)}</text>
       `;
     } else {
       svgContent += `
         <text x="${xPos}" y="${xLabelY}"
               fill="${colors.title}" font-size="${state.type.tickFont}" font-family="${TICK_FONT}"
-              text-anchor="middle" direction="ltr">${fmtTick(tick)}</text>
+              text-anchor="middle" direction="ltr"
+              paint-order="stroke fill" stroke="${colors.bg}" stroke-width="3.5" stroke-linejoin="round">${fmtTick(tick)}</text>
       `;
     }
   });
@@ -1080,6 +1108,7 @@ function renderChart() {
   }
 
   // Render Series
+  svgContent += `<g class="plot-data-layer" clip-path="url(#plotClip)">`;
   dataset.series.forEach(s => {
     if (!s.visible) return;
 
@@ -1213,8 +1242,9 @@ function renderChart() {
           <circle cx="${px}" cy="${py}" r="${state.markerSize + 4}" fill="transparent" style="cursor: pointer;" />
           ${pointSvg}
           ${state.showDataLabels ? `
-            <text x="${px}" y="${py - 10}" fill="${colors.text}" font-size="${state.type.dataLabelFont}"
-                  font-weight="700" text-anchor="middle" direction="ltr" font-family="${TICK_FONT}">${fmtTick(yVal)}</text>
+            <text x="${px}" y="${py < plotArea.y + 16 ? py + 16 : py - 10}" fill="${colors.text}" font-size="${state.type.dataLabelFont}"
+                  font-weight="700" text-anchor="middle" direction="ltr" font-family="${TICK_FONT}"
+                  paint-order="stroke fill" stroke="${colors.bg}" stroke-width="2.5" stroke-linejoin="round">${fmtTick(yVal)}</text>
           ` : ""}
         </g>
       `;
@@ -1257,14 +1287,22 @@ function renderChart() {
         const px2 = mapX(x2);
         const py2 = mapY(y2);
 
+        // Position R² on whichever end is on the right side of the chart
+        const rightPx = Math.max(px1, px2);
+        const rightPy = (rightPx === px2) ? py2 : py1;
+        const r2X = Math.max(plotArea.x + 60, Math.min(plotArea.x + plotArea.width - 12, rightPx - 10));
+        const r2Y = Math.max(plotArea.y + 16, Math.min(plotArea.y + plotArea.height - 8, rightPy - 10));
+
         svgContent += `
           <line x1="${px1}" y1="${py1}" x2="${px2}" y2="${py2}"
                 stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="${0.8 * seriesOpacity}" />
-          <text x="${px2 - 10}" y="${py2 - 10}" fill="${seriesColor}" font-size="${state.type.legendFont}" font-weight="bold" font-family="${TICK_FONT}" text-anchor="end" direction="ltr">R² = ${rSquared.toFixed(3)}</text>
+          <text x="${r2X}" y="${r2Y}" fill="${seriesColor}" font-size="${state.type.legendFont}" font-weight="bold" font-family="${TICK_FONT}" text-anchor="end" direction="ltr"
+                paint-order="stroke fill" stroke="${colors.bg}" stroke-width="3" stroke-linejoin="round">R² = ${rSquared.toFixed(3)}</text>
         `;
       }
     }
   });
+  svgContent += `</g>`;
 
   // Dynamic Callouts & Direct Arrows for each sample/series
   if (state.showAnnotations) {
@@ -1307,11 +1345,13 @@ function renderChart() {
   // In-Plot Scientific Legend Box
   if (state.showInplotLegend) {
     const isFa = state.lang === "fa";
-    const legBoxX = state.callouts.inplotX || 160;
-    const legBoxY = state.callouts.inplotY || 280;
     const rowH = Math.max(20, state.type.legendFont + 13);
     const legBoxW = 230;
     const legBoxH = Math.max(80, 44 + (dataset.series.length * rowH));
+    const rawLegX = state.callouts.inplotX != null ? state.callouts.inplotX : (plotArea.x + 20);
+    const rawLegY = state.callouts.inplotY != null ? state.callouts.inplotY : (plotArea.y + plotArea.height - legBoxH - 20);
+    const legBoxX = Math.max(plotArea.x + 4, Math.min(rawLegX, plotArea.x + plotArea.width - legBoxW - 4));
+    const legBoxY = Math.max(plotArea.y + 4, Math.min(rawLegY, plotArea.y + plotArea.height - legBoxH - 4));
 
     svgContent += `
       <g class="draggable-badge" data-badge="inplot" filter="url(#badgeShadow)">
@@ -1524,6 +1564,8 @@ window.addEventListener("mousemove", e => {
 
       callout.targetX = newX;
       callout.targetY = newY;
+      callout.dataX = unmapX(newX);
+      callout.dataY = unmapY(newY);
       syncCalloutSliders(s.id);
       renderChart();
     }
@@ -1541,6 +1583,8 @@ window.addEventListener("mousemove", e => {
       newY = Math.max(10, Math.min(newY, chartBox.height - 40));
       callout.x = newX;
       callout.y = newY;
+      callout.offsetDx = newX - callout.targetX;
+      callout.offsetDy = newY - callout.targetY;
       syncCalloutSliders(s.id);
       renderChart();
     }
@@ -1650,21 +1694,25 @@ function setupCalloutsControls() {
 
     rBx.addEventListener("input", e => {
       callout.x = parseInt(e.target.value, 10);
+      callout.offsetDx = callout.x - callout.targetX;
       lBx.textContent = `${callout.x} px`;
       renderChart();
     });
     rBy.addEventListener("input", e => {
       callout.y = parseInt(e.target.value, 10);
+      callout.offsetDy = callout.y - callout.targetY;
       lBy.textContent = `${callout.y} px`;
       renderChart();
     });
     rTx.addEventListener("input", e => {
       callout.targetX = parseInt(e.target.value, 10);
+      callout.dataX = unmapX(callout.targetX);
       lTx.textContent = `${callout.targetX} px`;
       renderChart();
     });
     rTy.addEventListener("input", e => {
       callout.targetY = parseInt(e.target.value, 10);
+      callout.dataY = unmapY(callout.targetY);
       lTy.textContent = `${callout.targetY} px`;
       renderChart();
     });
@@ -2915,6 +2963,12 @@ function applyStaticLang() {
     const txt = el.getAttribute(`data-${lang}`);
     if (txt != null) el.textContent = txt;
   });
+  const searchInput = document.getElementById("sidebarSearchInput");
+  if (searchInput) {
+    searchInput.placeholder = lang === "en"
+      ? "Search settings (e.g. font, color, ticks, scale...)"
+      : "جستجوی سریع تنظیمات (مثلاً فونت، رنگ، تیک، مقیاس...)";
+  }
 }
 
 function updateExportSize() {
@@ -3347,8 +3401,30 @@ function initAdvancedEvents() {
 
   document.querySelectorAll(".segmented-control .seg-btn[data-origin]").forEach(btn => {
     btn.addEventListener("click", () => {
-      state.layout.axisOrigin = btn.getAttribute("data-origin");
+      const orig = btn.getAttribute("data-origin");
+      state.layout.axisOrigin = orig;
       syncSeg("origin", state.layout.axisOrigin);
+      if (orig === "zero") {
+        state.axis.xMin = Math.min(0, state.axis.xMin);
+        state.axis.yMin = Math.min(0, state.axis.yMin);
+        state.axis.yMax = Math.max(0, state.axis.yMax);
+        setInp("inpXMin", state.axis.xMin);
+        setInp("inpYMin", state.axis.yMin);
+        setInp("inpYMax", state.axis.yMax);
+      } else if (orig === "center") {
+        let maxAbsX = Math.max(Math.abs(state.axis.xMin), Math.abs(state.axis.xMax));
+        if (maxAbsX === 0) maxAbsX = 1;
+        state.axis.xMin = -maxAbsX;
+        state.axis.xMax = maxAbsX;
+        let maxAbsY = Math.max(Math.abs(state.axis.yMin), Math.abs(state.axis.yMax));
+        if (maxAbsY === 0) maxAbsY = 1;
+        state.axis.yMin = -maxAbsY;
+        state.axis.yMax = maxAbsY;
+        setInp("inpXMin", state.axis.xMin);
+        setInp("inpXMax", state.axis.xMax);
+        setInp("inpYMin", state.axis.yMin);
+        setInp("inpYMax", state.axis.yMax);
+      }
       renderChart();
     });
   });
@@ -3495,6 +3571,108 @@ function initAdvancedEvents() {
   if (exportDpiSelect) exportDpiSelect.addEventListener("change", () => updateExportSize());
 }
 
+// Sidebar Navigation Tabs & Instant Search
+function initSidebarTabsAndSearch() {
+  const tabBtns = document.querySelectorAll(".sidebar-tab-btn");
+  const tabPanes = document.querySelectorAll(".sidebar-tab-pane");
+  const searchInput = document.getElementById("sidebarSearchInput");
+  const searchClearBtn = document.getElementById("btnSidebarSearchClear");
+  const searchBadge = document.getElementById("searchResultsBadge");
+
+  function switchTab(tabId) {
+    tabBtns.forEach(btn => {
+      const match = btn.getAttribute("data-tab") === tabId;
+      btn.classList.toggle("active", match);
+      btn.setAttribute("aria-selected", match ? "true" : "false");
+    });
+    tabPanes.forEach(pane => {
+      pane.classList.toggle("active", pane.id === tabId);
+    });
+  }
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.getAttribute("data-tab");
+      switchTab(tabId);
+    });
+  });
+
+  if (searchInput) {
+    function performSearch() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      if (!q) {
+        if (searchClearBtn) searchClearBtn.style.display = "none";
+        if (searchBadge) searchBadge.style.display = "none";
+        document.querySelectorAll(".search-matched").forEach(el => el.classList.remove("search-matched"));
+        const activeBtn = document.querySelector(".sidebar-tab-btn.active");
+        if (activeBtn) switchTab(activeBtn.getAttribute("data-tab"));
+        return;
+      }
+
+      if (searchClearBtn) searchClearBtn.style.display = "flex";
+
+      let totalMatches = 0;
+      let firstMatchingTabId = null;
+
+      document.querySelectorAll(".search-matched").forEach(el => el.classList.remove("search-matched"));
+
+      tabPanes.forEach(pane => {
+        let paneMatches = 0;
+        const searchableItems = pane.querySelectorAll(".control-group, .accordion, .slider-control, .input-field");
+        searchableItems.forEach(item => {
+          const text = (item.textContent || "").toLowerCase();
+          const inputs = Array.from(item.querySelectorAll("input, select, button"))
+            .map(el => (el.id || "") + " " + (el.getAttribute("data-fa") || "") + " " + (el.getAttribute("data-en") || "") + " " + (el.placeholder || ""))
+            .join(" ").toLowerCase();
+          
+          if (text.includes(q) || inputs.includes(q)) {
+            item.classList.add("search-matched");
+            paneMatches++;
+            totalMatches++;
+          }
+        });
+
+        if (paneMatches > 0 && !firstMatchingTabId) {
+          firstMatchingTabId = pane.id;
+        }
+      });
+
+      if (searchBadge) {
+        searchBadge.style.display = "inline-block";
+        const lang = state.lang === "en" ? "en" : "fa";
+        if (totalMatches === 0) {
+          searchBadge.textContent = lang === "en" ? "No settings found" : "تنظیمی یافت نشد";
+          searchBadge.style.background = "rgba(239, 68, 68, 0.15)";
+          searchBadge.style.borderColor = "rgba(239, 68, 68, 0.35)";
+          searchBadge.style.color = "#ef4444";
+        } else {
+          searchBadge.textContent = lang === "en" 
+            ? `${totalMatches} setting${totalMatches > 1 ? "s" : ""} found` 
+            : `${totalMatches} مورد یافت شد`;
+          searchBadge.style.background = "var(--primary-glow)";
+          searchBadge.style.borderColor = "rgba(79, 70, 229, 0.25)";
+          searchBadge.style.color = "var(--primary-accent)";
+        }
+      }
+
+      const currentActivePane = document.querySelector(".sidebar-tab-pane.active");
+      const currentHasMatches = currentActivePane && currentActivePane.querySelector(".search-matched");
+      if (firstMatchingTabId && !currentHasMatches) {
+        switchTab(firstMatchingTabId);
+      }
+    }
+
+    searchInput.addEventListener("input", performSearch);
+    if (searchClearBtn) {
+      searchClearBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        performSearch();
+        searchInput.focus();
+      });
+    }
+  }
+}
+
 // Initial Boot
 document.addEventListener("DOMContentLoaded", () => {
   applyLayoutToGeometry();
@@ -3509,5 +3687,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initEvents();
   initAdvancedEvents();
   initZoomInteractions();
+  initSidebarTabsAndSearch();
   state._booted = true;
 });
+
