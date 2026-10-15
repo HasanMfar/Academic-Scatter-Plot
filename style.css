@@ -1164,3 +1164,94 @@ input[type="number"] {
   text-align: center;
 }
 
+/* --- Glassmorphism Drag & Drop Visual Overlay --- */
+.drop-zone-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+}
+
+.drop-zone-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.drop-zone-card {
+  padding: 36px 52px;
+  background: var(--bg-card);
+  border: 2px dashed var(--primary-accent);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 24px var(--primary-glow);
+  text-align: center;
+  transform: scale(0.92);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drop-zone-overlay.active .drop-zone-card {
+  transform: scale(1);
+}
+
+.drop-zone-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  color: var(--primary-accent);
+  animation: bounceDrop 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes bounceDrop {
+  from { transform: translateY(-4px); }
+  to { transform: translateY(6px); }
+}
+
+/* --- Electrochemical & CV Metrics Cards --- */
+.cv-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cv-metric-card {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.cv-metric-card:hover {
+  border-color: var(--primary-accent);
+  transform: translateY(-1px);
+}
+
+.cv-metric-val {
+  font-family: var(--font-tick);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--primary-accent);
+  direction: ltr;
+  display: block;
+}
+
+.cv-metric-lbl {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+  display: block;
+}
+

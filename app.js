@@ -434,8 +434,28 @@ function yTransformStats(s) {
 
 function displayY(s, idx) {
   const t = yTransformStats(s);
-  const raw = s && s.yValues ? s.yValues[idx] : 0;
-  const v = typeof raw === "number" && isFinite(raw) ? raw : 0;
+  const rawVals = s && s.yValues ? s.yValues : [];
+  let v = rawVals[idx];
+  if (typeof v !== "number" || !isFinite(v)) v = 0;
+
+  // Moving average smoothing if selected
+  const sm = state.data.smoothing;
+  if (sm === "ma3" || sm === "ma5" || sm === "ma9") {
+    const k = sm === "ma3" ? 1 : (sm === "ma5" ? 2 : 4);
+    let sum = 0, count = 0;
+    for (let di = -k; di <= k; di++) {
+      const j = idx + di;
+      if (j >= 0 && j < rawVals.length) {
+        const val = rawVals[j];
+        if (typeof val === "number" && isFinite(val)) {
+          sum += val;
+          count++;
+        }
+      }
+    }
+    if (count > 0) v = sum / count;
+  }
+
   return (v - t.offset) * t.scale;
 }
 
@@ -977,21 +997,16 @@ function renderChart() {
   }
 
   // Axes Framing
+  // Axes Framing & Spine Coordinates
+  const spineLeftX = plotArea.x;
+  const spineBottomY = plotArea.y + plotArea.height;
+
   if (state.frameStyle === "boxed") {
     // Full enclosing rectangular frame for publication boxed style
     svgContent += `
       <rect x="${plotArea.x}" y="${plotArea.y}" width="${plotArea.width}" height="${plotArea.height}"
             fill="none" stroke="${colors.axis}" stroke-width="1.8" />
     `;
-    // If axes cross internally (center or zero), draw internal cross axes
-    if (geo.mode !== "corner") {
-      svgContent += `
-        <line x1="${geo.x}" y1="${plotArea.y}" x2="${geo.x}" y2="${plotArea.y + plotArea.height}"
-              stroke="${colors.axis}" stroke-width="1.5" stroke-dasharray="6,4" />
-        <line x1="${plotArea.x}" y1="${geo.y}" x2="${plotArea.x + plotArea.width}" y2="${geo.y}"
-              stroke="${colors.axis}" stroke-width="1.5" stroke-dasharray="6,4" />
-      `;
-    }
     // Top and right spines with inward ticks (classic ISI style)
     xTicks.forEach(tick => {
       const xPos = mapX(tick);
@@ -1008,72 +1023,85 @@ function renderChart() {
       `;
     });
   } else {
-    // Open style:
-    if (geo.mode === "corner") {
-      // Classic open L-frame (left and bottom spines)
-      svgContent += `
-        <line x1="${plotArea.x}" y1="${plotArea.y}" x2="${plotArea.x}" y2="${plotArea.y + plotArea.height}"
-              stroke="${colors.axis}" stroke-width="1.8" />
-        <line x1="${plotArea.x}" y1="${plotArea.y + plotArea.height}" x2="${plotArea.x + plotArea.width}" y2="${plotArea.y + plotArea.height}"
-              stroke="${colors.axis}" stroke-width="1.8" />
-      `;
-    } else {
-      // Internal cross axes
-      svgContent += `
-        <line x1="${geo.x}" y1="${plotArea.y}" x2="${geo.x}" y2="${plotArea.y + plotArea.height}"
-              stroke="${colors.axis}" stroke-width="1.8" />
-        <line x1="${plotArea.x}" y1="${geo.y}" x2="${plotArea.x + plotArea.width}" y2="${geo.y}"
-              stroke="${colors.axis}" stroke-width="1.8" />
-      `;
-    }
+    // Classic open L-frame (left and bottom spines)
+    svgContent += `
+      <line x1="${spineLeftX}" y1="${plotArea.y}" x2="${spineLeftX}" y2="${spineBottomY}"
+            stroke="${colors.axis}" stroke-width="1.8" />
+      <line x1="${spineLeftX}" y1="${spineBottomY}" x2="${plotArea.x + plotArea.width}" y2="${spineBottomY}"
+            stroke="${colors.axis}" stroke-width="1.8" />
+    `;
   }
 
-  // Minor ticks (both axes)
+  // Internal reference lines (crosshairs) if axisOrigin is zero or center
+  if (geo.mode === "zero") {
+    const rx = axisRange("x");
+    const ry = axisRange("y");
+    if (rx.min <= 0 && rx.max >= 0) {
+      const zx = mapX(0);
+      svgContent += `
+        <line x1="${zx}" y1="${plotArea.y}" x2="${zx}" y2="${plotArea.y + plotArea.height}"
+              stroke="${colors.axisZero}" stroke-width="1.3" stroke-dasharray="5,4" />
+      `;
+    }
+    if (ry.min <= 0 && ry.max >= 0) {
+      const zy = mapY(0);
+      svgContent += `
+        <line x1="${plotArea.x}" y1="${zy}" x2="${plotArea.x + plotArea.width}" y2="${zy}"
+              stroke="${colors.axisZero}" stroke-width="1.3" stroke-dasharray="5,4" />
+      `;
+    }
+  } else if (geo.mode === "center") {
+    svgContent += `
+      <line x1="${geo.x}" y1="${plotArea.y}" x2="${geo.x}" y2="${plotArea.y + plotArea.height}"
+            stroke="${colors.axis}" stroke-width="1.3" stroke-dasharray="5,4" stroke-opacity="0.45" />
+      <line x1="${plotArea.x}" y1="${geo.y}" x2="${plotArea.x + plotArea.width}" y2="${geo.y}"
+            stroke="${colors.axis}" stroke-width="1.3" stroke-dasharray="5,4" stroke-opacity="0.45" />
+    `;
+  }
+
+  // Minor ticks (both axes anchored strictly to frame spines)
   if (state.ticks.minor > 0) {
     xMinors.forEach(tick => {
       const xPos = mapX(tick);
-      const t = tickLine(geo.y, 1, TICK_LEN * 0.55);
+      const t = tickLine(spineBottomY, 1, TICK_LEN * 0.55);
       svgContent += `<line x1="${xPos}" y1="${t.from}" x2="${xPos}" y2="${t.to}" stroke="${colors.axis}" stroke-width="1" opacity="0.7" />`;
     });
     yMinors.forEach(tick => {
       const yPos = mapY(tick);
-      const side = geo.x > plotArea.x + plotArea.width * 0.6 ? 1 : -1;
-      const t = tickLine(geo.x, side, TICK_LEN * 0.55);
+      const t = tickLine(spineLeftX, -1, TICK_LEN * 0.55);
       svgContent += `<line x1="${t.from}" y1="${yPos}" x2="${t.to}" y2="${yPos}" stroke="${colors.axis}" stroke-width="1" opacity="0.7" />`;
     });
   }
 
-  // Y Ticks & Labels
-  const yLabelRight = geo.x > plotArea.x + plotArea.width * 0.6;
-  const yLabelSide = yLabelRight ? 1 : -1;
-  yTicks.forEach((tick, i) => {
+  // Y Ticks & Labels (always anchored to left spine plotArea.x)
+  const yLabelSide = -1;
+  const lblX = spineLeftX - 12;
+  yTicks.forEach(tick => {
     const yPos = mapY(tick);
-    const tl = tickLine(geo.x, yLabelSide, TICK_LEN);
-    const anchor = yLabelRight ? "start" : "end";
-    const lblX = geo.x + (yLabelRight ? 12 : -12);
+    const tl = tickLine(spineLeftX, yLabelSide, TICK_LEN);
     svgContent += `
       <line x1="${tl.from}" y1="${yPos}" x2="${tl.to}" y2="${yPos}"
             stroke="${colors.axis}" stroke-width="1.5" />
-      <text x="${lblX}" y="${yPos + 5}"
+      <text x="${lblX}" y="${yPos + Math.round(state.type.tickFont * 0.35)}"
             fill="${colors.title}" font-size="${state.type.tickFont}" font-family="${TICK_FONT}"
-            text-anchor="${anchor}" direction="ltr"
+            text-anchor="end" direction="ltr"
             paint-order="stroke fill" stroke="${colors.bg}" stroke-width="3.5" stroke-linejoin="round">${fmtTick(tick)}</text>
     `;
   });
 
-  // X Ticks & Labels (rotation + label-skipping supported)
-  const xLabelY = geo.y + state.type.tickFont + 10;
+  // X Ticks & Labels (always anchored to bottom spine plotArea.y + plotArea.height)
+  const xLabelY = spineBottomY + state.type.tickFont + 10;
   const rot = state.ticks.xLabelRotate;
   xTicks.forEach((tick, i) => {
     const xPos = mapX(tick);
-    const tl = tickLine(geo.y, 1, TICK_LEN);
+    const tl = tickLine(spineBottomY, 1, TICK_LEN);
     svgContent += `<line x1="${xPos}" y1="${tl.from}" x2="${xPos}" y2="${tl.to}" stroke="${colors.axis}" stroke-width="1.5" />`;
 
     if (state.ticks.labelEvery > 1 && (i % state.ticks.labelEvery) !== 0) return;
 
     if (rot) {
-      const anchor = rot === 90 ? "start" : "start";
-      const ly = rot === 90 ? geo.y + 8 : xLabelY;
+      const anchor = "start";
+      const ly = rot === 90 ? spineBottomY + 8 : xLabelY;
       svgContent += `
         <text x="${xPos}" y="${ly}" fill="${colors.title}" font-size="${state.type.tickFont}"
               font-family="${TICK_FONT}" text-anchor="${anchor}" direction="ltr"
@@ -1474,8 +1502,92 @@ function renderChart() {
 
   attachHoverListeners();
   attachDragListeners();
+  renderCVMetrics();
 
   if (state._booted) queueSave();
+}
+
+// --- Automated CV & Electrochemical Metrics Computation ---
+function renderCVMetrics() {
+  const container = document.getElementById("cvMetricsGrid");
+  const sec = document.getElementById("secCVMetrics");
+  if (!container || !sec) return;
+
+  const s = dataset.series.find(x => x.visible && x.yValues && x.yValues.length > 3) || dataset.series[0];
+  if (!s || !dataset.xValues || dataset.xValues.length < 4) {
+    sec.style.display = "none";
+    return;
+  }
+
+  const x = dataset.xValues;
+  const y = dataset.xValues.map((_, i) => displayY(s, i));
+  const n = x.length;
+
+  let maxIdx = 0, maxX = -Infinity;
+  for (let i = 0; i < n; i++) {
+    if (x[i] > maxX) { maxX = x[i]; maxIdx = i; }
+  }
+
+  // Forward scan (0 to maxIdx): anodic peak (max y)
+  let epa = -Infinity, ipa = -Infinity;
+  for (let i = 0; i <= maxIdx; i++) {
+    if (y[i] > ipa) { ipa = y[i]; epa = x[i]; }
+  }
+
+  // Reverse scan (maxIdx to n-1): cathodic peak (min y)
+  let epc = Infinity, ipc = Infinity;
+  for (let i = maxIdx; i < n; i++) {
+    if (y[i] < ipc) { ipc = y[i]; epc = x[i]; }
+  }
+
+  const hasPeaks = isFinite(epa) && isFinite(epc) && isFinite(ipa) && isFinite(ipc);
+  if (!hasPeaks) {
+    sec.style.display = "none";
+    return;
+  }
+
+  sec.style.display = "";
+  const deltaEp = Math.abs(epa - epc);
+  const eHalf = (epa + epc) / 2;
+  const ipRatio = Math.abs(ipc) > 1e-9 ? Math.abs(ipa / ipc) : 1;
+
+  // Trapezoidal loop area (charge / integral)
+  let loopArea = 0;
+  for (let i = 0; i < n - 1; i++) {
+    loopArea += (x[i] * y[i + 1] - x[i + 1] * y[i]);
+  }
+  loopArea += (x[n - 1] * y[0] - x[0] * y[n - 1]);
+  loopArea = Math.abs(loopArea) * 0.5;
+
+  const fmt = v => typeof v === "number" ? (Math.abs(v) >= 1000 ? v.toFixed(0) : (Math.abs(v) < 0.01 && v !== 0 ? v.toExponential(2) : v.toFixed(3))) : v;
+
+  const isFa = state.lang === "fa";
+  container.innerHTML = `
+    <div class="cv-metric-card">
+      <span class="cv-metric-val">${fmt(epa)}</span>
+      <span class="cv-metric-lbl">${isFa ? "پتانسیل پیک آندی (Epa)" : "Anodic Peak (Epa)"}</span>
+    </div>
+    <div class="cv-metric-card">
+      <span class="cv-metric-val">${fmt(epc)}</span>
+      <span class="cv-metric-lbl">${isFa ? "پتانسیل پیک کاتدی (Epc)" : "Cathodic Peak (Epc)"}</span>
+    </div>
+    <div class="cv-metric-card">
+      <span class="cv-metric-val">${fmt(deltaEp)}</span>
+      <span class="cv-metric-lbl">${isFa ? "جدایش پیک‌ها (ΔEp)" : "Peak Separation (ΔEp)"}</span>
+    </div>
+    <div class="cv-metric-card">
+      <span class="cv-metric-val">${fmt(eHalf)}</span>
+      <span class="cv-metric-lbl">${isFa ? "پتانسیل نیمه‌موج (E½)" : "Half-Wave Pot. (E½)"}</span>
+    </div>
+    <div class="cv-metric-card">
+      <span class="cv-metric-val">${fmt(ipRatio)}</span>
+      <span class="cv-metric-lbl">${isFa ? "نسبت جریان پیک (|Ipa/Ipc|)" : "Peak Current Ratio"}</span>
+    </div>
+    <div class="cv-metric-card">
+      <span class="cv-metric-val">${fmt(loopArea)}</span>
+      <span class="cv-metric-lbl">${isFa ? "مساحت حلقه (بار Q)" : "Loop Area (Charge Q)"}</span>
+    </div>
+  `;
 }
 
 // --- 7. Interactive Hover Tooltips (Event Delegation for High Performance) ---
@@ -2481,6 +2593,17 @@ function importExcelFile(e) {
 // Captions and axis labels reuse the wording of the README gallery figures;
 // only options that differ from the plain import behaviour are listed.
 const SAMPLE_OPTIONS = {
+  "Cyclic_Voltammetry.xlsx": {
+    sortByX: false,
+    flags: { showHysteresis: true, showInplotLegend: true },
+    title: { fa: "ولتامتری چرخه‌ای (CV)", en: "Cyclic Voltammogram (CV)" },
+    subtitle: {
+      fa: "پاسخ جریان–پتانسیل در رفت و برگشت (حلقه کامل)",
+      en: "Current–potential response over forward and reverse scans"
+    },
+    xTitle: { fa: "پتانسیل (ولت)", en: "Potential (V)" },
+    yTitle: { fa: "جریان (میکروآمپر)", en: "Current (μA)" }
+  },
   "QCM_Hysteresis.xlsx": {
     flags: { showHysteresis: true, showAnnotations: true },
     title: { fa: "پاسخ سنسور رطوبت QCM", en: "QCM Humidity Sensor Response" },
@@ -3053,16 +3176,117 @@ function initEvents() {
     btnLoadSample.addEventListener("click", () => loadBundledSample(selSampleDataset ? selSampleDataset.value : ""));
   }
 
-  // Drag and drop Excel files directly into window
+  // Copy LaTeX Table Button
+  const btnCopyLatex = document.getElementById("copyLatexBtn");
+  if (btnCopyLatex) {
+    btnCopyLatex.addEventListener("click", () => {
+      const xVals = dataset.xValues || [];
+      const series = dataset.series.filter(s => s.visible);
+      if (!xVals.length || !series.length) return;
+
+      const cols = ["r", ...series.map(() => "r")].join("");
+      const colHeaders = [escapeXml(state.xTitle || "X"), ...series.map(s => escapeXml(state.lang === "fa" ? s.nameFa : s.nameEn))].join(" & ");
+
+      const rows = [];
+      const maxRows = Math.min(xVals.length, 50);
+      for (let i = 0; i < maxRows; i++) {
+        const rowVals = [xVals[i], ...series.map(s => displayY(s, i))];
+        rows.push(rowVals.map(v => typeof v === "number" ? Number(v.toFixed(4)) : v).join(" & ") + " \\\\");
+      }
+
+      const latex = [
+        "\\begin{table}[htbp]",
+        "\\centering",
+        `\\caption{${state.chartTitle || "Experimental Data"}${xVals.length > 50 ? " (First 50 points)" : ""}}`,
+        "\\label{tab:data}",
+        `\\begin{tabular}{${cols}}`,
+        "\\hline",
+        colHeaders + " \\\\",
+        "\\hline",
+        ...rows,
+        "\\hline",
+        "\\end{tabular}",
+        "\\end{table}"
+      ].join("\n");
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(latex).then(() => {
+          showToast(state.lang === "fa" ? "کد جدول LaTeX در کلیپ‌بورد کپی شد" : "LaTeX table code copied to clipboard");
+        });
+      }
+    });
+  }
+
+  // Copy CV Metrics Button
+  const btnCopyCV = document.getElementById("btnCopyCVMetrics");
+  if (btnCopyCV) {
+    btnCopyCV.addEventListener("click", () => {
+      const cards = document.querySelectorAll("#cvMetricsGrid .cv-metric-card");
+      if (!cards.length) return;
+      const lines = [];
+      cards.forEach(c => {
+        const val = c.querySelector(".cv-metric-val")?.textContent || "";
+        const lbl = c.querySelector(".cv-metric-lbl")?.textContent || "";
+        lines.push(`${lbl}: ${val}`);
+      });
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lines.join("\n")).then(() => {
+          showToast(state.lang === "fa" ? "مشخصات CV کپی شد" : "CV metrics copied to clipboard");
+        });
+      }
+    });
+  }
+
+  // Drag and drop overlay & file handling
+  const dropOverlay = document.getElementById("dropZoneOverlay");
+  let dragCounter = 0;
+  window.addEventListener("dragenter", e => {
+    e.preventDefault();
+    dragCounter++;
+    if (dropOverlay) dropOverlay.classList.add("active");
+  });
+  window.addEventListener("dragleave", e => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      if (dropOverlay) dropOverlay.classList.remove("active");
+    }
+  });
   window.addEventListener("dragover", e => {
     e.preventDefault();
   });
   window.addEventListener("drop", e => {
     e.preventDefault();
+    dragCounter = 0;
+    if (dropOverlay) dropOverlay.classList.remove("active");
     if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFile = e.dataTransfer.files[0];
       if (/\.(xlsx|xls|csv|tsv|txt|dat|prn|asc)$/i.test(droppedFile.name)) {
         importExcelFile({ target: { files: [droppedFile], value: "" } });
+      }
+    }
+  });
+
+  // Global Keyboard Shortcuts (Ctrl+S for PNG, Ctrl+C for copy chart, Ctrl+F for search)
+  window.addEventListener("keydown", e => {
+    const isCtrl = e.ctrlKey || e.metaKey;
+    const tag = (e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "");
+    const isTyping = tag === "input" || tag === "textarea" || (e.target && e.target.isContentEditable);
+
+    if (isCtrl && (e.key === "s" || e.key === "S")) {
+      e.preventDefault();
+      const btnExport = document.getElementById("exportPngBtn");
+      if (btnExport) btnExport.click();
+    } else if (isCtrl && (e.key === "c" || e.key === "C") && !isTyping && !window.getSelection().toString()) {
+      e.preventDefault();
+      copyImageToClipboard();
+    } else if (isCtrl && (e.key === "f" || e.key === "F") && !isTyping) {
+      e.preventDefault();
+      const search = document.getElementById("sidebarSearchInput");
+      if (search) {
+        search.focus();
+        search.select();
       }
     }
   });
@@ -3578,27 +3802,6 @@ function initAdvancedEvents() {
       const orig = btn.getAttribute("data-origin");
       state.layout.axisOrigin = orig;
       syncSeg("origin", state.layout.axisOrigin);
-      if (orig === "zero") {
-        state.axis.xMin = Math.min(0, state.axis.xMin);
-        state.axis.yMin = Math.min(0, state.axis.yMin);
-        state.axis.yMax = Math.max(0, state.axis.yMax);
-        setInp("inpXMin", state.axis.xMin);
-        setInp("inpYMin", state.axis.yMin);
-        setInp("inpYMax", state.axis.yMax);
-      } else if (orig === "center") {
-        let maxAbsX = Math.max(Math.abs(state.axis.xMin), Math.abs(state.axis.xMax));
-        if (maxAbsX === 0) maxAbsX = 1;
-        state.axis.xMin = -maxAbsX;
-        state.axis.xMax = maxAbsX;
-        let maxAbsY = Math.max(Math.abs(state.axis.yMin), Math.abs(state.axis.yMax));
-        if (maxAbsY === 0) maxAbsY = 1;
-        state.axis.yMin = -maxAbsY;
-        state.axis.yMax = maxAbsY;
-        setInp("inpXMin", state.axis.xMin);
-        setInp("inpXMax", state.axis.xMax);
-        setInp("inpYMin", state.axis.yMin);
-        setInp("inpYMax", state.axis.yMax);
-      }
       renderChart();
     });
   });

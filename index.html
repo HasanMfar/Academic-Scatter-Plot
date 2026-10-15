@@ -89,6 +89,12 @@
           </svg>
           <span>SVG</span>
         </button>
+
+        <!-- Export LaTeX Table -->
+        <button id="copyLatexBtn" class="btn btn-secondary" title="کپی کد جدول LaTeX برای مقالات (Overleaf)" data-fa-title="کپی کد جدول LaTeX برای مقالات (Overleaf)" data-en-title="Copy LaTeX table code for Overleaf">
+          <span style="font-family: monospace; font-weight: bold; font-size: 13px;">T<sub>E</sub>X</span>
+          <span id="copyLatexText" data-fa="جدول LaTeX" data-en="LaTeX Table">جدول LaTeX</span>
+        </button>
       </div>
     </header>
 
@@ -195,10 +201,22 @@
                         <option value="UVVis_Spectra.xlsx" data-fa="طیف UV-Vis — سه نمونه" data-en="UV-Vis spectra — three samples">طیف UV-Vis — سه نمونه</option>
                         <option value="Impedance_Bode.xlsx" data-fa="امپدانس بُد — محور لگاریتمی" data-en="Impedance Bode — log X axis">امپدانس بُد — محور لگاریتمی</option>
                         <option value="Solar_Cell_IV.xlsx" data-fa="منحنی I–V سلول خورشیدی" data-en="Solar cell I–V curve">منحنی I–V سلول خورشیدی</option>
+                        <option value="Cyclic_Voltammetry.xlsx" data-fa="ولتامتری چرخه‌ای (CV) — نمونه الکتروشیمی" data-en="Cyclic voltammetry (CV) — electrochemistry">ولتامتری چرخه‌ای (CV) — نمونه الکتروشیمی</option>
                       </select>
                       <button id="btnLoadSample" class="btn btn-primary btn-sm-reset" style="margin-top: 0; width: auto; flex: 0 0 auto; white-space: nowrap;">
                         <span data-fa="بارگذاری" data-en="Load">بارگذاری</span>
                       </button>
+                    </div>
+                  </div>
+
+                  <!-- CV & Electrochemical Analytics Box -->
+                  <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;" id="secCVMetrics">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <span style="font-weight: bold; color: var(--primary-accent); font-size: 0.88rem;" data-fa="⚡ مشخصات ولتامتری چرخه‌ای (CV Metrics)" data-en="⚡ Cyclic Voltammetry & Redox Metrics">⚡ مشخصات ولتامتری چرخه‌ای (CV Metrics)</span>
+                      <button id="btnCopyCVMetrics" class="btn btn-secondary btn-sm-reset" style="margin: 0; padding: 2px 8px; font-size: 0.75rem;" data-fa="کپی آمار" data-en="Copy Stats">کپی آمار</button>
+                    </div>
+                    <div class="cv-metrics-grid" id="cvMetricsGrid">
+                      <!-- Populated dynamically by app.js -->
                     </div>
                   </div>
 
@@ -246,6 +264,9 @@
                   <select id="selSmoothing" class="select-dpi" style="width: 100%;">
                     <option value="straight" data-fa="خط مستقیم" data-en="Straight lines">خط مستقیم</option>
                     <option value="spline" data-fa="منحنی نرم (Spline)" data-en="Smooth spline">منحنی نرم (Spline)</option>
+                    <option value="ma3" data-fa="میانگین متحرک (۳ نقطه)" data-en="Moving average (3-pt)">میانگین متحرک (۳ نقطه)</option>
+                    <option value="ma5" data-fa="میانگین متحرک (۵ نقطه)" data-en="Moving average (5-pt)">میانگین متحرک (۵ نقطه)</option>
+                    <option value="ma9" data-fa="فیلتر حذف نویز (۹ نقطه)" data-en="Noise filter (9-pt)">فیلتر حذف نویز (۹ نقطه)</option>
                   </select>
                 </div>
                 <div class="input-field">
@@ -301,7 +322,7 @@
 
                   <div class="control-group" style="margin-top: 14px; margin-bottom: 12px;">
                     <label class="control-label" data-fa="محل تلاقی محورها (Axis Origin)" data-en="Axis origin (where axes cross)">محل تلاقی محورها (Axis Origin)</label>
-                    <div class="segmented-control">
+                    <div class="segmented-control" data-seg="origin">
                       <button class="seg-btn active" data-origin="corner" data-fa="گوشه (کلاسیک)" data-en="Corner (classic)">گوشه (کلاسیک)</button>
                       <button class="seg-btn" data-origin="zero" data-fa="از صفر" data-en="Through zero">از صفر</button>
                       <button class="seg-btn" data-origin="center" data-fa="از وسط" data-en="Through center">از وسط</button>
@@ -892,6 +913,15 @@
       </aside>
 
     </main>
+  </div>
+
+  <!-- Drag and Drop Overlay -->
+  <div id="dropZoneOverlay" class="drop-zone-overlay">
+    <div class="drop-zone-card">
+      <div class="drop-zone-icon">📁</div>
+      <div class="drop-zone-title" data-fa="فایل داده را اینجا رها کنید" data-en="Drop data file here">فایل داده را اینجا رها کنید</div>
+      <div class="drop-zone-sub" data-fa="پشتیبانی از فرمت‌های xlsx, csv, tsv, txt" data-en="Supports xlsx, csv, tsv, txt formats">پشتیبانی از فرمت‌های xlsx, csv, tsv, txt</div>
+    </div>
   </div>
 
   <!-- Toast Notification on Copy -->

@@ -134,9 +134,10 @@ function pick(value) {
       annot: state.showAnnotations, inplot: state.showInplotLegend,
       trend: state.showTrendlines, labels: state.showDataLabels
     })`));
-    const wantHyst = o.value === 'QCM_Hysteresis.xlsx';
-    const wantAnnot = wantHyst || o.value === 'Solar_Cell_IV.xlsx';
-    const wantInplot = ['BeerLambert_Calibration.xlsx', 'Damped_Oscillation.xlsx', 'UVVis_Spectra.xlsx', 'Impedance_Bode.xlsx'].indexOf(o.value) !== -1;
+    const isLoopSample = o.value === 'QCM_Hysteresis.xlsx' || o.value === 'Cyclic_Voltammetry.xlsx';
+    const wantHyst = isLoopSample;
+    const wantAnnot = o.value === 'QCM_Hysteresis.xlsx' || o.value === 'Solar_Cell_IV.xlsx';
+    const wantInplot = ['BeerLambert_Calibration.xlsx', 'Damped_Oscillation.xlsx', 'UVVis_Spectra.xlsx', 'Impedance_Bode.xlsx', 'Cyclic_Voltammetry.xlsx'].indexOf(o.value) !== -1;
     if (flags.hyst !== wantHyst || flags.hystChk !== wantHyst) problems.push('hysteresis ' + flags.hyst);
     if (flags.annot !== wantAnnot) problems.push('annotations ' + flags.annot);
     if (flags.inplot !== wantInplot) problems.push('inplot legend ' + flags.inplot);
@@ -144,7 +145,7 @@ function pick(value) {
     if (flags.labels) problems.push('data labels on');
     if (/مسیر رفت/.test(app.svg()) !== wantHyst) problems.push('forward/return legend mismatch');
 
-    const wantSort = o.value !== 'QCM_Hysteresis.xlsx';
+    const wantSort = !isLoopSample;
     if (window.eval('state.data.sortByX') !== wantSort) problems.push('sortByX not applied');
     if ($('chkSortByX').checked !== wantSort) problems.push('chkSortByX not synced');
     if (window.eval('state.data.smoothing') !== 'straight' || window.eval('state.data.yTransform') !== 'none') {

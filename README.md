@@ -4,13 +4,13 @@
 
 <p align="center">
   <b>A modern, zero-install, publication-ready scatter plot suite for academic researchers and students.</b><br>
-  Create ISI/Nature-grade scientific figures with Excel/CSV imports, hysteresis loops, error bars, regression trendlines, and magnifier insets — entirely in your browser.
+  Create ISI/Nature-grade scientific figures with Excel/CSV imports, hysteresis loops, Cyclic Voltammetry (CV) analytics, LaTeX export, error bars, regression trendlines, and magnifier insets — entirely in your browser.
 </p>
 
 <p align="center">
   <a href="https://hasanmfar.github.io/Academic-Scatter-Plot/"><img alt="Live Demo" src="https://img.shields.io/badge/▶_Live_Demo-GitHub_Pages-10b981?style=for-the-badge&logo=githubpages&logoColor=white"></a>
   <img alt="100% Client-Side" src="https://img.shields.io/badge/Privacy-100%25_Client--Side-4f46e5?style=for-the-badge">
-  <img alt="Export Options" src="https://img.shields.io/badge/Export-PNG_600_DPI_|_SVG-ea580c?style=for-the-badge">
+  <img alt="Export Options" src="https://img.shields.io/badge/Export-PNG_600_DPI_|_SVG_|_LaTeX-ea580c?style=for-the-badge">
   <img alt="Bilingual" src="https://img.shields.io/badge/Language-English_|_فارسی-0284c7?style=for-the-badge">
   <img alt="Tests Passing" src="https://img.shields.io/badge/Tests-100%25_Passing-16a34a?style=for-the-badge">
 </p>
@@ -33,7 +33,7 @@ Researchers often struggle with complex, proprietary software (like OriginLab or
 
 ### 🗂️ Categorized 5-Tab Workflow & Instant Search
 - **No endless scrolling:** All controls are organized into 5 focused tabs:
-  - 📊 **Data:** Fast sample picker, template generator, raw table editor, smoothing (Spline/Straight), and normalization.
+  - 📊 **Data:** Fast sample picker, template generator, 50-row paginated table editor, noise filters (`Moving Average 3/5/9-pt`, `Spline`), and Y-transforms.
   - 📐 **Axes:** Bounds ($X/Y$ Min, Max, Step), Auto-Scale, logarithmic scales ($\log X$, $\log Y$), and tick formatting.
   - 🎨 **Style:** Publication presets, boxed vs. open frame, marker size, line width, series palette, and grid styling.
   - 🏷️ **Labels:** Titles, subtitles, $R^2$ trendlines, callout drag-and-drop, and legends.
@@ -41,11 +41,22 @@ Researchers often struggle with complex, proprietary software (like OriginLab or
 - **🔍 Instant Search Engine:** Type any keyword (e.g. `font`, `grid`, `origin`, `log`, `خطا`, `لگاریتم`) to instantly highlight controls across all tabs and auto-navigate to the right section.
 - **📌 Sticky Viewport:** The live plot stays locked in view on desktop screens so you get instant visual feedback for every tweak.
 
-### 📐 Precision Axis Origins & Mathematical Alignment
-- **Classic Corner:** Traditional bottom-left quadrant layout.
-- **Through Zero $(0, 0)$:** Axes intersect at the exact origin, with contrast halos around ticks.
-- **Through Center:** Symmetrical balanced bounds across four quadrants for bipolar signals or cyclic measurements.
+### 📐 Guaranteed Perimeter Spine Alignment (Clean Axis Numbers)
+- **Publication Spine Standard:** Major/minor tick marks and numeric labels are strictly anchored to the outer boundary spines (`plotArea.x` and `plotArea.y + height`), preventing any overlap with experimental curves, markers, or text callouts.
+- **Internal Crosshairs:** When using *Through Zero* or *Through Center*, clean dashed reference lines are drawn within the plot area without displacing the outer spine values.
 - **Reverse Axes (Flip X / Flip Y):** Invert horizontal or vertical orientations with dynamic trendline and callout adaptation.
+
+### ⚡ Automated Cyclic Voltammetry (CV) & Electrochemical Analytics
+- **Redox Peak Auto-Detection:** Automatically calculates anodic peak potential ($E_{pa}$), cathodic peak potential ($E_{pc}$), peak-to-peak separation ($\Delta E_p$), half-wave potential ($E_{1/2}$), and peak current ratio ($|I_{pa}/I_{pc}|$).
+- **Integrated Charge & Loop Area:** Trapezoidal cyclic integral ($\oint I \, dV$) to evaluate total loop area and capacitive charge.
+- **One-Click Stats Copy:** Copy formatted electrochemical metrics to clipboard for immediate insertion into papers or lab notebooks.
+
+### 📋 LaTeX Table Generator (`\begin{tabular}...`)
+- One-click button in the header toolbar formats active experimental series into standard LaTeX table code, ready to paste directly into Overleaf or journal manuscripts.
+
+### 🏎️ High-Performance Engine (8,000+ Data Points in <3ms)
+- Preamble-stripping parser handles raw instrument dumps with text headers and metadata blocks automatically.
+- Paginated table viewer and delegated SVG event listeners maintain 60 FPS responsiveness even with dense instrument scans.
 
 ### 🔄 Smart Cyclic Hysteresis & Arrow Navigation
 - Automatically detects forward and backward trajectories in cyclic experimental measurements (such as QCM humidity sensors, magnetic hysteresis, or stress-strain loops).
@@ -59,10 +70,12 @@ Researchers often struggle with complex, proprietary software (like OriginLab or
 - Frame crowded or complex regions (such as spectrum crossovers or diode knees) and showcase them in a high-resolution inset directly inside the plot.
 - Interactive drag-to-select directly on the chart, with customizable corner positioning.
 
-### 🧾 Universal Data Import
-- **Excel:** Native drag-and-drop support for `.xlsx` and `.xls` files.
-- **Plain-Text:** Full compatibility with `.csv`, `.tsv`, `.txt`, `.dat`, and `.prn` files.
-- **Encoding & Delimiter Detection:** Automatic detection of commas, tabs, semicolons, whitespace, UTF-8, UTF-16, and Windows codepages.
+### 📁 Drag-and-Drop Visual Overlay & Keyboard Shortcuts
+- Full-window drop-zone overlay with support for `.xlsx`, `.xls`, `.csv`, `.tsv`, `.txt`, `.dat`, and `.prn` files.
+- Academic keyboard shortcuts:
+  - `Ctrl + S`: Instant 600 DPI PNG figure export.
+  - `Ctrl + C`: Copy chart image to system clipboard.
+  - `Ctrl + F`: Quick jump to settings search.
 
 ### 🖼️ Publication-Quality Export
 - **Ultra-HD Raster:** Export at **300 DPI** or **600 DPI PNG** ready for LaTeX, MS Word, and PowerPoint.
@@ -98,6 +111,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 
 | File | Application & What It Demonstrates |
 |------|------------------------------------|
+| [`samples/Cyclic_Voltammetry.xlsx`](samples/Cyclic_Voltammetry.xlsx) | Cyclic Voltammetry (CV) — 7,996 points, automated redox peaks ($E_{pa}, E_{pc}, \Delta E_p$), and loop area |
 | [`samples/QCM_Hysteresis.xlsx`](samples/QCM_Hysteresis.xlsx) | Cyclic sensor response — hysteresis loop detection and dashed return lines |
 | [`samples/BeerLambert_Calibration.xlsx`](samples/BeerLambert_Calibration.xlsx) | Linear regression — trendline equation, $R^2$, and automated error bars |
 | [`samples/Damped_Oscillation.xlsx`](samples/Damped_Oscillation.xlsx) | Dense dynamic series — 121 points, spline interpolation, and sorting |
@@ -112,7 +126,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 1. **Launch:** Open the **[Online App](https://hasanmfar.github.io/Academic-Scatter-Plot/)** or download this repository and double-click `index.html`.
 2. **Load Data:** Choose a bundled dataset from the dropdown, or click **Download Excel Template**, populate your experimental values, and upload your `.xlsx` or `.csv`.
 3. **Customize:** Switch between the **Data**, **Axes**, **Style**, **Labels**, and **Tools** tabs to fine-tune your visualization.
-4. **Export:** Click **Export PNG (600 DPI)** or **SVG** and embed directly into your manuscript.
+4. **Export:** Click **Export PNG (600 DPI)**, **SVG**, or **Copy LaTeX** and embed directly into your manuscript.
 
 ---
 
@@ -140,7 +154,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 ---
 
 ## ✨ چرا این برنامه؟
-بسیاری از پژوهشگران برای رسم نمودارهای ساده یا تحلیل داده‌های آزمایشگاهی ناچار به استفاده از نرم‌افزارهای حجیم مانند OriginLab یا MATLAB می‌شوند. این ابزار با فراهم کردن رابط کاربری مدرن، تعاملی و مجهز به **تب‌بندی موضوعی و جستجوی لحظه‌ای**، امکان ساخت نمودارهای دقیق علمی با کیفیت ۶۰۰ DPI را در کسری از ثانیه فراهم می‌سازد. تمامی پردازش‌ها ۱۰۰٪ درون مرورگر شما انجام شده و هیچ داده‌ای در سرور ذخیره نمی‌شود.
+بسیاری از پژوهشگران برای رسم نمودارهای ساده یا تحلیل داده‌های آزمایشگاهی ناچار به استفاده از نرم‌افزارهای حجیم مانند OriginLab یا MATLAB می‌شوند. این ابزار با فراهم کردن رابط کاربری مدرن، تعاملی و مجهز به **تب‌بندی موضوعی، موتور تحلیل ولتامتری چرخه‌ای و خروجی LaTeX**، امکان ساخت نمودارهای دقیق علمی با کیفیت ۶۰۰ DPI را در کسری از ثانیه فراهم می‌سازد. تمامی پردازش‌ها ۱۰۰٪ درون مرورگر شما انجام شده و هیچ داده‌ای در سرور ذخیره نمی‌شود.
 
 ---
 
@@ -148,7 +162,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 
 ### 🗂️ پنل تنظیمات ۵ تبه و موتور جستجوی هوشمند
 - **پایان اسکرول‌های طولانی:** کلیهٔ ابزارها در ۵ دسته مشخص مرتب شده‌اند:
-  - 📊 **داده‌ها:** بارگذاری سریع نمونه‌ها، تمپلیت اکسل، جدول داده زنده، اتصال نرم منحنی (Spline)، نرمال‌سازی و میله‌های خطا.
+  - 📊 **داده‌ها:** بارگذاری نمونه‌های آماده، تمپلیت اکسل، جدول داده صفحه‌بندی‌شده (۵۰ سطر)، فیلترهای نویز (میانگین متحرک ۳، ۵ و ۹ نقطه)، اتصال Spline، نرمال‌سازی و میله‌های خطا.
   - 📐 **محورها:** تعیین حدود Min/Max/Step، دکمه تنظیم خودکار (Auto Scale)، مقیاس لگاریتمی ($\log X, \log Y$)، محل تلاقی محورها و فرمت ارقام.
   - 🎨 **ظاهر:** پیش‌تنظیمات استاندارد مقالات، کادر بسته (Boxed) یا باز (Open)، اندازه مارکرها، ضخامت خطوط و خطوط راهنمای شبکه.
   - 🏷️ **عناوین:** متون نمودار و محورها، فرمول خط روند، ضریب $R^2$، کشیدن و رها کردن لیبل‌ها با ماوس و راهنمای نمونه‌ها.
@@ -156,11 +170,22 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 - **🔍 جستجوی سریع تنظیمات:** با تایپ هر واژه (مانند «فونت»، «رنگ»، «لگاریتم»، «خطا»، «تیک»)، کنترل مربوطه فوراً هایلایت شده و تب مربوطه باز می‌شود.
 - **📌 پین شدن نمودار (Sticky Layout):** نمودار همیشه در جلوی دید کاربر ثابت می‌ماند و همزمان با اعمال تنظیمات تغییرات به صورت زنده نمایش داده می‌شود.
 
-### 📐 کنترل دقیق مبدأ مختصات (Axis Origin)
-- **گوشه (کلاسیک):** چیدمان استاندارد ربع اول.
-- **از صفر $(0,0)$:** تلاقی محورها دقیقاً در مبدأ مختصات با خطوط زمینه ظریف و خوانایی ارقام.
-- **از وسط (Center):** ایجاد محدوده متقارن در چهار ربع برای سیگنال‌های رفت‌وبرگشتی و ارتعاشی.
+### 📐 چیدمان استاندارد و تمیز محورها (تضمین عدم تداخل با داده‌ها)
+- **ارقام همیشه روی کادر بیرونی:** اعداد محور افقی و عمودی همواره در حاشیه بیرونی کادر نمودار قرار می‌گیرند و هرگز روی خطوط داده، مارکرها یا منحنی‌های آزمایشگاهی تداخل ایجاد نمی‌کنند.
+- **خطوط کمکی مبدأ و مرکز:** در حالت «از صفر» یا «از وسط»، خطوط راهنمای ظریف خط‌چین در داخل نمودار رسم می‌شوند بدون آنکه اعداد محور از کادر بیرونی جابجا شوند.
 - **برعکس کردن محورها (Flip X / Flip Y):** قرینه‌سازی جهت با حفظ موقعیت هوشمند راهنما و خط روند.
+
+### ⚡ تحلیل خودکار ولتامتری چرخه‌ای (Cyclic Voltammetry - CV)
+- **شناسایی خودکار پیک‌های اکسایش و کاهش:** محاسبه هوشمند پتانسیل پیک آندی ($E_{pa}$)، پتانسیل پیک کاتدی ($E_{pc}$)، فاصله دو پیک ($\Delta E_p$)، پتانسیل نیمه‌موج ($E_{1/2}$) و نسبت جریان پیک ($|I_{pa}/I_{pc}|$).
+- **محاسبه مساحت حلقه و بار کل (Q):** انتگرال‌گیری ذوزنقه‌ای حلقه بسته ($\oint I \, dV$) جهت بررسی بار خازنی یا فاراداییک.
+- **دکمه کپی فوری آمار:** کپی مشخصات استخراج‌شده CV در کلیپ‌بورد جهت انتقال سریع به متن مقاله یا گزارش.
+
+### 📋 خروجی جدول LaTeX برای مقالات (Overleaf)
+- دکمه اختصاصی در نوار ابزار بالا جهت تولید و کپی کد آماده جدول LaTeX (`\begin{table} \begin{tabular}`) از داده‌های فعال با فرمت استاندارد مقالات علمی.
+
+### 🏎️ موتور پردازش پرسرعت داده‌های حجیم (بیش از ۸,۰۰۰ نقطه زیر ۳ میلی‌ثانیه)
+- حذف خودکار سربرگ‌ها و متن‌های دستگاهی در فایل‌های خام آزمایشگاهی.
+- جدول ۵۰ سطری صفحه‌بندی‌شده و Event Delegation در SVG جهت پیمایش کاملاً روان و بدون لگ.
 
 ### 🔄 تشخیص هوشمند حلقه هیسترزیس (رفت و برگشت)
 - شناسایی خودکار مسیر رفت و بازگشت داده‌های چرخه‌ای سنسورها با ترسیم خط‌چین و پیکان‌های جهت‌نما.
@@ -172,9 +197,12 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 ### 🔍 ذره‌بین بزرگ‌نمایی (Magnifier Inset)
 - بزرگ‌نمایی بخش‌های شلوغ یا تقاطع‌های حساس با کادر Inset درون خود نمودار با قابلیت کشیدن مستطیل با ماوس.
 
-### 🧾 پشتیبانی جامع از فرمت‌های داده
-- بارگذاری فایل‌های اکسل (`.xlsx`, `.xls`) و فایل‌های متنی (`.csv`, `.tsv`, `.txt`, `.dat`).
-- تشخیص هوشمند جداکننده‌ها (کاما، تب، فاصله، سمیکالن) و کدگذاری UTF-8 و فارسی.
+### 📁 اورلی درگ اند دراپ و کلیدهای میانبر کیبورد
+- لایه بصری رها کردن فایل داده در هر کجای پنجره با پشتیبانی از اکسل و فایل‌های متنی (`.xlsx`, `.csv`, `.tsv`, `.txt`).
+- کلیدهای میانبر:
+  - `Ctrl + S`: دانلود فوری تصویر با کیفیت ۶۰۰ DPI.
+  - `Ctrl + C`: کپی نمودار در کلیپ‌بورد.
+  - `Ctrl + F`: پرش سریع به کادر جستجوی تنظیمات.
 
 ### 🖼️ خروجی مناسب چاپ در ژورنال‌ها
 - خروجی تصویر با وضوح فوق‌العاده **300 و 600 DPI (PNG)** برای Word و LaTeX.
@@ -188,7 +216,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 ۱. **اجرا:** وارد **[نسخه آنلاین](https://hasanmfar.github.io/Academic-Scatter-Plot/)** شوید یا مخزن را دانلود کرده و فایل `index.html` را در مرورگر باز کنید.
 ۲. **ورود داده:** یکی از دیتاست‌های آماده را انتخاب کنید یا قالب خام اکسل را دانلود، پر کرده و مجدداً آپلود نمایید.
 ۳. **تنظیمات:** با استفاده از تب‌های سایدبار و نوار جستجو، ابعاد، فونت، رنگ‌ها و خطوط را سفارشی کنید.
-۴. **خروجی:** با کلیک بر روی **PNG (600 DPI)** یا **SVG** فایل مقاله خود را دریافت کنید.
+۴. **خروجی:** با کلیک بر روی **PNG (600 DPI)** یا **SVG** یا **کپی LaTeX** فایل مقاله خود را دریافت کنید.
 
 ---
 *توسعه‌داده‌شده برای جامعه دانشگاهی و علمی — متن‌باز و آزاد.*
