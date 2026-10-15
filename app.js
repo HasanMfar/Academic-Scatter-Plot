@@ -62,6 +62,19 @@ const state = {
   showGrid: true,
   showHysteresis: true,
   showTrendlines: false,
+  fitModel: "linear", // 'linear' | 'polynomial2' | 'exponential' | 'power'
+  showFitEquation: true,
+  colorPalette: "default",
+  peaks: {
+    enabled: false,
+    type: "maxima",
+    sens: 3,
+    showFWHM: true,
+    showLabels: true
+  },
+  crosshair: {
+    enabled: false
+  },
   showCalloutBox: true,
 
   // Axis overrides (null means auto-calculate or default)
@@ -149,6 +162,58 @@ const state = {
     showRegionBox: true,
     showTitles: false
   }
+};
+
+// Curated scientific color palettes for academic publications
+const SCIENTIFIC_PALETTES = {
+  default: [
+    { dark: '#06b6d4', light: '#0284c7' },
+    { dark: '#f43f5e', light: '#e11d48' },
+    { dark: '#10b981', light: '#059669' },
+    { dark: '#f59e0b', light: '#d97706' },
+    { dark: '#8b5cf6', light: '#6d28d9' },
+    { dark: '#ec4899', light: '#be185d' }
+  ],
+  classic: [
+    { dark: '#e64b35', light: '#b2182b' },
+    { dark: '#4dbbd5', light: '#2166ac' },
+    { dark: '#00a087', light: '#1b7837' },
+    { dark: '#3c5488', light: '#253494' },
+    { dark: '#f39b7f', light: '#d6604d' },
+    { dark: '#8491b4', light: '#542788' }
+  ],
+  biomedical: [
+    { dark: '#374e55', light: '#08306b' },
+    { dark: '#df8f44', light: '#bd0026' },
+    { dark: '#00a1d5', light: '#0570b0' },
+    { dark: '#b24745', light: '#7f0000' },
+    { dark: '#79af97', light: '#238b45' },
+    { dark: '#6a6599', light: '#54278f' }
+  ],
+  engineering: [
+    { dark: '#0072b2', light: '#004c7a' },
+    { dark: '#d55e00', light: '#993d00' },
+    { dark: '#009e73', light: '#00664b' },
+    { dark: '#cc79a7', light: '#8c3b68' },
+    { dark: '#f0e442', light: '#b3a700' },
+    { dark: '#56b4e9', light: '#2277a8' }
+  ],
+  viridis: [
+    { dark: '#440154', light: '#3b528b' },
+    { dark: '#3b528b', light: '#21918c' },
+    { dark: '#21918c', light: '#5ec962' },
+    { dark: '#5ec962', light: '#fde725' },
+    { dark: '#fde725', light: '#f98e09' },
+    { dark: '#bc3754', light: '#57106e' }
+  ],
+  colorblind: [
+    { dark: '#0173b2', light: '#015685' },
+    { dark: '#de8f05', light: '#aa6d00' },
+    { dark: '#029e73', light: '#01684c' },
+    { dark: '#d55e00', light: '#9c4300' },
+    { dark: '#cc78bc', light: '#964d85' },
+    { dark: '#ca9161', light: '#8d603a' }
+  ]
 };
 
 // Publication presets: one click applies a full figure look
@@ -1317,56 +1382,23 @@ function renderChart() {
     }
 
     // --- Trendlines ---
+    // --- Trendlines & Advanced Curve Fitting ---
     if (state.showTrendlines && xVals.length >= 2) {
-      let n = xVals.length;
-      let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-      const yDisp = [];
-      for (let i = 0; i < n; i++) {
-        const yv = dy(i);
-        yDisp.push(yv);
-        sumX += xVals[i];
-        sumY += yv;
-        sumXY += xVals[i] * yv;
-        sumXX += xVals[i] * xVals[i];
-      }
-
-      let denom = (n * sumXX - sumX * sumX);
-      if (Math.abs(denom) > 1e-12) {
-        let slope = (n * sumXY - sumX * sumY) / denom;
-        let intercept = (sumY - slope * sumX) / n;
-
-        let yMean = sumY / n;
-        let ssTot = 0, ssRes = 0;
-        for (let i = 0; i < n; i++) {
-          let yPred = slope * xVals[i] + intercept;
-          ssTot += Math.pow(yDisp[i] - yMean, 2);
-          ssRes += Math.pow(yDisp[i] - yPred, 2);
+      const fit = calculateCurveFit(xVals, s, dy, state.fitModel || "linear");
+      if (fit) {
+        if (fit.pathD) {
+          svgContent += `
+            <path d="${fit.pathD}" fill="none" stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="${0.85 * seriesOpacity}" />
+          `;
         }
-        let rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
-
-        const xb = arrayBounds(xVals);
-        const x1 = xb.min;
-        const x2 = xb.max;
-        const y1 = slope * x1 + intercept;
-        const y2 = slope * x2 + intercept;
-
-        const px1 = mapX(x1);
-        const py1 = mapY(y1);
-        const px2 = mapX(x2);
-        const py2 = mapY(y2);
-
-        // Position R² on whichever end is on the right side of the chart
-        const rightPx = Math.max(px1, px2);
-        const rightPy = (rightPx === px2) ? py2 : py1;
-        const r2X = Math.max(plotArea.x + 60, Math.min(plotArea.x + plotArea.width - 12, rightPx - 10));
-        const r2Y = Math.max(plotArea.y + 16, Math.min(plotArea.y + plotArea.height - 8, rightPy - 10));
-
-        svgContent += `
-          <line x1="${px1}" y1="${py1}" x2="${px2}" y2="${py2}"
-                stroke="${seriesColor}" stroke-width="2" stroke-dasharray="8,4" opacity="${0.8 * seriesOpacity}" />
-          <text x="${r2X}" y="${r2Y}" fill="${seriesColor}" font-size="${state.type.legendFont}" font-weight="bold" font-family="${TICK_FONT}" text-anchor="end" direction="ltr"
-                paint-order="stroke fill" stroke="${colors.bg}" stroke-width="3" stroke-linejoin="round">R² = ${rSquared.toFixed(3)}</text>
-        `;
+        if (state.showFitEquation !== false && fit.label) {
+          const r2X = Math.max(plotArea.x + 80, Math.min(plotArea.x + plotArea.width - 12, fit.labelX));
+          const r2Y = Math.max(plotArea.y + 18, Math.min(plotArea.y + plotArea.height - 8, fit.labelY));
+          svgContent += `
+            <text x="${r2X}" y="${r2Y}" fill="${seriesColor}" font-size="${state.type.legendFont}" font-weight="bold" font-family="${TICK_FONT}" text-anchor="end" direction="ltr"
+                  paint-order="stroke fill" stroke="${colors.bg}" stroke-width="3" stroke-linejoin="round">${fit.label}</text>
+          `;
+        }
       }
     }
   });
@@ -1413,53 +1445,70 @@ function renderChart() {
   // In-Plot Scientific Legend Box
   if (state.showInplotLegend) {
     const isFa = state.lang === "fa";
-    const rowH = Math.max(20, state.type.legendFont + 13);
-    const legBoxW = 230;
-    const legBoxH = Math.max(80, 44 + (dataset.series.length * rowH));
+    const titleText = isFa ? "راهنمای نمونه‌ها" : "Legend / Samples";
+    const legFontSize = Math.max(9.5, state.type.legendFont || 11.5);
+    const rowH = Math.max(22, legFontSize + 12);
+
+    // Dynamically calculate width based on longest label so text never clips or overflows
+    let maxLabelChars = titleText.length;
+    dataset.series.forEach(s => {
+      const n = (isFa ? s.nameFa : s.nameEn) || s.nameEn || s.id || "";
+      if (n.length > maxLabelChars) maxLabelChars = n.length;
+    });
+    const charWidth = legFontSize * 0.72;
+    // Box width: left padding (16) + symbol width (26) + spacing (12) + text width + right padding (20)
+    const computedW = Math.round(maxLabelChars * charWidth + 74);
+    const legBoxW = Math.max(190, Math.min(plotArea.width - 16, computedW));
+    const legBoxH = Math.max(70, Math.round(38 + (dataset.series.length * rowH)));
+
     const rawLegX = state.callouts.inplotX != null ? state.callouts.inplotX : (plotArea.x + 20);
-    const rawLegY = state.callouts.inplotY != null ? state.callouts.inplotY : (plotArea.y + plotArea.height - legBoxH - 20);
+    const rawLegY = state.callouts.inplotY != null ? state.callouts.inplotY : (plotArea.y + 20);
     const legBoxX = Math.max(plotArea.x + 4, Math.min(rawLegX, plotArea.x + plotArea.width - legBoxW - 4));
     const legBoxY = Math.max(plotArea.y + 4, Math.min(rawLegY, plotArea.y + plotArea.height - legBoxH - 4));
 
+    const boxBg = isDark ? "#0f172a" : "#ffffff";
+    const boxBorder = isDark ? "rgba(148, 163, 184, 0.45)" : "#cbd5e1";
+
     svgContent += `
-      <g class="draggable-badge" data-badge="inplot" filter="url(#badgeShadow)">
+      <g class="draggable-badge" data-badge="inplot" filter="url(#badgeShadow)" style="cursor: move;">
         <rect x="${legBoxX}" y="${legBoxY}" width="${legBoxW}" height="${legBoxH}" rx="8"
-              fill="${colors.calloutBg}" stroke="${colors.calloutBorder}" stroke-width="1.4" />
+              fill="${boxBg}" stroke="${boxBorder}" stroke-width="1.3" />
         
-        <text x="${isFa ? legBoxX + legBoxW - 16 : legBoxX + 16}" y="${legBoxY + 22}" fill="${colors.title}" font-size="${Math.max(10, state.type.legendFont + 0.5)}" font-weight="700"
-              direction="${isFa ? 'rtl' : 'ltr'}" text-anchor="${isFa ? 'end' : 'start'}" font-family="${USER_FONT}">
-          ${isFa ? 'راهنمای نمونه‌ها:' : 'Legend / Samples:'}
+        <text x="${legBoxX + 16}" y="${legBoxY + 21}" fill="${colors.title}" font-size="${Math.max(10.5, legFontSize + 0.5)}" font-weight="700"
+              text-anchor="start" font-family="${USER_FONT}">
+          ${titleText}
         </text>
+        <line x1="${legBoxX + 14}" y1="${legBoxY + 27}" x2="${legBoxX + legBoxW - 14}" y2="${legBoxY + 27}"
+              stroke="${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}" stroke-width="1" />
     `;
 
     dataset.series.forEach((s, idx) => {
       const itemY = legBoxY + 44 + (idx * rowH);
       const seriesColor = isDark ? s.colorDark : s.colorLight;
-      const name = isFa ? s.nameFa : s.nameEn;
-      const lineX1 = isFa ? legBoxX + legBoxW - 42 : legBoxX + 16;
-      const lineX2 = isFa ? legBoxX + legBoxW - 16 : legBoxX + 42;
-      const markerCx = isFa ? legBoxX + legBoxW - 29 : legBoxX + 29;
-      const textX = isFa ? legBoxX + legBoxW - 55 : legBoxX + 50;
+      const name = (isFa ? s.nameFa : s.nameEn) || s.nameEn || s.id;
+      const lineX1 = legBoxX + 16;
+      const lineX2 = legBoxX + 40;
+      const markerCx = legBoxX + 28;
+      const textX = legBoxX + 48;
 
       if (state.plotMode === "scatter-line") {
         svgContent += `
           <line x1="${lineX1}" y1="${itemY}" x2="${lineX2}" y2="${itemY}"
-                stroke="${seriesColor}" stroke-width="2.4" opacity="${s.visible ? 1 : 0.25}"
+                stroke="${seriesColor}" stroke-width="2.2" opacity="${s.visible ? 1 : 0.25}"
                 ${s.strokeDash ? `stroke-dasharray="${s.strokeDash}"` : ""} />
         `;
       }
 
       svgContent += `
         <g opacity="${s.visible ? 1 : 0.25}">
-          ${getMarkerSvg(s.marker, markerCx, itemY, 8.5, seriesColor, isDark ? "#0f172a" : "#ffffff")}
+          ${getMarkerSvg(s.marker, markerCx, itemY, 8, seriesColor, isDark ? "#0f172a" : "#ffffff")}
         </g>
       `;
 
       svgContent += `
         <text x="${textX}" y="${itemY + 4}" fill="${s.visible ? colors.text : colors.axis}"
-              font-size="${state.type.legendFont}" font-weight="600" opacity="${s.visible ? 1 : 0.35}"
-              direction="${isFa ? 'rtl' : 'ltr'}" text-anchor="${isFa ? 'end' : 'start'}"
-              font-family="${USER_FONT}">${escapeXml(name)}</text>
+              font-size="${legFontSize}" font-weight="600" opacity="${s.visible ? 1 : 0.35}"
+              text-anchor="start" font-family="${USER_FONT}">${escapeXml(name)}</text>
       `;
     });
 
@@ -1491,6 +1540,58 @@ function renderChart() {
     svgContent += renderZoomOverlay();
     svgContent += renderZoomInset(colors, TICK_FONT, USER_FONT);
   }
+
+  // --- Automated Peak & Valley Finder & FWHM ---
+  if (state.peaks && state.peaks.enabled) {
+    const allPeaks = [];
+    dataset.series.filter(s => s.visible).forEach(s => {
+      const pks = computePeaksForSeries(s);
+      const col = state.theme === "dark" ? s.colorDark : s.colorLight;
+      pks.forEach(p => {
+        allPeaks.push(Object.assign({ seriesName: state.lang === "fa" ? s.nameFa : s.nameEn }, p));
+        const px = mapX(p.x);
+        const py = mapY(p.y);
+        const isMax = p.kind === "peak";
+        const triD = isMax ? `M ${px} ${py - 12} L ${px - 5} ${py - 3} L ${px + 5} ${py - 3} Z`
+                           : `M ${px} ${py + 12} L ${px - 5} ${py + 3} L ${px + 5} ${py + 3} Z`;
+        svgContent += `<path d="${triD}" fill="${col}" stroke="${colors.bg}" stroke-width="1.2" />`;
+
+        if (state.peaks.showLabels !== false) {
+          const lblY = isMax ? py - 16 : py + 24;
+          svgContent += `
+            <text x="${px}" y="${lblY}" fill="${col}" font-size="${Math.max(8.5, state.type.tickFont - 5)}" font-weight="bold" font-family="${TICK_FONT}" text-anchor="middle" direction="ltr"
+                  paint-order="stroke fill" stroke="${colors.bg}" stroke-width="2.5" stroke-linejoin="round">${Number(p.x.toFixed(2))}, ${Number(p.y.toFixed(2))}</text>
+          `;
+        }
+
+        if (state.peaks.showFWHM !== false && p.fwhm && isMax) {
+          const fLeft = mapX(p.fwhmLeft);
+          const fRight = mapX(p.fwhmRight);
+          const fY = mapY(p.halfY);
+          svgContent += `
+            <line x1="${fLeft}" y1="${fY}" x2="${fRight}" y2="${fY}" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="3,3" />
+            <circle cx="${fLeft}" cy="${fY}" r="2.5" fill="#f59e0b" />
+            <circle cx="${fRight}" cy="${fY}" r="2.5" fill="#f59e0b" />
+            <text x="${(fLeft + fRight) / 2}" y="${fY - 5}" fill="#f59e0b" font-size="${Math.max(8, state.type.tickFont - 6)}" font-weight="bold" font-family="${TICK_FONT}" text-anchor="middle" direction="ltr"
+                  paint-order="stroke fill" stroke="${colors.bg}" stroke-width="2.5" stroke-linejoin="round">FWHM = ${p.fwhm.toFixed(2)}</text>
+          `;
+        }
+      });
+    });
+    updatePeakListSidebar(allPeaks);
+  }
+
+  // --- Crosshair Coordinate Inspector Elements ---
+  svgContent += `
+    <g id="crosshairGroup" style="pointer-events: none; display: none;">
+      <line id="chLineH" class="crosshair-line" x1="${plotArea.x}" y1="0" x2="${plotArea.x + plotArea.width}" y2="0" />
+      <line id="chLineV" class="crosshair-line" x1="0" y1="${plotArea.y}" x2="0" y2="${plotArea.y + plotArea.height}" />
+      <g id="chBadge">
+        <rect id="chBadgeBg" rx="4" ry="4" fill="${state.theme === 'dark' ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.95)'}" stroke="${colors.calloutBorder}" stroke-width="1" width="130" height="24" />
+        <text id="chBadgeText" x="8" y="16" class="crosshair-badge" direction="ltr"></text>
+      </g>
+    </g>
+  `;
 
   // Rubber-band selection rectangle used to pick the magnified region
   svgContent += `<rect id="zoomBandRect" x="0" y="0" width="0" height="0" style="display:none"
@@ -1590,12 +1691,45 @@ function renderCVMetrics() {
   `;
 }
 
-// --- 7. Interactive Hover Tooltips (Event Delegation for High Performance) ---
+// --- 7. Interactive Hover Tooltips & Crosshair (Event Delegation) ---
 function attachHoverListeners() {
   if (svg._hasHoverListener) return;
   svg._hasHoverListener = true;
 
   svg.addEventListener("pointermove", e => {
+    // Crosshair inspection
+    if (state.crosshair && state.crosshair.enabled) {
+      const chG = document.getElementById("crosshairGroup");
+      if (chG) {
+        const coords = getSvgCoords(e);
+        if (coords.x >= plotArea.x && coords.x <= plotArea.x + plotArea.width &&
+            coords.y >= plotArea.y && coords.y <= plotArea.y + plotArea.height) {
+          chG.style.display = "";
+          const hLine = document.getElementById("chLineH");
+          const vLine = document.getElementById("chLineV");
+          const badge = document.getElementById("chBadge");
+          const badgeText = document.getElementById("chBadgeText");
+
+          if (hLine) { hLine.setAttribute("y1", coords.y); hLine.setAttribute("y2", coords.y); }
+          if (vLine) { vLine.setAttribute("x1", coords.x); vLine.setAttribute("x2", coords.x); }
+
+          const dataX = unmapX(coords.x);
+          const dataY = unmapY(coords.y);
+          const fmtVal = v => typeof v === 'number' ? (Math.abs(v) >= 1000 ? v.toFixed(0) : (Math.abs(v) < 0.01 && v !== 0 ? v.toExponential(2) : v.toFixed(3))) : v;
+          const txt = `X: ${fmtVal(dataX)}, Y: ${fmtVal(dataY)}`;
+
+          if (badge && badgeText) {
+            badgeText.textContent = txt;
+            const bx = Math.min(plotArea.x + plotArea.width - 135, Math.max(plotArea.x + 5, coords.x + 12));
+            const by = Math.max(plotArea.y + 6, coords.y - 28);
+            badge.setAttribute("transform", `translate(${bx}, ${by})`);
+          }
+        } else {
+          chG.style.display = "none";
+        }
+      }
+    }
+
     const pt = e.target.closest(".point-group");
     if (!pt) {
       if (tooltip && tooltip.classList.contains("visible")) tooltip.classList.remove("visible");
@@ -1631,6 +1765,8 @@ function attachHoverListeners() {
 
   svg.addEventListener("pointerleave", () => {
     if (tooltip) tooltip.classList.remove("visible");
+    const chG = document.getElementById("crosshairGroup");
+    if (chG) chG.style.display = "none";
   });
 }
 
@@ -2124,7 +2260,8 @@ function autoScaleAxis() {
   const maxX = xBounds.max;
   
   let allY = [];
-  dataset.series.forEach(s => {
+  const activeSeries = dataset.series.filter(s => s.visible).length ? dataset.series.filter(s => s.visible) : dataset.series;
+  activeSeries.forEach(s => {
     if (s.yValues && s.yValues.length) {
       for (let i = 0; i < s.yValues.length; i++) allY.push(displayY(s, i));
     }
@@ -2134,19 +2271,33 @@ function autoScaleAxis() {
   const minY = yBounds.min;
   const maxY = yBounds.max;
 
-  const xSpan = Math.max(1e-6, maxX - minX);
-  const xStep = getNiceStep(xSpan, 6);
-  state.axis.xMin = Math.floor(minX / xStep) * xStep;
-  state.axis.xMax = Math.ceil(maxX / xStep) * xStep;
-  if (state.axis.xMax <= state.axis.xMin) state.axis.xMax = state.axis.xMin + xStep * 5;
-  state.axis.xStep = xStep;
+  // Handle Log X
+  if (state.ticks.xLog && minX > 0 && maxX > 0) {
+    state.axis.xMin = Math.pow(10, Math.floor(Math.log10(minX)));
+    state.axis.xMax = Math.pow(10, Math.ceil(Math.log10(maxX)));
+    state.axis.xStep = 1;
+  } else {
+    const xSpan = Math.max(1e-6, maxX - minX);
+    const xStep = getNiceStep(xSpan, 6);
+    state.axis.xMin = roundTick(Math.floor(minX / xStep) * xStep);
+    state.axis.xMax = roundTick(Math.ceil(maxX / xStep) * xStep);
+    if (state.axis.xMax <= state.axis.xMin) state.axis.xMax = roundTick(state.axis.xMin + xStep * 5);
+    state.axis.xStep = roundTick(xStep);
+  }
 
-  const ySpan = Math.max(1e-6, maxY - minY);
-  const yStep = getNiceStep(ySpan, 6);
-  state.axis.yMin = Math.floor(minY / yStep) * yStep;
-  state.axis.yMax = Math.ceil(maxY / yStep) * yStep;
-  if (state.axis.yMax <= state.axis.yMin) state.axis.yMax = state.axis.yMin + yStep * 5;
-  state.axis.yStep = yStep;
+  // Handle Log Y
+  if (state.ticks.yLog && minY > 0 && maxY > 0) {
+    state.axis.yMin = Math.pow(10, Math.floor(Math.log10(minY)));
+    state.axis.yMax = Math.pow(10, Math.ceil(Math.log10(maxY)));
+    state.axis.yStep = 1;
+  } else {
+    const ySpan = Math.max(1e-6, maxY - minY);
+    const yStep = getNiceStep(ySpan, 6);
+    state.axis.yMin = roundTick(Math.floor(minY / yStep) * yStep);
+    state.axis.yMax = roundTick(Math.ceil(maxY / yStep) * yStep);
+    if (state.axis.yMax <= state.axis.yMin) state.axis.yMax = roundTick(state.axis.yMin + yStep * 5);
+    state.axis.yStep = roundTick(yStep);
+  }
 
   // Sync inputs in UI
   const inpXMin = document.getElementById("inpXMin");
@@ -2164,6 +2315,305 @@ function autoScaleAxis() {
   if (inpYStep) inpYStep.value = state.axis.yStep;
 }
 
+// --- Mathematical Curve Fitting Models ---
+function calculateCurveFit(xVals, s, dy, model) {
+  const n = xVals.length;
+  if (n < 2) return null;
+
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const yv = dy(i);
+    if (isFinite(xVals[i]) && isFinite(yv)) pts.push({ x: xVals[i], y: yv });
+  }
+  if (pts.length < 2) return null;
+
+  const xb = arrayBounds(xVals);
+  const xMin = xb.min, xMax = xb.max;
+  const numInterp = 80;
+  let label = "", pathPts = [], rSquared = 0;
+
+  if (model === "polynomial2" && pts.length >= 3) {
+    let s1 = 0, s2 = 0, s3 = 0, s4 = 0, z0 = 0, z1 = 0, z2 = 0;
+    for (let p of pts) {
+      const xi = p.x, yi = p.y, x2 = xi * xi;
+      s1 += xi; s2 += x2; s3 += x2 * xi; s4 += x2 * x2;
+      z0 += yi; z1 += xi * yi; z2 += x2 * yi;
+    }
+    const D = pts.length * (s2 * s4 - s3 * s3) - s1 * (s1 * s4 - s2 * s3) + s2 * (s1 * s3 - s2 * s2);
+    if (Math.abs(D) > 1e-12) {
+      const c = (z0 * (s2 * s4 - s3 * s3) - s1 * (z1 * s4 - z2 * s3) + s2 * (z1 * s3 - z2 * s2)) / D;
+      const b = (pts.length * (z1 * s4 - z2 * s3) - z0 * (s1 * s4 - s2 * s3) + s2 * (s1 * z2 - s2 * z1)) / D;
+      const a = (pts.length * (s2 * z2 - s3 * z1) - s1 * (s1 * z2 - s2 * z1) + z0 * (s1 * s3 - s2 * s2)) / D;
+
+      let ssTot = 0, ssRes = 0, yMean = z0 / pts.length;
+      for (let p of pts) {
+        const yPred = a * p.x * p.x + b * p.x + c;
+        ssTot += Math.pow(p.y - yMean, 2);
+        ssRes += Math.pow(p.y - yPred, 2);
+      }
+      rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
+
+      for (let step = 0; step <= numInterp; step++) {
+        const curX = xMin + (step / numInterp) * (xMax - xMin);
+        const curY = a * curX * curX + b * curX + c;
+        pathPts.push({ x: mapX(curX), y: mapY(curY) });
+      }
+      const sgnB = b >= 0 ? "+" : "-";
+      const sgnC = c >= 0 ? "+" : "-";
+      label = `y = ${a.toFixed(3)}x² ${sgnB} ${Math.abs(b).toFixed(3)}x ${sgnC} ${Math.abs(c).toFixed(3)} (R² = ${rSquared.toFixed(3)})`;
+    }
+  } else if (model === "exponential") {
+    const valid = pts.filter(p => p.y > 0);
+    if (valid.length >= 2) {
+      let sx = 0, sly = 0, sxy = 0, sxx = 0, sy = 0;
+      for (let p of valid) {
+        const ly = Math.log(p.y);
+        sx += p.x; sly += ly; sxy += p.x * ly; sxx += p.x * p.x; sy += p.y;
+      }
+      const denom = valid.length * sxx - sx * sx;
+      if (Math.abs(denom) > 1e-12) {
+        const b = (valid.length * sxy - sx * sly) / denom;
+        const a = Math.exp((sly - b * sx) / valid.length);
+
+        let ssTot = 0, ssRes = 0, yMean = sy / valid.length;
+        for (let p of valid) {
+          const yPred = a * Math.exp(b * p.x);
+          ssTot += Math.pow(p.y - yMean, 2);
+          ssRes += Math.pow(p.y - yPred, 2);
+        }
+        rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
+
+        for (let step = 0; step <= numInterp; step++) {
+          const curX = xMin + (step / numInterp) * (xMax - xMin);
+          const curY = a * Math.exp(b * curX);
+          pathPts.push({ x: mapX(curX), y: mapY(curY) });
+        }
+        label = `y = ${a.toFixed(3)}·e^(${b.toFixed(3)}x) (R² = ${rSquared.toFixed(3)})`;
+      }
+    }
+  } else if (model === "power") {
+    const valid = pts.filter(p => p.x > 0 && p.y > 0);
+    if (valid.length >= 2) {
+      let slx = 0, sly = 0, slxy = 0, slxx = 0, sy = 0;
+      for (let p of valid) {
+        const lx = Math.log(p.x), ly = Math.log(p.y);
+        slx += lx; sly += ly; slxy += lx * ly; slxx += lx * lx; sy += p.y;
+      }
+      const denom = valid.length * slxx - slx * slx;
+      if (Math.abs(denom) > 1e-12) {
+        const b = (valid.length * slxy - slx * sly) / denom;
+        const a = Math.exp((sly - b * slx) / valid.length);
+
+        let ssTot = 0, ssRes = 0, yMean = sy / valid.length;
+        for (let p of valid) {
+          const yPred = a * Math.pow(p.x, b);
+          ssTot += Math.pow(p.y - yMean, 2);
+          ssRes += Math.pow(p.y - yPred, 2);
+        }
+        rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
+
+        for (let step = 0; step <= numInterp; step++) {
+          const curX = xMin + (step / numInterp) * (xMax - xMin);
+          const curY = a * Math.pow(curX, b);
+          pathPts.push({ x: mapX(curX), y: mapY(curY) });
+        }
+        label = `y = ${a.toFixed(3)}·x^(${b.toFixed(3)}) (R² = ${rSquared.toFixed(3)})`;
+      }
+    }
+  }
+
+  // Fallback to Linear if model not solved or requested
+  if (!pathPts.length) {
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    for (let p of pts) {
+      sumX += p.x; sumY += p.y; sumXY += p.x * p.y; sumXX += p.x * p.x;
+    }
+    const denom = pts.length * sumXX - sumX * sumX;
+    if (Math.abs(denom) <= 1e-12) return null;
+    const slope = (pts.length * sumXY - sumX * sumY) / denom;
+    const intercept = (sumY - slope * sumX) / pts.length;
+
+    let ssTot = 0, ssRes = 0, yMean = sumY / pts.length;
+    for (let p of pts) {
+      const yPred = slope * p.x + intercept;
+      ssTot += Math.pow(p.y - yMean, 2);
+      ssRes += Math.pow(p.y - yPred, 2);
+    }
+    rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
+
+    pathPts = [
+      { x: mapX(xMin), y: mapY(slope * xMin + intercept) },
+      { x: mapX(xMax), y: mapY(slope * xMax + intercept) }
+    ];
+    const sgn = intercept >= 0 ? "+" : "-";
+    label = `y = ${slope.toFixed(3)}x ${sgn} ${Math.abs(intercept).toFixed(3)} (R² = ${rSquared.toFixed(3)})`;
+  }
+
+  let pathD = "";
+  if (pathPts.length) {
+    pathD = `M ${pathPts[0].x} ${pathPts[0].y} ` + pathPts.slice(1).map(p => `L ${p.x} ${p.y}`).join(" ");
+  }
+
+  const lastPt = pathPts[pathPts.length - 1] || { x: plotArea.x + plotArea.width, y: plotArea.y + 20 };
+  return {
+    pathD,
+    label,
+    rSquared,
+    labelX: lastPt.x - 10,
+    labelY: lastPt.y - 12
+  };
+}
+
+// --- Automated Peak & Valley Detection ---
+function computePeaksForSeries(s) {
+  const xVals = dataset.xValues || [];
+  const n = xVals.length;
+  if (n < 3) return [];
+  const yVals = [];
+  for (let i = 0; i < n; i++) yVals.push(displayY(s, i));
+
+  let yMin = Infinity, yMax = -Infinity;
+  for (let i = 0; i < n; i++) {
+    if (yVals[i] < yMin) yMin = yVals[i];
+    if (yVals[i] > yMax) yMax = yVals[i];
+  }
+  const yRange = yMax - yMin || 1;
+  const sens = (state.peaks && state.peaks.sens) || 3;
+  const type = (state.peaks && state.peaks.type) || "maxima";
+  const threshold = yRange * (11 - sens) * 0.025;
+
+  const peaks = [];
+  for (let i = 1; i < n - 1; i++) {
+    const isPeak = (yVals[i] > yVals[i-1] && yVals[i] >= yVals[i+1]);
+    const isValley = (yVals[i] < yVals[i-1] && yVals[i] <= yVals[i+1]);
+
+    if ((type === "maxima" || type === "both") && isPeak) {
+      if ((yVals[i] - Math.min(yVals[i-1], yVals[i+1])) >= threshold || (yVals[i] - yMin) >= threshold) {
+        peaks.push({ index: i, x: xVals[i], y: yVals[i], kind: "peak" });
+      }
+    } else if ((type === "minima" || type === "both") && isValley) {
+      if ((Math.max(yVals[i-1], yVals[i+1]) - yVals[i]) >= threshold || (yMax - yVals[i]) >= threshold) {
+        peaks.push({ index: i, x: xVals[i], y: yVals[i], kind: "valley" });
+      }
+    }
+  }
+
+  // FWHM for the dominant peak
+  let domPeak = null;
+  peaks.forEach(p => {
+    if (p.kind === "peak" && (!domPeak || p.y > domPeak.y)) domPeak = p;
+  });
+
+  if (domPeak) {
+    const halfY = yMin + 0.5 * (domPeak.y - yMin);
+    let xLeft = domPeak.x;
+    for (let i = domPeak.index; i >= 0; i--) {
+      if (yVals[i] <= halfY) {
+        const dyVal = (yVals[i+1] - yVals[i]) || 1;
+        const t = (halfY - yVals[i]) / dyVal;
+        xLeft = xVals[i] + t * (xVals[i+1] - xVals[i]);
+        break;
+      }
+    }
+    let xRight = domPeak.x;
+    for (let i = domPeak.index; i < n; i++) {
+      if (yVals[i] <= halfY) {
+        const dyVal = (yVals[i] - yVals[i-1]) || 1;
+        const t = (halfY - yVals[i-1]) / dyVal;
+        xRight = xVals[i-1] + t * (xVals[i] - xVals[i-1]);
+        break;
+      }
+    }
+    domPeak.fwhm = Math.abs(xRight - xLeft);
+    domPeak.halfY = halfY;
+    domPeak.fwhmLeft = xLeft;
+    domPeak.fwhmRight = xRight;
+  }
+
+  return peaks;
+}
+
+function updatePeakListSidebar(allPeaks) {
+  const listEl = document.getElementById("peakListContent");
+  if (!listEl) return;
+  if (!allPeaks || !allPeaks.length) {
+    listEl.innerHTML = `<span style="color: var(--text-dim);">${state.lang === 'fa' ? 'پیکی با این حساسیت یافت نشد' : 'No peaks detected at this sensitivity'}</span>`;
+    return;
+  }
+  listEl.innerHTML = allPeaks.map((p, idx) => {
+    const typeLabel = p.kind === "peak" ? "Peak" : "Valley";
+    const fwhmStr = p.fwhm ? ` | FWHM: ${p.fwhm.toFixed(2)}` : "";
+    return `
+      <div class="peak-result-row">
+        <span>#${idx + 1} (${p.seriesName}): ${typeLabel}</span>
+        <span class="peak-result-val">X=${Number(p.x.toFixed(2))}, Y=${Number(p.y.toFixed(2))}${fwhmStr}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+// --- Export Clean Processed Data (Excel & CSV) ---
+function exportProcessedData(format) {
+  const xVals = dataset.xValues || [];
+  const series = dataset.series.filter(s => s.visible);
+  if (!xVals.length || !series.length) {
+    showToast(state.lang === 'fa' ? 'داده‌ای برای خروجی وجود ندارد.' : 'No data to export.');
+    return;
+  }
+
+  const order = xVals.map((_, i) => i);
+  if (state.data.sortByX) order.sort((a, b) => xVals[a] - xVals[b]);
+
+  const header = [state.xTitle || (state.lang === 'fa' ? 'محور X' : 'X')];
+  series.forEach(s => {
+    header.push(state.lang === 'fa' ? s.nameFa : s.nameEn);
+  });
+
+  const rows = [header];
+  for (let idx of order) {
+    const row = [xVals[idx]];
+    series.forEach(s => {
+      const v = displayY(s, idx);
+      row.push(typeof v === 'number' ? Number(v.toFixed(4)) : v);
+    });
+    rows.push(row);
+  }
+
+  if (format === 'csv') {
+    const csvContent = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Clean_Scientific_Data_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(state.lang === 'fa' ? 'فایل CSV داده‌های پردازش‌شده دانلود شد' : 'Processed CSV data downloaded');
+  } else {
+    if (typeof XLSX !== 'undefined') {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Clean_Data");
+      XLSX.writeFile(wb, `Clean_Scientific_Data_${Date.now()}.xlsx`);
+      showToast(state.lang === 'fa' ? 'فایل اکسل داده‌های پردازش‌شده دانلود شد' : 'Processed Excel data downloaded');
+    }
+  }
+}
+
+// --- Scientific Color Palettes ---
+function applyColorPalette(key) {
+  const pal = SCIENTIFIC_PALETTES[key] || SCIENTIFIC_PALETTES.default;
+  state.colorPalette = key;
+  dataset.series.forEach((s, i) => {
+    const c = pal[i % pal.length];
+    s.colorDark = c.dark;
+    s.colorLight = c.light;
+  });
+  setupSeriesCheckboxes();
+  renderChart();
+  renderLegend();
+}
+
 function exportExcelTemplate() {
   if (typeof XLSX === "undefined") {
     showToast("کتابخانه SheetJS بارگذاری نشده است.");
@@ -2172,9 +2622,9 @@ function exportExcelTemplate() {
   const numSeriesInput = document.getElementById("numSeriesInput");
   const numSeries = parseInt(numSeriesInput ? numSeriesInput.value : "3", 10) || 3;
   
-  const headers = ["RH (%)"];
+  const headers = [state.xTitle || (state.lang === 'fa' ? 'محور X' : 'X')];
   for (let i = 1; i <= numSeries; i++) {
-    headers.push(`نمونه ${i}`);
+    headers.push(state.lang === 'fa' ? `نمونه ${i}` : `Sample ${i}`);
   }
   
   // Dummy hysteresis data layout
@@ -2593,6 +3043,18 @@ function importExcelFile(e) {
 // Captions and axis labels reuse the wording of the README gallery figures;
 // only options that differ from the plain import behaviour are listed.
 const SAMPLE_OPTIONS = {
+  "Raman_Spectroscopy.xlsx": {
+    sortByX: true,
+    flags: { showInplotLegend: true },
+    callouts: { inplotX: 110, inplotY: 60 },
+    title: { fa: "طیف‌سنجی رامان گرافن", en: "Raman Spectra of Graphene" },
+    subtitle: {
+      fa: "بررسی پیک‌های D، G و 2D در نمونه‌های سنتزی و خالص",
+      en: "D, G, and 2D characteristic bands of defective vs. pristine graphene"
+    },
+    xTitle: { fa: "شیفت رامان (1/cm)", en: "Raman Shift (cm⁻¹)" },
+    yTitle: { fa: "شدت (a.u.)", en: "Intensity (a.u.)" }
+  },
   "Cyclic_Voltammetry.xlsx": {
     sortByX: false,
     flags: { showHysteresis: true, showInplotLegend: true },
@@ -2710,6 +3172,7 @@ async function loadBundledSample(fileName) {
     if (opts.subtitle) state.chartSubtitle = cap(opts.subtitle);
     if (opts.xTitle) state.xTitle = cap(opts.xTitle);
     if (opts.yTitle) state.yTitle = cap(opts.yTitle);
+    if (opts.callouts) Object.assign(state.callouts, opts.callouts);
 
     syncUIFromState();
     renderChart();
@@ -3299,10 +3762,99 @@ function initEvents() {
   });
 
   const chkTrendline = document.getElementById("chkTrendline");
+  const boxTrendOptions = document.getElementById("trendlineOptionsBox");
   if (chkTrendline) chkTrendline.addEventListener("change", e => {
     state.showTrendlines = e.target.checked;
+    if (boxTrendOptions) boxTrendOptions.style.display = e.target.checked ? "block" : "none";
     renderChart();
   });
+
+  const selFitModel = document.getElementById("selFitModel");
+  if (selFitModel) selFitModel.addEventListener("change", e => {
+    state.fitModel = e.target.value;
+    renderChart();
+  });
+  const chkFitEquation = document.getElementById("chkFitEquation");
+  if (chkFitEquation) chkFitEquation.addEventListener("change", e => {
+    state.showFitEquation = e.target.checked;
+    renderChart();
+  });
+
+  // Scientific Color Palette selector
+  const selColorPalette = document.getElementById("selColorPalette");
+  if (selColorPalette) selColorPalette.addEventListener("change", e => {
+    applyColorPalette(e.target.value);
+  });
+
+  // Clean Data Export buttons
+  const btnExportCleanExcel = document.getElementById("btnExportCleanExcel");
+  if (btnExportCleanExcel) btnExportCleanExcel.addEventListener("click", () => exportProcessedData("xlsx"));
+  const btnExportCleanCSV = document.getElementById("btnExportCleanCSV");
+  if (btnExportCleanCSV) btnExportCleanCSV.addEventListener("click", () => exportProcessedData("csv"));
+
+  // Peak Finder & FWHM controls
+  const chkPeakFinder = document.getElementById("chkPeakFinder");
+  const peakControlsBox = document.getElementById("peakFinderControls");
+  if (chkPeakFinder) {
+    chkPeakFinder.addEventListener("change", e => {
+      state.peaks.enabled = e.target.checked;
+      if (peakControlsBox) peakControlsBox.style.display = e.target.checked ? "block" : "none";
+      renderChart();
+    });
+  }
+  const selPeakType = document.getElementById("selPeakType");
+  if (selPeakType) {
+    selPeakType.addEventListener("change", e => {
+      state.peaks.type = e.target.value;
+      renderChart();
+    });
+  }
+  const rngPeakSens = document.getElementById("rngPeakSens");
+  if (rngPeakSens) {
+    rngPeakSens.addEventListener("input", e => {
+      state.peaks.sens = parseInt(e.target.value, 10) || 3;
+      setText("valPeakSens", state.peaks.sens);
+      renderChart();
+    });
+  }
+  const chkShowFWHM = document.getElementById("chkShowFWHM");
+  if (chkShowFWHM) {
+    chkShowFWHM.addEventListener("change", e => {
+      state.peaks.showFWHM = e.target.checked;
+      renderChart();
+    });
+  }
+  const chkPeakLabels = document.getElementById("chkPeakLabels");
+  if (chkPeakLabels) {
+    chkPeakLabels.addEventListener("change", e => {
+      state.peaks.showLabels = e.target.checked;
+      renderChart();
+    });
+  }
+  const btnCopyPeaks = document.getElementById("btnCopyPeaks");
+  if (btnCopyPeaks) {
+    btnCopyPeaks.addEventListener("click", () => {
+      const rows = document.querySelectorAll("#peakListContent .peak-result-row");
+      if (!rows.length) return;
+      const lines = [];
+      rows.forEach(r => lines.push(r.textContent.trim()));
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lines.join("\n")).then(() => {
+          showToast(state.lang === "fa" ? "لیست پیک‌ها در کلیپ‌بورد کپی شد" : "Peak list copied to clipboard");
+        });
+      }
+    });
+  }
+
+  // Crosshair Inspector toggle
+  const chkCrosshair = document.getElementById("chkCrosshair");
+  if (chkCrosshair) {
+    chkCrosshair.addEventListener("change", e => {
+      state.crosshair.enabled = e.target.checked;
+      const chG = document.getElementById("crosshairGroup");
+      if (chG && !e.target.checked) chG.style.display = "none";
+    });
+  }
 
   const chkShowCalloutBox = document.getElementById("chkShowCalloutBox");
   if (chkShowCalloutBox) chkShowCalloutBox.addEventListener("change", e => {
@@ -3407,6 +3959,26 @@ function syncUIFromState() {
   setInp("inpYMin", state.axis.yMin); setInp("inpYMax", state.axis.yMax); setInp("inpYStep", state.axis.yStep);
 
   setChk("chkTrendline", state.showTrendlines);
+  const boxTrendOptions = document.getElementById("trendlineOptionsBox");
+  if (boxTrendOptions) boxTrendOptions.style.display = state.showTrendlines ? "block" : "none";
+  setSel("selFitModel", state.fitModel || "linear");
+  setChk("chkFitEquation", state.showFitEquation !== false);
+  setSel("selColorPalette", state.colorPalette || "default");
+
+  if (state.peaks) {
+    setChk("chkPeakFinder", state.peaks.enabled);
+    const boxPeakControls = document.getElementById("peakFinderControls");
+    if (boxPeakControls) boxPeakControls.style.display = state.peaks.enabled ? "block" : "none";
+    setSel("selPeakType", state.peaks.type || "maxima");
+    if (document.getElementById("rngPeakSens")) document.getElementById("rngPeakSens").value = state.peaks.sens || 3;
+    setText("valPeakSens", state.peaks.sens || 3);
+    setChk("chkShowFWHM", state.peaks.showFWHM !== false);
+    setChk("chkPeakLabels", state.peaks.showLabels !== false);
+  }
+  if (state.crosshair) {
+    setChk("chkCrosshair", state.crosshair.enabled);
+  }
+
   setChk("chkShowCalloutBox", state.showCalloutBox);
   setChk("chkHysteresis", state.showHysteresis);
   setChk("chkShowAnnotations", state.showAnnotations);
@@ -3644,10 +4216,10 @@ function applySettings(obj) {
   const s = obj.state && typeof obj.state === "object" ? obj.state : obj;
   const scalars = ["lang", "theme", "plotMode", "frameStyle", "markerSize", "lineWidth",
     "showErrorBand", "showAnnotations", "showInplotLegend", "showBottomLegend", "showDataLabels",
-    "showGrid", "showHysteresis", "showTrendlines", "showCalloutBox",
+    "showGrid", "showHysteresis", "showTrendlines", "fitModel", "showFitEquation", "colorPalette", "showCalloutBox",
     "chartTitle", "chartSubtitle", "xTitle", "yTitle"];
   scalars.forEach(k => { if (s[k] !== undefined) state[k] = s[k]; });
-  ["axis", "layout", "ticks", "type", "data", "zoom"].forEach(k => {
+  ["axis", "layout", "ticks", "type", "data", "zoom", "peaks", "crosshair"].forEach(k => {
     if (s[k] && typeof s[k] === "object") Object.assign(state[k], s[k]);
   });
   if (s.callouts && typeof s.callouts === "object") state.callouts = s.callouts;

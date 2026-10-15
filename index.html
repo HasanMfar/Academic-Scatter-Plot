@@ -202,6 +202,7 @@
                         <option value="Impedance_Bode.xlsx" data-fa="امپدانس بُد — محور لگاریتمی" data-en="Impedance Bode — log X axis">امپدانس بُد — محور لگاریتمی</option>
                         <option value="Solar_Cell_IV.xlsx" data-fa="منحنی I–V سلول خورشیدی" data-en="Solar cell I–V curve">منحنی I–V سلول خورشیدی</option>
                         <option value="Cyclic_Voltammetry.xlsx" data-fa="ولتامتری چرخه‌ای (CV) — نمونه الکتروشیمی" data-en="Cyclic voltammetry (CV) — electrochemistry">ولتامتری چرخه‌ای (CV) — نمونه الکتروشیمی</option>
+                        <option value="Raman_Spectroscopy.xlsx" data-fa="طیف‌سنجی رامان (Raman) — گرافن و پیک‌های D/G/2D" data-en="Raman spectroscopy — graphene D/G/2D peaks">طیف‌سنجی رامان (Raman) — گرافن و پیک‌های D/G/2D</option>
                       </select>
                       <button id="btnLoadSample" class="btn btn-primary btn-sm-reset" style="margin-top: 0; width: auto; flex: 0 0 auto; white-space: nowrap;">
                         <span data-fa="بارگذاری" data-en="Load">بارگذاری</span>
@@ -251,6 +252,16 @@
                   <div style="display: flex; gap: 8px; margin-top: 10px;">
                     <button id="btnAddRow" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin-top: 0;" data-fa="افزودن سطر" data-en="Add row">افزودن سطر</button>
                     <button id="btnApplyTableData" class="btn btn-primary btn-sm-reset" style="flex: 2; margin-top: 0;" data-fa="بروزرسانی تغییرات جدول" data-en="Apply table changes">بروزرسانی تغییرات جدول</button>
+                  </div>
+                  
+                  <!-- Clean Data Export -->
+                  <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-top: 12px;" id="secCleanDataExport">
+                    <label class="control-label" style="color: var(--primary-accent); margin-bottom: 6px;" data-fa="۳. خروجی داده‌های پردازش‌شده" data-en="3. Export Processed Data">۳. خروجی داده‌های پردازش‌شده</label>
+                    <small class="control-hint" style="display: block; margin-bottom: 8px;" data-fa="دانلود داده‌ها با فیلترهای نویز (Moving Average)، نرمال‌سازی یا مرتب‌سازی اعمال‌شده" data-en="Download data with noise filters, smoothing, normalization, or sorting applied">دانلود داده‌ها با فیلترهای نویز (Moving Average)، نرمال‌سازی یا مرتب‌سازی اعمال‌شده</small>
+                    <div style="display: flex; gap: 8px;">
+                      <button id="btnExportCleanExcel" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin: 0;" data-fa="📊 خروجی Excel (.xlsx)" data-en="📊 Clean Excel (.xlsx)">📊 خروجی Excel (.xlsx)</button>
+                      <button id="btnExportCleanCSV" class="btn btn-secondary btn-sm-reset" style="flex: 1; margin: 0;" data-fa="📄 خروجی CSV" data-en="📄 Clean CSV">📄 خروجی CSV</button>
+                    </div>
                   </div>
                   
                 </details>
@@ -500,6 +511,19 @@
                 </div>
               </details>
 
+              <!-- Scientific Color Palette Preset -->
+              <div class="control-group" id="secPalettePreset" style="margin-bottom: 14px;">
+                <label class="control-label" data-fa="پالت رنگ‌های علمی (Color Palette)" data-en="Scientific Color Palette">پالت رنگ‌های علمی (Color Palette)</label>
+                <select id="selColorPalette" class="select-dpi" style="width: 100%;">
+                  <option value="default" data-fa="پیش‌فرض مدرن (Modern Vibrant)" data-en="Modern Vibrant (Default)">پیش‌فرض مدرن (Modern Vibrant)</option>
+                  <option value="classic" data-fa="کلاسیک دانشگاهی (Editorial Classic)" data-en="Editorial Classic">کلاسیک دانشگاهی (Editorial Classic)</option>
+                  <option value="biomedical" data-fa="پزشکی و زیستی (Clinical &amp; Biomedical)" data-en="Clinical &amp; Biomedical">پزشکی و زیستی (Clinical &amp; Biomedical)</option>
+                  <option value="engineering" data-fa="کنتراست بالای مهندسی (High-Contrast Engineering)" data-en="High-Contrast Engineering">کنتراست بالای مهندسی (High-Contrast Engineering)</option>
+                  <option value="viridis" data-fa="پالت یکنواخت ادراکی (Viridis Scientific)" data-en="Perceptually Uniform (Viridis)">پالت یکنواخت ادراکی (Viridis Scientific)</option>
+                  <option value="colorblind" data-fa="ایمن برای کوررنگی (Colorblind-Safe — Wong)" data-en="Colorblind-Safe (Wong)">ایمن برای کوررنگی (Colorblind-Safe — Wong)</option>
+                </select>
+              </div>
+
               <!-- Series Toggles -->
               <div class="control-group">
                 <label class="control-label" id="labelSeriesVisible">سری‌های داده فعال و رنگ‌ها</label>
@@ -695,6 +719,24 @@
                       <span class="chk-box"></span>
                       <span id="lblTrendline" style="font-weight: bold; color: var(--primary-accent);">رسم خط روند (Trendline) و R²</span>
                     </label>
+
+                    <!-- Advanced Curve Fitting Box -->
+                    <div id="trendlineOptionsBox" style="margin-top: 8px; margin-right: 24px; padding: 10px; background: var(--bg-card-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: none;">
+                      <div class="input-field" style="margin-bottom: 8px;">
+                        <label for="selFitModel" data-fa="مدل ریاضی برازش (Fitting Model)" data-en="Fitting Model">مدل ریاضی برازش (Fitting Model)</label>
+                        <select id="selFitModel" class="select-dpi" style="width: 100%;">
+                          <option value="linear" data-fa="خطی: y = mx + c" data-en="Linear: y = mx + c">خطی: y = mx + c</option>
+                          <option value="polynomial2" data-fa="چندجمله‌ای درجه ۲ (سهمی)" data-en="Polynomial 2nd Deg: y = ax² + bx + c">چندجمله‌ای درجه ۲ (سهمی)</option>
+                          <option value="exponential" data-fa="نمایی: y = a · e^(bx)" data-en="Exponential: y = a · e^(bx)">نمایی: y = a · e^(bx)</option>
+                          <option value="power" data-fa="توانی: y = a · x^b" data-en="Power: y = a · x^b">توانی: y = a · x^b</option>
+                        </select>
+                      </div>
+                      <label class="custom-checkbox" style="margin-bottom: 0;">
+                        <input type="checkbox" id="chkFitEquation" checked>
+                        <span class="chk-box"></span>
+                        <span data-fa="نمایش معادله برازش و ضریب R²" data-en="Show fit equation &amp; R²">نمایش معادله برازش و ضریب R²</span>
+                      </label>
+                    </div>
                     <label class="custom-checkbox">
                       <input type="checkbox" id="chkShowCalloutBox" checked>
                       <span class="chk-box"></span>
@@ -847,6 +889,71 @@
 
                 </div>
               </details>
+
+              <!-- Peak Finder & FWHM Analysis -->
+              <details class="accordion control-group" id="secPeakFinder" open>
+                <summary data-fa="⚡ ردیاب و آنالیز خودکار پیک‌ها (Peak Finder &amp; FWHM)" data-en="⚡ Peak Finder &amp; FWHM Analysis">⚡ ردیاب و آنالیز خودکار پیک‌ها (Peak Finder &amp; FWHM)</summary>
+                <div class="accordion-content">
+                  <div class="checkbox-list">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="chkPeakFinder">
+                      <span class="chk-box"></span>
+                      <span style="font-weight: bold; color: var(--primary-accent);" data-fa="فعال‌سازی ردیاب پیک‌ها" data-en="Enable peak finder">فعال‌سازی ردیاب پیک‌ها</span>
+                    </label>
+                  </div>
+
+                  <div id="peakFinderControls" style="display: none; margin-top: 10px;">
+                    <div class="input-field">
+                      <label for="selPeakType" data-fa="نوع نقاط اکسترمم" data-en="Extrema type">نوع نقاط اکسترمم</label>
+                      <select id="selPeakType" class="select-dpi" style="width: 100%;">
+                        <option value="maxima" data-fa="قله‌ها / پیک‌های بیشینه (Peaks / Maxima)" data-en="Peaks / Maxima">قله‌ها / پیک‌های بیشینه (Peaks / Maxima)</option>
+                        <option value="minima" data-fa="دره‌ها / کمینه‌ها (Valleys / Minima)" data-en="Valleys / Minima">دره‌ها / کمینه‌ها (Valleys / Minima)</option>
+                        <option value="both" data-fa="هر دو (Peaks &amp; Valleys)" data-en="Both (Peaks &amp; Valleys)">هر دو (Peaks &amp; Valleys)</option>
+                      </select>
+                    </div>
+
+                    <div class="slider-control">
+                      <div class="slider-control-header">
+                        <span data-fa="حساسیت تشخیص پیک (Sensitivity)" data-en="Sensitivity">حساسیت تشخیص پیک</span>
+                        <span id="valPeakSens">3</span>
+                      </div>
+                      <input type="range" id="rngPeakSens" min="1" max="10" value="3">
+                    </div>
+
+                    <div class="checkbox-list" style="margin-top: 8px;">
+                      <label class="custom-checkbox">
+                        <input type="checkbox" id="chkShowFWHM" checked>
+                        <span class="chk-box"></span>
+                        <span data-fa="محاسبه و نمایش پهنای نیمه‌بیشینه (FWHM)" data-en="Calculate &amp; show FWHM for dominant peak">محاسبه و نمایش پهنای نیمه‌بیشینه (FWHM)</span>
+                      </label>
+                      <label class="custom-checkbox">
+                        <input type="checkbox" id="chkPeakLabels" checked>
+                        <span class="chk-box"></span>
+                        <span data-fa="نمایش برچسب مقدار (X, Y) روی هر پیک" data-en="Show (X, Y) label above each peak">نمایش برچسب مقدار (X, Y) روی هر پیک</span>
+                      </label>
+                    </div>
+
+                    <div style="background: var(--bg-card-subtle); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); margin-top: 10px;" id="peakResultsBox">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-weight: 600; font-size: 0.8rem; color: var(--primary-accent);" data-fa="لیست پیک‌های استخراج‌شده" data-en="Detected Peaks List">لیست پیک‌های استخراج‌شده</span>
+                        <button id="btnCopyPeaks" class="btn btn-secondary btn-sm-reset" style="margin: 0; padding: 2px 8px; font-size: 0.72rem;" data-fa="کپی آمار پیک‌ها" data-en="Copy Peaks">کپی آمار پیک‌ها</button>
+                      </div>
+                      <div id="peakListContent" style="font-family: var(--font-tick); font-size: 0.78rem; max-height: 120px; overflow-y: auto; color: var(--text-color);">
+                        <!-- Dynamic peaks list -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Crosshair Cursor -->
+              <div class="checkbox-list" style="margin-top: 12px; margin-bottom: 12px;">
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chkCrosshair">
+                  <span class="chk-box"></span>
+                  <span data-fa="نشانگر زنده مختصات ماوس (Crosshair Inspector)" data-en="Live crosshair coordinate inspector">نشانگر زنده مختصات ماوس (Crosshair Inspector)</span>
+                </label>
+              </div>
 
               <!-- Layout: Where the plot starts -->
               <details class="accordion control-group" open id="secLayout">

@@ -137,7 +137,7 @@ function pick(value) {
     const isLoopSample = o.value === 'QCM_Hysteresis.xlsx' || o.value === 'Cyclic_Voltammetry.xlsx';
     const wantHyst = isLoopSample;
     const wantAnnot = o.value === 'QCM_Hysteresis.xlsx' || o.value === 'Solar_Cell_IV.xlsx';
-    const wantInplot = ['BeerLambert_Calibration.xlsx', 'Damped_Oscillation.xlsx', 'UVVis_Spectra.xlsx', 'Impedance_Bode.xlsx', 'Cyclic_Voltammetry.xlsx'].indexOf(o.value) !== -1;
+    const wantInplot = ['BeerLambert_Calibration.xlsx', 'Damped_Oscillation.xlsx', 'UVVis_Spectra.xlsx', 'Impedance_Bode.xlsx', 'Cyclic_Voltammetry.xlsx', 'Raman_Spectroscopy.xlsx'].indexOf(o.value) !== -1;
     if (flags.hyst !== wantHyst || flags.hystChk !== wantHyst) problems.push('hysteresis ' + flags.hyst);
     if (flags.annot !== wantAnnot) problems.push('annotations ' + flags.annot);
     if (flags.inplot !== wantInplot) problems.push('inplot legend ' + flags.inplot);

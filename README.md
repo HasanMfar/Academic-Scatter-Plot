@@ -62,8 +62,37 @@ Researchers often struggle with complex, proprietary software (like OriginLab or
 - Automatically detects forward and backward trajectories in cyclic experimental measurements (such as QCM humidity sensors, magnetic hysteresis, or stress-strain loops).
 - Return paths are automatically rendered with distinct dashes and flow direction arrows.
 
+### 🔬 Non-Linear Curve Fitting & Dynamic Equations
+- **Multiple Mathematical Models:** Move beyond simple lines with built-in mathematical fits:
+  - **Linear:** $y = mx + c$
+  - **Polynomial (2nd Degree):** $y = ax^2 + bx + c$ via Cramer's rule / 3×3 normal equations
+  - **Exponential:** $y = a \cdot e^{bx}$
+  - **Power Law:** $y = a \cdot x^b$
+- **High-Resolution Smooth Rendering:** Computes 80 SVG interpolated coordinates across active bounds for glass-smooth curves.
+- **Goodness-of-Fit Metric:** Real-time determination coefficient ($R^2$) calculation and toggleable on-plot dynamic equation badges.
+
+### 🏔️ Automated Peak Finder & Full Width at Half Maximum (FWHM)
+- **Local Extrema Detection:** Automatically identifies experimental peaks and valleys with adjustable sensitivity (3 to 15 points) and prominence thresholding.
+- **FWHM Spectral Bandwidth:** Computes the Full Width at Half Maximum for dominant peaks, vital for spectroscopy, XRD, and chromatography.
+- **Peak Coordinate Labels & Tabular Summary:** Labels peak locations $(X, Y)$ directly on curves and generates a tabular summary in the Tools tab with one-click clipboard copying.
+
+### 🎨 Curated Scientific Color Palettes
+- **Publication-Ready Schemes:** Switch your entire figure's color harmony in one click:
+  - **Modern Vibrant:** Sleek high-energy cyan, rose, emerald, and amber.
+  - **Editorial Classic:** Timeless deep navy, crimson, forest green, and slate.
+  - **Clinical & Biomedical:** Soft, authoritative blues, teal, mauve, and coral.
+  - **High-Contrast Engineering:** Maximum legibility cobalt, orange, violet, and gold.
+  - **Viridis Scientific:** Perceptually uniform colormap ideal for physical sciences.
+  - **Colorblind-Safe Wong:** Mathematically optimized for readers with color vision deficiencies.
+
+### 🎯 Live Crosshair Coordinate Inspector
+- Interactive SVG crosshair badge follows your cursor across the plotting canvas with microsecond latency, displaying instantaneous $(X, Y)$ values for point-by-point inspection without altering the underlying data.
+
+### 📥 Clean Processed Data Export (Excel & CSV)
+- Export the active dataset with all noise filtering (moving average, spline), normalization, and sorting applied as a clean, standardized `.xlsx` or `.csv` spreadsheet ready for secondary processing or archival.
+
 ### 📈 Statistical Regression & Error Bars
-- **Trendline & $R^2$:** One-click linear best-fit regression line with automatic slope, intercept, and determination coefficient ($R^2$) calculation.
+- **Trendline & $R^2$:** One-click best-fit regression lines with slope, intercept, and determination coefficient ($R^2$) calculation.
 - **Standard Deviation Error Bars:** Automatically attaches `_SD` or `_err` columns as symmetric $\pm\text{SD}$ error bars.
 
 ### 🔍 Magnifier Inset (Zoom Region)
@@ -105,12 +134,16 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 <td align="center"><img src="gallery/07_magnifier_inset.png" width="420"><br><sub><b>Magnifier Inset</b><br>Secondary zoomed detail window</sub></td>
 <td align="center"><img src="gallery/08_fa_hysteresis.png" width="420"><br><sub><b>Persian / RTL Mode</b><br>Full academic typography & bilingual support</sub></td>
 </tr>
+<tr>
+<td align="center" colspan="2"><img src="gallery/09_raman_peaks.png" width="420"><br><sub><b>Raman Spectroscopy & Peak Finder</b><br>D, G, and 2D characteristic bands with automated peak detection</sub></td>
+</tr>
 </table>
 
 ### 📂 Included Sample Datasets
 
 | File | Application & What It Demonstrates |
 |------|------------------------------------|
+| [`samples/Raman_Spectroscopy.xlsx`](samples/Raman_Spectroscopy.xlsx) | Raman Spectroscopy — 201 points, D/G/2D graphene bands, automated peak finder & FWHM |
 | [`samples/Cyclic_Voltammetry.xlsx`](samples/Cyclic_Voltammetry.xlsx) | Cyclic Voltammetry (CV) — 7,996 points, automated redox peaks ($E_{pa}, E_{pc}, \Delta E_p$), and loop area |
 | [`samples/QCM_Hysteresis.xlsx`](samples/QCM_Hysteresis.xlsx) | Cyclic sensor response — hysteresis loop detection and dashed return lines |
 | [`samples/BeerLambert_Calibration.xlsx`](samples/BeerLambert_Calibration.xlsx) | Linear regression — trendline equation, $R^2$, and automated error bars |
@@ -189,6 +222,35 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 
 ### 🔄 تشخیص هوشمند حلقه هیسترزیس (رفت و برگشت)
 - شناسایی خودکار مسیر رفت و بازگشت داده‌های چرخه‌ای سنسورها با ترسیم خط‌چین و پیکان‌های جهت‌نما.
+
+### 🔬 برازش منحنی‌های غیرخطی و معادلات ریاضی زنده (Non-Linear Fitting)
+- **مدل‌های متنوع ریاضی:** برازش داده‌های تجربی با مدل‌های استانداردی فراتر از خط مستقیم:
+  - **خطی:** $y = mx + c$
+  - **چندجمله‌ای درجه ۲ (Polynomial):** $y = ax^2 + bx + c$ با حل ماتریسی ۳×۳ و قاعده کرامر
+  - **نمایی (Exponential):** $y = a \cdot e^{bx}$
+  - **توانی (Power Law):** $y = a \cdot x^b$
+- **رسم نرم و باکیفیت:** درونیابی ۸۰ نقطه SVG برای رسم منحنی‌های کاملاً پیوسته و بدون شکستگی.
+- **ارزیابی دقت برازش:** محاسبه خودکار ضریب تعیین ($R^2$) و نمایش شناور فرمول برازش روی نمودار.
+
+### 🏔️ آشکارساز هوشمند پیک‌ها و پهنا در نیمه‌ارتفاع (Peak Finder & FWHM)
+- **شناسایی خودکار قله‌ها و دره‌ها:** تشخیص اتوماتیک اکسترمم‌های محلی با تنظیم حساسیت (۳ تا ۱۵ نقطه) و فیلتر برجستگی (Prominence).
+- **محاسبه عرض در نیمه ارتفاع (FWHM):** تحلیل پهنای باند پیک شاخص برای کاربردهای طیف‌سنجی (مانند رامان، XRD، UV-Vis و کروماتوگرافی).
+- **برچسب‌گذاری مختصات و جدول پیک‌ها:** درج مستقیم برچسب $(X, Y)$ روی قله‌ها و تهیه جدول در تب ابزارها با امکان کپی یک‌کلیکه در کلیپ‌بورد.
+
+### 🎨 پالت‌های رنگی استاندارد نشریات علمی
+- **تغییر یکپارچه هارمونی رنگ‌ها:** اعمال فوری رنگ‌های هماهنگ و چشم‌نواز با یک کلیک:
+  - **مدرن پرانرژی (Modern Vibrant):** رنگ‌های جذاب فیروزه‌ای، رزی، زمردی و کهربایی.
+  - **کلاسیک ژورنالی (Editorial Classic):** سرمه‌ای عمیق، یاقوتی، سبز جنگلی و فیلی.
+  - **بالینی و زیست‌پزشکی (Clinical & Biomedical):** آبی ملو، فیروزه‌ای، یاسی و مرجانی.
+  - **کنتراست بالای مهندسی (High-Contrast Engineering):** لاجوردی، نارنجی، بنفش و زرد پررنگ.
+  - **طیف علمی Viridis:** مقیاس ادراکی یکنواخت برای داده‌های پیوسته فیزیک و شیمی.
+  - **سازگار با کوررنگی (Colorblind-Safe Wong):** بهینه‌سازی‌شده بر پایه الگوریتم‌های استاندارد بینایی.
+
+### 🎯 نشانگر متقاطع مختصات زنده (Live Crosshair Inspector)
+- ردگیری آنی مکان‌نما با خطوط متقاطع SVG و نشانگر شناور مختصات دقیق $(X, Y)$ بر روی سطح نمودار بدون ایجاد تغییر در داده‌های اصلی.
+
+### 📥 خروجی داده‌های پردازش‌شده تمیز (Clean Data Export)
+- ذخیره و بارگیری فایل‌های اکسل (`.xlsx`) و متنی (`.csv`) تمیز و استاندارد از داده‌های نهایی پس از اعمال فیلترهای کاهش نویز، اتصال Spline، نرمال‌سازی و مرتب‌سازی جهت استفاده در سایر نرم‌افزارها یا بایگانی آزمایشگاهی.
 
 ### 📈 رگرسیون خطی و میله‌های خطا
 - محاسبه شیب خط، عرض از مبدأ و ضریب تعیین $R^2$ و نمایش فرمول برازش.

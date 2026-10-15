@@ -74,6 +74,7 @@ function applyLook(cfg) {
     state.type = { tickFont: 15, axisTitleFont: 18, legendFont: 11.5, dataLabelFont: 10.5, fontFamily: 'auto', plotBg: '', transparentBg: false, gridStyle: 'dashed', gridOpacity: 1, gridAxis: 'both', titlePlacement: 'above' };
     state.layout = { width: 960, height: 560, marginTop: 40, marginRight: 60, marginBottom: 75, marginLeft: 90, preset: 'standard', axisOrigin: 'corner', reverseX: false, reverseY: false };
     state.zoom = { enabled: false, x0: null, x1: null, y0: null, y1: null, boxW: 300, boxH: 190, boxX: null, boxY: null, showRegionBox: true, showTitles: false };
+    state.peaks = { enabled: false, type: 'maxima', sens: 3, showFWHM: true, showLabels: true };
     state.markerSize = 10; state.lineWidth = 2.6;
     state.chartSubtitle = ''; state.callouts = {};
     if (c.lang) state.lang = c.lang;
@@ -95,6 +96,7 @@ function applyLook(cfg) {
     if (c.layout) { Object.assign(state.layout, c.layout); }
     if (c.callouts) { Object.assign(state.callouts, c.callouts); }
     if (c.zoom) { Object.assign(state.zoom, c.zoom); }
+    if (c.peaks) { Object.assign(state.peaks, c.peaks); }
     renderChart(); renderLegend();
   })(${json});`);
 }
@@ -221,6 +223,17 @@ const jobs = [
     axis: { xMin: 20, xMax: 100, xStep: 10, yMin: -650, yMax: 0, yStep: 100 },
     flags: { showHysteresis: true, showAnnotations: true, showInplotLegend: false, showTrendlines: false },
     layout: { width: 900, height: 560 }
+  }],
+  ['09_raman_peaks', 'Raman_Spectroscopy.xlsx', {
+    lang: 'en', theme: 'light', preset: 'compact',
+    title: 'Raman Spectroscopy — Graphene Fingerprints',
+    subtitle: 'Identification of D, G, and 2D characteristic bands with automated peak detection',
+    xTitle: 'Raman Shift (cm⁻¹)', yTitle: 'Intensity (a.u.)',
+    data: { sortByX: true },
+    flags: { showHysteresis: false, showAnnotations: false, showTrendlines: false, showInplotLegend: true },
+    peaks: { enabled: true, type: 'maxima', sens: 3, showFWHM: true, showLabels: true },
+    callouts: { inplotX: 60, inplotY: 60 },
+    layout: { width: 920, height: 560 }
   }]
 ];
 

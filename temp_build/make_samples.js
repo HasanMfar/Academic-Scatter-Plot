@@ -96,14 +96,36 @@ function write(name, sheetName, aoa) {
 /* 6. Solar cell I-V curve: two cells, sharp knee */
 (function solar() {
   const rows = [['Voltage (V)', 'Cell A — η 21.4%', 'Cell B — η 18.2%']];
-  // Sweep stops at 0.60 V: Voc sits just above it (0.620 / 0.607 V) so both knees are
-  // visible and neither diode term runs away into a negative cliff.
   for (let v = 0; v <= 0.60001; v += 0.02) {
     const vv = Math.round(v * 100) / 100;
     const iv = (isc, voc, n) => isc - isc / (Math.exp(voc / n) - 1) * (Math.exp(vv / n) - 1);
     rows.push([vv, r3(iv(9.42, 0.620, 0.0259) + noise(0.02)), r3(iv(8.71, 0.607, 0.0272) + noise(0.02))]);
   }
   write('Solar_Cell_IV.xlsx', 'IV_Curve', rows);
+})();
+
+/* 7. Raman Spectroscopy: Graphene D, G, and 2D peaks (Ideal for Peak Finder & FWHM) */
+(function raman() {
+  const rows = [['Raman Shift (cm⁻¹)', 'Functionalized Graphene', 'Pristine Graphene']];
+  const lorentz = (x, x0, gamma, a) => a * Math.pow(gamma / 2, 2) / (Math.pow(x - x0, 2) + Math.pow(gamma / 2, 2));
+  for (let w = 1000; w <= 3000.001; w += 10) {
+    // Defective/Functionalized: Strong D peak (~1348), G peak (~1582), 2D peak (~2685)
+    const baseDefect = 80 + 0.04 * (w - 1000);
+    const dPeak = lorentz(w, 1348, 48, 920);
+    const gPeak1 = lorentz(w, 1582, 38, 1150);
+    const twoDPeak1 = lorentz(w, 2685, 75, 680);
+    const yDefect = baseDefect + dPeak + gPeak1 + twoDPeak1 + noise(14);
+
+    // Pristine: Very weak D peak, sharp G peak, very sharp dominant 2D peak (I_2D / I_G > 2)
+    const basePristine = 65 + 0.03 * (w - 1000);
+    const dWeak = lorentz(w, 1348, 35, 65);
+    const gPeak2 = lorentz(w, 1582, 28, 850);
+    const twoDPeak2 = lorentz(w, 2685, 36, 1850);
+    const yPristine = basePristine + dWeak + gPeak2 + twoDPeak2 + noise(12);
+
+    rows.push([w, Math.round(yDefect), Math.round(yPristine)]);
+  }
+  write('Raman_Spectroscopy.xlsx', 'Raman', rows);
 })();
 
 console.log('\nAll samples written to', outDir);

@@ -1255,3 +1255,33 @@ input[type="number"] {
   display: block;
 }
 
+/* --- Peak Finder & Crosshair Styles --- */
+.peak-result-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-bottom: 1px dashed var(--border-color);
+  direction: ltr;
+}
+.peak-result-row:last-child {
+  border-bottom: none;
+}
+.peak-result-val {
+  font-weight: 600;
+  color: var(--primary-accent);
+}
+.crosshair-line {
+  pointer-events: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4,4;
+  opacity: 0.65;
+}
+.crosshair-badge {
+  pointer-events: none;
+  font-family: var(--font-tick);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-color);
+}
+
