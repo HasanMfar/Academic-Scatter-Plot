@@ -46,10 +46,14 @@ Researchers often struggle with complex, proprietary software (like OriginLab or
 - **Internal Crosshairs:** When using *Through Zero* or *Through Center*, clean dashed reference lines are drawn within the plot area without displacing the outer spine values.
 - **Reverse Axes (Flip X / Flip Y):** Invert horizontal or vertical orientations with dynamic trendline and callout adaptation.
 
-### ⚡ Automated Cyclic Voltammetry (CV) & Electrochemical Analytics
-- **Redox Peak Auto-Detection:** Automatically calculates anodic peak potential ($E_{pa}$), cathodic peak potential ($E_{pc}$), peak-to-peak separation ($\Delta E_p$), half-wave potential ($E_{1/2}$), and peak current ratio ($|I_{pa}/I_{pc}|$).
-- **Integrated Charge & Loop Area:** Trapezoidal cyclic integral ($\oint I \, dV$) to evaluate total loop area and capacitive charge.
-- **One-Click Stats Copy:** Copy formatted electrochemical metrics to clipboard for immediate insertion into papers or lab notebooks.
+### ⚡ Multi-Domain Scientific Analytics Engine (CV, Spectroscopy, Hysteresis, General Stats)
+- **Domain Selector Dropdown:** Seamlessly switch analytics between disciplines or let the app auto-detect:
+  - **⚡ Cyclic Voltammetry (CV):** Anodic & cathodic peak potentials ($E_{pa}, E_{pc}$), peak separation ($\Delta E_p$), half-wave potential ($E_{1/2}$), peak current ratio ($|I_{pa}/I_{pc}|$), and cyclic loop charge/area ($\oint I \, dV$).
+  - **🔬 Spectroscopy & Peaks:** Dominant peak wavelength/shift ($X_{peak}$), maximum intensity ($Y_{max}$), Full Width at Half Maximum (FWHM), integrated band area ($\int Y \, dX$), baseline offset, and Signal-to-Noise Ratio (SNR).
+  - **🔄 Sensor Hysteresis & Loops:** Maximum hysteresis gap ($\Delta H_{max}$), sensor sensitivity ($S = \Delta Y / \Delta X$), full dynamic range, hysteresis loop area, recovery drift, and excitation peak.
+  - **📊 General Statistics & Regression:** Mean, standard deviation ($\sigma$), range ($\Delta Y$), area under curve (AUC), linear regression slope ($m$), and determination coefficient ($R^2$).
+- **One-Click Stats Copy:** Copy formatted metrics directly to the clipboard for reports and journal articles.
+- **Publication In-Plot Legend:** Refined bi-directional legend with solid background, zero marker-text collisions, and responsive auto-sizing.
 
 ### 📋 LaTeX Table Generator (`\begin{tabular}...`)
 - One-click button in the header toolbar formats active experimental series into standard LaTeX table code, ready to paste directly into Overleaf or journal manuscripts.
@@ -208,10 +212,14 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 - **خطوط کمکی مبدأ و مرکز:** در حالت «از صفر» یا «از وسط»، خطوط راهنمای ظریف خط‌چین در داخل نمودار رسم می‌شوند بدون آنکه اعداد محور از کادر بیرونی جابجا شوند.
 - **برعکس کردن محورها (Flip X / Flip Y):** قرینه‌سازی جهت با حفظ موقعیت هوشمند راهنما و خط روند.
 
-### ⚡ تحلیل خودکار ولتامتری چرخه‌ای (Cyclic Voltammetry - CV)
-- **شناسایی خودکار پیک‌های اکسایش و کاهش:** محاسبه هوشمند پتانسیل پیک آندی ($E_{pa}$)، پتانسیل پیک کاتدی ($E_{pc}$)، فاصله دو پیک ($\Delta E_p$)، پتانسیل نیمه‌موج ($E_{1/2}$) و نسبت جریان پیک ($|I_{pa}/I_{pc}|$).
-- **محاسبه مساحت حلقه و بار کل (Q):** انتگرال‌گیری ذوزنقه‌ای حلقه بسته ($\oint I \, dV$) جهت بررسی بار خازنی یا فاراداییک.
-- **دکمه کپی فوری آمار:** کپی مشخصات استخراج‌شده CV در کلیپ‌بورد جهت انتقال سریع به متن مقاله یا گزارش.
+### ⚡ موتور آنالیز علمی چندرشته‌ای (Multi-Domain Scientific Analytics)
+- **منوی انتخاب نوع تحلیل علمی:** امکان انتخاب دستی یا تشخیص خودکار حوزه تحلیلی بر اساس نوع داده‌ها:
+  - **⚡ ولتامتری چرخه‌ای (CV):** محاسبه پتانسیل پیک آندی ($E_{pa}$)، پتانسیل پیک کاتدی ($E_{pc}$)، فاصله دو پیک ($\Delta E_p$)، پتانسیل نیمه‌موج ($E_{1/2}$)، نسبت جریان ($|I_{pa}/I_{pc}|$) و مساحت انتگرال بار حلقه ($\oint I \, dV$).
+  - **🔬 طیف‌سنجی و پیک‌ها (Spectroscopy):** طول‌موج/عدد موج پیک شاخص ($X_{peak}$)، بیشینه شدت ($Y_{max}$)، عرض نیمه‌ارتفاع (FWHM)، انتگرال مساحت باند ($\int Y \, dX$)، خط پایه و نسبت سیگنال به نویز (SNR).
+  - **🔄 سنسور و حلقه هیسترزیس (Hysteresis):** بیشینه شکاف هیسترزیس ($\Delta H_{max}$)، حساسیت سنسور ($S = \Delta Y / \Delta X$)، گستره دینامیکی پاسخ، مساحت حلقه، خطای بازگشت (Drift) و ماکزیمم تحریک.
+  - **📊 آمار توصیفی و رگرسیون (General Statistics):** میانگین، انحراف معیار ($\sigma$)، دامنه تغییرات ($\Delta Y$)، سطح زیر منحنی (AUC)، شیب رگرسیون خطی ($m$) و ضریب تعیین ($R^2$).
+- **دکمه کپی فوری مشخصات تحلیلی:** کپی جدول متریک‌های استخراج‌شده در کلیپ‌بورد با عنوان حوزه تخصصی.
+- **راهنمای داخل نمودار (In-Plot Legend) بازطراحی‌شده:** چینش استاندارد و بدون تداخل مارکر و متن، پشتیبانی از متون فارسی و انگلیسی، پس‌زمینه سالید و ابعاد هوشمند.
 
 ### 📋 خروجی جدول LaTeX برای مقالات (Overleaf)
 - دکمه اختصاصی در نوار ابزار بالا جهت تولید و کپی کد آماده جدول LaTeX (`\begin{table} \begin{tabular}`) از داده‌های فعال با فرمت استاندارد مقالات علمی.

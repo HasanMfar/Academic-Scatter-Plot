@@ -65,6 +65,7 @@ const state = {
   fitModel: "linear", // 'linear' | 'polynomial2' | 'exponential' | 'power'
   showFitEquation: true,
   colorPalette: "default",
+  analysisType: "auto", // 'auto' | 'cv' | 'spectroscopy' | 'hysteresis' | 'stats' | 'none'
   peaks: {
     enabled: false,
     type: "maxima",
@@ -1608,11 +1609,61 @@ function renderChart() {
   if (state._booted) queueSave();
 }
 
-// --- Automated CV & Electrochemical Metrics Computation ---
+// --- Scientific Data Analytics Computation (Multi-Domain Support) ---
+function resolveAnalysisType() {
+  if (state.analysisType && state.analysisType !== "auto") {
+    return state.analysisType;
+  }
+  const s = dataset.series.find(x => x.visible && x.yValues && x.yValues.length > 3) || dataset.series[0];
+  if (!s || !dataset.xValues || dataset.xValues.length < 4) return "none";
+
+  const x = dataset.xValues;
+  const y = dataset.xValues.map((_, i) => displayY(s, i));
+  const n = x.length;
+
+  // Check if active sample is one of known types
+  const selSample = document.getElementById("sampleSelect");
+  const sVal = selSample ? selSample.value : "";
+  if (sVal === "Cyclic_Voltammetry.xlsx") return "cv";
+  if (sVal === "QCM_Hysteresis.xlsx") return "hysteresis";
+  if (sVal === "Raman_Spectroscopy.xlsx" || sVal === "UVVis_Spectra.xlsx") return "spectroscopy";
+
+  // Cyclic loop test
+  let maxIdx = 0, maxX = -Infinity;
+  for (let i = 0; i < n; i++) {
+    if (x[i] > maxX) { maxX = x[i]; maxIdx = i; }
+  }
+  const isLoop = maxIdx > 2 && maxIdx < n - 2;
+  if (isLoop) {
+    const hasPolarity = y.some(v => v > 0) && y.some(v => v < 0);
+    const titleStr = ((state.xTitle || "") + " " + (state.yTitle || "")).toLowerCase();
+    if (hasPolarity && (titleStr.includes("curr") || titleStr.includes("pot") || titleStr.includes("جریان") || titleStr.includes("پتانسیل"))) {
+      return "cv";
+    }
+    return "hysteresis";
+  }
+
+  const titleStr = ((state.chartTitle || "") + " " + (state.xTitle || "") + " " + (state.yTitle || "")).toLowerCase();
+  if (titleStr.includes("raman") || titleStr.includes("رامان") || titleStr.includes("spectr") || titleStr.includes("طیف") ||
+      titleStr.includes("absorb") || titleStr.includes("uv") || titleStr.includes("vis") || titleStr.includes("xrd") ||
+      titleStr.includes("shift") || titleStr.includes("wavelen") || titleStr.includes("شدت") || titleStr.includes("طول موج")) {
+    return "spectroscopy";
+  }
+
+  return "stats";
+}
+
 function renderCVMetrics() {
   const container = document.getElementById("cvMetricsGrid");
   const sec = document.getElementById("secCVMetrics");
+  const titleEl = document.getElementById("lblAnalysisTitle");
   if (!container || !sec) return;
+
+  const resolved = resolveAnalysisType();
+  if (resolved === "none") {
+    sec.style.display = "none";
+    return;
+  }
 
   const s = dataset.series.find(x => x.visible && x.yValues && x.yValues.length > 3) || dataset.series[0];
   if (!s || !dataset.xValues || dataset.xValues.length < 4) {
@@ -1623,70 +1674,294 @@ function renderCVMetrics() {
   const x = dataset.xValues;
   const y = dataset.xValues.map((_, i) => displayY(s, i));
   const n = x.length;
+  const isFa = state.lang === "fa";
 
-  let maxIdx = 0, maxX = -Infinity;
-  for (let i = 0; i < n; i++) {
-    if (x[i] > maxX) { maxX = x[i]; maxIdx = i; }
+  sec.style.display = "";
+
+  const fmt = v => {
+    if (typeof v !== "number" || !isFinite(v)) return "—";
+    if (Math.abs(v) >= 10000) return v.toFixed(0);
+    if (Math.abs(v) >= 100) return v.toFixed(1);
+    if (Math.abs(v) < 0.01 && v !== 0) return v.toExponential(2);
+    return v.toFixed(3);
+  };
+
+  const selType = document.getElementById("selAnalysisType");
+  if (selType && document.activeElement !== selType) {
+    selType.value = state.analysisType || "auto";
   }
 
-  // Forward scan (0 to maxIdx): anodic peak (max y)
-  let epa = -Infinity, ipa = -Infinity;
-  for (let i = 0; i <= maxIdx; i++) {
-    if (y[i] > ipa) { ipa = y[i]; epa = x[i]; }
-  }
+  if (resolved === "cv") {
+    if (titleEl) {
+      titleEl.textContent = isFa ? "⚡ مشخصات ولتامتری چرخه‌ای (CV Metrics)" : "⚡ Cyclic Voltammetry & Redox Metrics";
+    }
 
-  // Reverse scan (maxIdx to n-1): cathodic peak (min y)
-  let epc = Infinity, ipc = Infinity;
-  for (let i = maxIdx; i < n; i++) {
-    if (y[i] < ipc) { ipc = y[i]; epc = x[i]; }
-  }
+    let maxIdx = 0, maxX = -Infinity;
+    for (let i = 0; i < n; i++) {
+      if (x[i] > maxX) { maxX = x[i]; maxIdx = i; }
+    }
 
-  const hasPeaks = isFinite(epa) && isFinite(epc) && isFinite(ipa) && isFinite(ipc);
-  if (!hasPeaks) {
-    sec.style.display = "none";
+    let epa = -Infinity, ipa = -Infinity;
+    for (let i = 0; i <= maxIdx; i++) {
+      if (y[i] > ipa) { ipa = y[i]; epa = x[i]; }
+    }
+
+    let epc = Infinity, ipc = Infinity;
+    for (let i = maxIdx; i < n; i++) {
+      if (y[i] < ipc) { ipc = y[i]; epc = x[i]; }
+    }
+
+    const deltaEp = Math.abs(epa - epc);
+    const eHalf = (epa + epc) / 2;
+    const ipRatio = Math.abs(ipc) > 1e-9 ? Math.abs(ipa / ipc) : 1;
+
+    let loopArea = 0;
+    for (let i = 0; i < n - 1; i++) {
+      loopArea += (x[i] * y[i + 1] - x[i + 1] * y[i]);
+    }
+    loopArea += (x[n - 1] * y[0] - x[0] * y[n - 1]);
+    loopArea = Math.abs(loopArea) * 0.5;
+
+    container.innerHTML = `
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(epa)}</span>
+        <span class="cv-metric-lbl">${isFa ? "پتانسیل پیک آندی (Epa)" : "Anodic Peak (Epa)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(epc)}</span>
+        <span class="cv-metric-lbl">${isFa ? "پتانسیل پیک کاتدی (Epc)" : "Cathodic Peak (Epc)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(deltaEp)}</span>
+        <span class="cv-metric-lbl">${isFa ? "جدایش پیک‌ها (ΔEp)" : "Peak Separation (ΔEp)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(eHalf)}</span>
+        <span class="cv-metric-lbl">${isFa ? "پتانسیل نیمه‌موج (E½)" : "Half-Wave Pot. (E½)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(ipRatio)}</span>
+        <span class="cv-metric-lbl">${isFa ? "نسبت جریان پیک (|Ipa/Ipc|)" : "Peak Current Ratio"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(loopArea)}</span>
+        <span class="cv-metric-lbl">${isFa ? "مساحت حلقه (بار Q)" : "Loop Area (Charge Q)"}</span>
+      </div>
+    `;
     return;
   }
 
-  sec.style.display = "";
-  const deltaEp = Math.abs(epa - epc);
-  const eHalf = (epa + epc) / 2;
-  const ipRatio = Math.abs(ipc) > 1e-9 ? Math.abs(ipa / ipc) : 1;
+  if (resolved === "spectroscopy") {
+    if (titleEl) {
+      titleEl.textContent = isFa ? "🔬 مشخصات طیف‌سنجی و پیک‌ها (Spectroscopy)" : "🔬 Spectroscopy & Peak Metrics";
+    }
 
-  // Trapezoidal loop area (charge / integral)
-  let loopArea = 0;
-  for (let i = 0; i < n - 1; i++) {
-    loopArea += (x[i] * y[i + 1] - x[i + 1] * y[i]);
+    let maxY = -Infinity, maxXAtPeak = x[0], maxIdx = 0;
+    let minY = Infinity;
+    for (let i = 0; i < n; i++) {
+      if (y[i] > maxY) { maxY = y[i]; maxXAtPeak = x[i]; maxIdx = i; }
+      if (y[i] < minY) { minY = y[i]; }
+    }
+
+    let integratedArea = 0;
+    for (let i = 0; i < n - 1; i++) {
+      integratedArea += 0.5 * (y[i] + y[i + 1]) * Math.abs(x[i + 1] - x[i]);
+    }
+
+    let fwhm = null;
+    const halfY = minY + (maxY - minY) * 0.5;
+    let leftX = null, rightX = null;
+    for (let i = maxIdx; i >= 0; i--) {
+      if (y[i] <= halfY) {
+        if (i < n - 1 && y[i + 1] !== y[i]) {
+          leftX = x[i] + (x[i + 1] - x[i]) * ((halfY - y[i]) / (y[i + 1] - y[i]));
+        } else {
+          leftX = x[i];
+        }
+        break;
+      }
+    }
+    for (let i = maxIdx; i < n; i++) {
+      if (y[i] <= halfY) {
+        if (i > 0 && y[i] !== y[i - 1]) {
+          rightX = x[i - 1] + (x[i] - x[i - 1]) * ((halfY - y[i - 1]) / (y[i] - y[i - 1]));
+        } else {
+          rightX = x[i];
+        }
+        break;
+      }
+    }
+    if (leftX != null && rightX != null) {
+      fwhm = Math.abs(rightX - leftX);
+    }
+
+    const snr = Math.abs(minY) > 1e-6 ? (maxY / minY) : maxY;
+
+    container.innerHTML = `
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(maxXAtPeak)}</span>
+        <span class="cv-metric-lbl">${isFa ? "موقعیت پیک اصلی (Xmax)" : "Dominant Peak (Xmax)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(maxY)}</span>
+        <span class="cv-metric-lbl">${isFa ? "بیشینه شدت (Ymax)" : "Peak Intensity (Ymax)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fwhm != null ? fmt(fwhm) : "—"}</span>
+        <span class="cv-metric-lbl">${isFa ? "عرض نیمه‌ارتفاع (FWHM)" : "Bandwidth (FWHM)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(integratedArea)}</span>
+        <span class="cv-metric-lbl">${isFa ? "مساحت کل باند (∫Y dX)" : "Integrated Area (∫Y dX)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(minY)}</span>
+        <span class="cv-metric-lbl">${isFa ? "شدت خط مبنا (Ymin)" : "Baseline Level (Ymin)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(snr)}</span>
+        <span class="cv-metric-lbl">${isFa ? "نسبت پیک به مبنا (SNR)" : "Peak-to-Base Ratio"}</span>
+      </div>
+    `;
+    return;
   }
-  loopArea += (x[n - 1] * y[0] - x[0] * y[n - 1]);
-  loopArea = Math.abs(loopArea) * 0.5;
 
-  const fmt = v => typeof v === "number" ? (Math.abs(v) >= 1000 ? v.toFixed(0) : (Math.abs(v) < 0.01 && v !== 0 ? v.toExponential(2) : v.toFixed(3))) : v;
+  if (resolved === "hysteresis") {
+    if (titleEl) {
+      titleEl.textContent = isFa ? "🔄 مشخصات هیسترزیس سنسور (Hysteresis)" : "🔄 Sensor Hysteresis & Loop Metrics";
+    }
 
-  const isFa = state.lang === "fa";
+    let maxIdx = 0, maxX = -Infinity, minX = Infinity;
+    let maxY = -Infinity, minY = Infinity;
+    for (let i = 0; i < n; i++) {
+      if (x[i] > maxX) { maxX = x[i]; maxIdx = i; }
+      if (x[i] < minX) { minX = x[i]; }
+      if (y[i] > maxY) maxY = y[i];
+      if (y[i] < minY) minY = y[i];
+    }
+
+    const fwdX = x.slice(0, maxIdx + 1);
+    const fwdY = y.slice(0, maxIdx + 1);
+    const revX = x.slice(maxIdx);
+    const revY = y.slice(maxIdx);
+
+    let maxHystGap = 0;
+    fwdX.forEach((fx, fi) => {
+      let closestDist = Infinity, closestRy = 0;
+      revX.forEach((rx, ri) => {
+        const d = Math.abs(rx - fx);
+        if (d < closestDist) { closestDist = d; closestRy = revY[ri]; }
+      });
+      const gap = Math.abs(fwdY[fi] - closestRy);
+      if (gap > maxHystGap) maxHystGap = gap;
+    });
+
+    const xSpan = Math.abs(maxX - minX);
+    const ySpan = Math.abs(maxY - minY);
+    const sensitivity = xSpan > 1e-9 ? (ySpan / xSpan) : 0;
+    const drift = Math.abs(y[n - 1] - y[0]);
+
+    let loopArea = 0;
+    for (let i = 0; i < n - 1; i++) {
+      loopArea += (x[i] * y[i + 1] - x[i + 1] * y[i]);
+    }
+    loopArea += (x[n - 1] * y[0] - x[0] * y[n - 1]);
+    loopArea = Math.abs(loopArea) * 0.5;
+
+    container.innerHTML = `
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(maxHystGap)}</span>
+        <span class="cv-metric-lbl">${isFa ? "بیشینه هیسترزیس (ΔHmax)" : "Max Hysteresis (ΔHmax)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(sensitivity)}</span>
+        <span class="cv-metric-lbl">${isFa ? "حساسیت سنسور (ΔY/ΔX)" : "Sensitivity Slope (S)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(ySpan)}</span>
+        <span class="cv-metric-lbl">${isFa ? "گستره پاسخ سنسور (ΔY)" : "Dynamic Range (ΔY)"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(loopArea)}</span>
+        <span class="cv-metric-lbl">${isFa ? "مساحت حلقه هیسترزیس" : "Hysteresis Loop Area"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(drift)}</span>
+        <span class="cv-metric-lbl">${isFa ? "خطای بازگشت (Drift)" : "Recovery Drift"}</span>
+      </div>
+      <div class="cv-metric-card">
+        <span class="cv-metric-val">${fmt(maxX)}</span>
+        <span class="cv-metric-lbl">${isFa ? "بیشینه تحریک (Xmax)" : "Max Stimulus (Xmax)"}</span>
+      </div>
+    `;
+    return;
+  }
+
+  // Default: General Statistics & Curve Metrics
+  if (titleEl) {
+    titleEl.textContent = isFa ? "📊 آمار عمومی و برازش داده‌ها" : "📊 Curve Statistics & Regression";
+  }
+
+  let sumY = 0, sumX = 0, minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i < n; i++) {
+    sumY += y[i];
+    sumX += x[i];
+    if (y[i] < minY) minY = y[i];
+    if (y[i] > maxY) maxY = y[i];
+  }
+  const meanY = sumY / n;
+  let varY = 0;
+  for (let i = 0; i < n; i++) {
+    varY += Math.pow(y[i] - meanY, 2);
+  }
+  const sdY = n > 1 ? Math.sqrt(varY / (n - 1)) : 0;
+  const rangeY = maxY - minY;
+
+  let auc = 0;
+  for (let i = 0; i < n - 1; i++) {
+    auc += 0.5 * (y[i] + y[i + 1]) * Math.abs(x[i + 1] - x[i]);
+  }
+
+  const meanX = sumX / n;
+  let num = 0, den = 0, ssTot = 0;
+  for (let i = 0; i < n; i++) {
+    num += (x[i] - meanX) * (y[i] - meanY);
+    den += Math.pow(x[i] - meanX, 2);
+    ssTot += Math.pow(y[i] - meanY, 2);
+  }
+  const slope = den !== 0 ? num / den : 0;
+  const intercept = meanY - slope * meanX;
+  let ssRes = 0;
+  for (let i = 0; i < n; i++) {
+    const yPred = slope * x[i] + intercept;
+    ssRes += Math.pow(y[i] - yPred, 2);
+  }
+  const r2 = ssTot > 1e-9 ? Math.max(0, 1 - (ssRes / ssTot)) : 1;
+
   container.innerHTML = `
     <div class="cv-metric-card">
-      <span class="cv-metric-val">${fmt(epa)}</span>
-      <span class="cv-metric-lbl">${isFa ? "پتانسیل پیک آندی (Epa)" : "Anodic Peak (Epa)"}</span>
+      <span class="cv-metric-val">${fmt(meanY)}</span>
+      <span class="cv-metric-lbl">${isFa ? "میانگین (Mean Y)" : "Mean Value (Ȳ)"}</span>
     </div>
     <div class="cv-metric-card">
-      <span class="cv-metric-val">${fmt(epc)}</span>
-      <span class="cv-metric-lbl">${isFa ? "پتانسیل پیک کاتدی (Epc)" : "Cathodic Peak (Epc)"}</span>
+      <span class="cv-metric-val">${fmt(sdY)}</span>
+      <span class="cv-metric-lbl">${isFa ? "انحراف معیار (Std Dev)" : "Std Deviation (σ)"}</span>
     </div>
     <div class="cv-metric-card">
-      <span class="cv-metric-val">${fmt(deltaEp)}</span>
-      <span class="cv-metric-lbl">${isFa ? "جدایش پیک‌ها (ΔEp)" : "Peak Separation (ΔEp)"}</span>
+      <span class="cv-metric-val">${fmt(rangeY)}</span>
+      <span class="cv-metric-lbl">${isFa ? "دامنه تغییرات (ΔY)" : "Dynamic Range (ΔY)"}</span>
     </div>
     <div class="cv-metric-card">
-      <span class="cv-metric-val">${fmt(eHalf)}</span>
-      <span class="cv-metric-lbl">${isFa ? "پتانسیل نیمه‌موج (E½)" : "Half-Wave Pot. (E½)"}</span>
+      <span class="cv-metric-val">${fmt(auc)}</span>
+      <span class="cv-metric-lbl">${isFa ? "سطح زیر منحنی (AUC)" : "Area Under Curve (AUC)"}</span>
     </div>
     <div class="cv-metric-card">
-      <span class="cv-metric-val">${fmt(ipRatio)}</span>
-      <span class="cv-metric-lbl">${isFa ? "نسبت جریان پیک (|Ipa/Ipc|)" : "Peak Current Ratio"}</span>
+      <span class="cv-metric-val">${fmt(slope)}</span>
+      <span class="cv-metric-lbl">${isFa ? "شیب رگرسیون (Slope)" : "Regression Slope (m)"}</span>
     </div>
     <div class="cv-metric-card">
-      <span class="cv-metric-val">${fmt(loopArea)}</span>
-      <span class="cv-metric-lbl">${isFa ? "مساحت حلقه (بار Q)" : "Loop Area (Charge Q)"}</span>
+      <span class="cv-metric-val">${r2.toFixed(4)}</span>
+      <span class="cv-metric-lbl">${isFa ? "ضریب تعیین (R²)" : "Goodness of Fit (R²)"}</span>
     </div>
   `;
 }
@@ -3047,6 +3322,7 @@ const SAMPLE_OPTIONS = {
     sortByX: true,
     flags: { showInplotLegend: true },
     callouts: { inplotX: 110, inplotY: 60 },
+    analysisType: "spectroscopy",
     title: { fa: "طیف‌سنجی رامان گرافن", en: "Raman Spectra of Graphene" },
     subtitle: {
       fa: "بررسی پیک‌های D، G و 2D در نمونه‌های سنتزی و خالص",
@@ -3058,6 +3334,7 @@ const SAMPLE_OPTIONS = {
   "Cyclic_Voltammetry.xlsx": {
     sortByX: false,
     flags: { showHysteresis: true, showInplotLegend: true },
+    analysisType: "cv",
     title: { fa: "ولتامتری چرخه‌ای (CV)", en: "Cyclic Voltammogram (CV)" },
     subtitle: {
       fa: "پاسخ جریان–پتانسیل در رفت و برگشت (حلقه کامل)",
@@ -3068,6 +3345,7 @@ const SAMPLE_OPTIONS = {
   },
   "QCM_Hysteresis.xlsx": {
     flags: { showHysteresis: true, showAnnotations: true },
+    analysisType: "hysteresis",
     title: { fa: "پاسخ سنسور رطوبت QCM", en: "QCM Humidity Sensor Response" },
     subtitle: {
       fa: "حلقه هیسترزیس جذب و واجذب — نانوکامپوزیت در برابر نشاسته خالص",
@@ -3080,6 +3358,7 @@ const SAMPLE_OPTIONS = {
     sortByX: true,
     showErrorBars: true,
     flags: { showTrendlines: true, showInplotLegend: true },
+    analysisType: "stats",
     title: { fa: "منحنی کالیبراسیون بیر–لامبرت", en: "Beer–Lambert Calibration Curve" },
     subtitle: {
       fa: "جذب سه‌تکراره با میله‌های خطای ±SD و برازش خطی",
@@ -3091,6 +3370,7 @@ const SAMPLE_OPTIONS = {
   "Damped_Oscillation.xlsx": {
     sortByX: true,
     flags: { showInplotLegend: true },
+    analysisType: "stats",
     title: { fa: "پاسخ پله‌ای سیستم میرا", en: "Underdamped Step Response" },
     subtitle: {
       fa: "جابجایی جرم–فنر–میراگر برای دو نسبت میرایی",
@@ -3102,6 +3382,7 @@ const SAMPLE_OPTIONS = {
   "UVVis_Spectra.xlsx": {
     sortByX: true,
     flags: { showInplotLegend: true },
+    analysisType: "spectroscopy",
     title: { fa: "طیف جذبی UV-Vis", en: "UV-Vis Absorption Spectra" },
     subtitle: { fa: "سه نمونه کاتالیست در محدوده مرئی", en: "Three catalyst samples across the visible band" },
     xTitle: { fa: "طول موج (نانومتر)", en: "Wavelength (nm)" },
@@ -3111,6 +3392,7 @@ const SAMPLE_OPTIONS = {
     sortByX: true,
     xLog: true,
     flags: { showInplotLegend: true },
+    analysisType: "stats",
     title: { fa: "نمودار دامنه بُد", en: "Bode Magnitude Plot" },
     subtitle: {
       fa: "پاسخ پایین‌گذر دو قطبی، با و بدون نویز EMI (محور فرکانس لگاریتمی)",
@@ -3122,6 +3404,7 @@ const SAMPLE_OPTIONS = {
   "Solar_Cell_IV.xlsx": {
     sortByX: true,
     flags: { showAnnotations: true },
+    analysisType: "stats",
     title: { fa: "منحنی مشخصه I–V سلول خورشیدی", en: "Solar Cell I–V Characteristics" },
     subtitle: { fa: "ناحیه زانوی ضریب پرشدگی دو سلول پروسکایتی", en: "Fill-factor knee region of two perovskite cells" },
     xTitle: { fa: "ولتاژ (ولت)", en: "Voltage (V)" },
@@ -3168,6 +3451,7 @@ async function loadBundledSample(fileName) {
     state.showTrendlines = !!flags.showTrendlines;
     state.showErrorBand = !!flags.showErrorBand;
     state.showDataLabels = !!flags.showDataLabels;
+    state.analysisType = opts.analysisType || "auto";
     if (opts.title) state.chartTitle = cap(opts.title);
     if (opts.subtitle) state.chartSubtitle = cap(opts.subtitle);
     if (opts.xTitle) state.xTitle = cap(opts.xTitle);
@@ -3680,13 +3964,22 @@ function initEvents() {
     });
   }
 
-  // Copy CV Metrics Button
+  // Scientific Analysis Selector & Copy Button
+  const selAnalysisType = document.getElementById("selAnalysisType");
+  if (selAnalysisType) {
+    selAnalysisType.addEventListener("change", e => {
+      state.analysisType = e.target.value;
+      renderCVMetrics();
+    });
+  }
+
   const btnCopyCV = document.getElementById("btnCopyCVMetrics");
   if (btnCopyCV) {
     btnCopyCV.addEventListener("click", () => {
       const cards = document.querySelectorAll("#cvMetricsGrid .cv-metric-card");
       if (!cards.length) return;
-      const lines = [];
+      const title = document.getElementById("lblAnalysisTitle")?.textContent || "Analytics";
+      const lines = [title, "----------------------------"];
       cards.forEach(c => {
         const val = c.querySelector(".cv-metric-val")?.textContent || "";
         const lbl = c.querySelector(".cv-metric-lbl")?.textContent || "";
@@ -3694,7 +3987,7 @@ function initEvents() {
       });
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(lines.join("\n")).then(() => {
-          showToast(state.lang === "fa" ? "مشخصات CV کپی شد" : "CV metrics copied to clipboard");
+          showToast(state.lang === "fa" ? "آمار تحلیل در کلیپ‌بورد کپی شد" : "Analysis metrics copied to clipboard");
         });
       }
     });
@@ -3964,6 +4257,7 @@ function syncUIFromState() {
   setSel("selFitModel", state.fitModel || "linear");
   setChk("chkFitEquation", state.showFitEquation !== false);
   setSel("selColorPalette", state.colorPalette || "default");
+  setSel("selAnalysisType", state.analysisType || "auto");
 
   if (state.peaks) {
     setChk("chkPeakFinder", state.peaks.enabled);
@@ -4189,6 +4483,7 @@ function serializeSettings() {
     showGrid: state.showGrid,
     showHysteresis: state.showHysteresis,
     showTrendlines: state.showTrendlines,
+    analysisType: state.analysisType,
     showCalloutBox: state.showCalloutBox,
     chartTitle: state.chartTitle,
     chartSubtitle: state.chartSubtitle,
@@ -4216,7 +4511,7 @@ function applySettings(obj) {
   const s = obj.state && typeof obj.state === "object" ? obj.state : obj;
   const scalars = ["lang", "theme", "plotMode", "frameStyle", "markerSize", "lineWidth",
     "showErrorBand", "showAnnotations", "showInplotLegend", "showBottomLegend", "showDataLabels",
-    "showGrid", "showHysteresis", "showTrendlines", "fitModel", "showFitEquation", "colorPalette", "showCalloutBox",
+    "showGrid", "showHysteresis", "showTrendlines", "fitModel", "showFitEquation", "colorPalette", "analysisType", "showCalloutBox",
     "chartTitle", "chartSubtitle", "xTitle", "yTitle"];
   scalars.forEach(k => { if (s[k] !== undefined) state[k] = s[k]; });
   ["axis", "layout", "ticks", "type", "data", "zoom", "peaks", "crosshair"].forEach(k => {

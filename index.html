@@ -210,11 +210,22 @@
                     </div>
                   </div>
 
-                  <!-- CV & Electrochemical Analytics Box -->
+                  <!-- Scientific Data Analytics Box -->
                   <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px;" id="secCVMetrics">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                      <span style="font-weight: bold; color: var(--primary-accent); font-size: 0.88rem;" data-fa="⚡ مشخصات ولتامتری چرخه‌ای (CV Metrics)" data-en="⚡ Cyclic Voltammetry & Redox Metrics">⚡ مشخصات ولتامتری چرخه‌ای (CV Metrics)</span>
+                      <span id="lblAnalysisTitle" style="font-weight: bold; color: var(--primary-accent); font-size: 0.88rem;" data-fa="⚡ تحلیل علمی داده‌ها" data-en="⚡ Scientific Data Analytics">⚡ تحلیل علمی داده‌ها</span>
                       <button id="btnCopyCVMetrics" class="btn btn-secondary btn-sm-reset" style="margin: 0; padding: 2px 8px; font-size: 0.75rem;" data-fa="کپی آمار" data-en="Copy Stats">کپی آمار</button>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+                      <label for="selAnalysisType" style="font-size: 12px; color: var(--text-muted); white-space: nowrap;" data-fa="نوع تحلیل:" data-en="Analysis:">نوع تحلیل:</label>
+                      <select id="selAnalysisType" class="setting-input" style="flex: 1; padding: 3px 6px; font-size: 12px; height: 28px;">
+                        <option value="auto" data-fa="⚡ تشخیص خودکار (Auto-Detect)" data-en="⚡ Auto-Detect">⚡ تشخیص خودکار (Auto-Detect)</option>
+                        <option value="cv" data-fa="⚡ ولتامتری چرخه‌ای (CV Metrics)" data-en="⚡ Cyclic Voltammetry (CV)">⚡ ولتامتری چرخه‌ای (CV Metrics)</option>
+                        <option value="spectroscopy" data-fa="🔬 طیف‌سنجی و پیک‌ها (Spectroscopy)" data-en="🔬 Spectroscopy & Peaks">🔬 طیف‌سنجی و پیک‌ها (Spectroscopy)</option>
+                        <option value="hysteresis" data-fa="🔄 سنسور و هیسترزیس (Hysteresis)" data-en="🔄 Sensor & Hysteresis">🔄 سنسور و هیسترزیس (Hysteresis)</option>
+                        <option value="stats" data-fa="📊 آمار عمومی و مشخصات منحنی" data-en="📊 Curve Statistics">📊 آمار عمومی و مشخصات منحنی</option>
+                        <option value="none" data-fa="🚫 غیرفعال (مخفی)" data-en="🚫 Disabled (Hidden)">🚫 غیرفعال (مخفی)</option>
+                      </select>
                     </div>
                     <div class="cv-metrics-grid" id="cvMetricsGrid">
                       <!-- Populated dynamically by app.js -->
