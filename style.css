@@ -363,6 +363,30 @@ html[dir="ltr"] body {
 }
 
 @media (max-width: 768px) {
+  .app-container {
+    padding: 12px 14px 28px;
+  }
+  .app-header {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .chart-card {
+    padding: 16px 14px 14px;
+  }
+  .sidebar-card {
+    padding: 16px 14px;
+  }
+  .sidebar-tabs-nav {
+    gap: 2px;
+    padding: 3px;
+  }
+  .sidebar-tab-btn {
+    padding: 6px 1px;
+    font-size: 0.71rem;
+  }
+  .sidebar-tab-btn .tab-icon {
+    font-size: 1.05rem;
+  }
   .metrics-row {
     grid-template-columns: 1fr;
   }
