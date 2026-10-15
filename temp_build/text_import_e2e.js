@@ -145,6 +145,20 @@ try {
   failMsg('wordy header', (e && e.stack) || String(e));
 }
 
+// Instrument export with metadata preamble lines (e.g. CV potentiostat format)
+try {
+  const cvSample = 'Title:\nNote:\nTech: CV\nE1(v)=0.000\nE2(v)=2.000\nPotential /V  Current /uA\n0.000  -1608.3\n0.001  -1571.7\n0.002  -1544.2\n0.003  -1519.8';
+  const file = write('instrument-preamble.txt', Buffer.from(cvSample));
+  importThrough(file);
+  const info = JSON.parse(window.eval(`JSON.stringify({points: dataset.xValues.length, series: dataset.series.length, name: dataset.series[0].nameEn, xTitle: state.xTitle, yTitle: state.yTitle})`));
+  if (info.points !== 4) failMsg('instrument preamble', 'points ' + info.points);
+  else if (info.series !== 1) failMsg('instrument preamble', 'series: ' + info.series);
+  else if (info.name !== 'Current /uA') failMsg('instrument preamble', 'series name: ' + info.name);
+  else console.log('OK   instrument-preamble.txt points=4 series=1 name=' + info.name + ' xTitle=' + info.xTitle);
+} catch (e) {
+  failMsg('instrument preamble', (e && e.stack) || String(e));
+}
+
 // Garbage / data-free text must report an error instead of clearing the figure
 
 // Drag & drop a .txt file onto the window

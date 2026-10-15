@@ -398,6 +398,21 @@ function computeAxisGeometry() {
   return { x: ax, y: ay, mode };
 }
 
+// --- Safe Bounds Calculation (prevents stack overflow with Math.min(...arr) on large datasets) ---
+function arrayBounds(arr) {
+  let min = Infinity;
+  let max = -Infinity;
+  if (!arr || !arr.length) return { min: 0, max: 1 };
+  for (let i = 0; i < arr.length; i++) {
+    const v = arr[i];
+    if (typeof v === "number" && isFinite(v)) {
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+  }
+  return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 1 : max };
+}
+
 // --- Display transforms (baseline zero / normalize / mean-center) ---
 function yTransformStats(s) {
   const vals = (s && s.yValues ? s.yValues : []).filter(v => typeof v === "number" && isFinite(v));
@@ -408,8 +423,9 @@ function yTransformStats(s) {
     return { offset: vals.reduce((a, b) => a + b, 0) / vals.length, scale: 1 };
   }
   if (mode === "normalize") {
-    const mn = Math.min(...vals);
-    const mx = Math.max(...vals);
+    const b = arrayBounds(vals);
+    const mn = b.min;
+    const mx = b.max;
     const span = Math.abs(mx - mn) || 1;
     return { offset: mn, scale: 100 / span };
   }
@@ -1175,31 +1191,46 @@ function renderChart() {
          `;
       }
 
-      // Directional Arrows
-      if (state.showHysteresis && !state.data.sortByX) {
-         for (let i = 0; i < xVals.length - 1; i++) {
-             const px1 = mapX(xVals[i]);
-             const py1 = mapY(dy(i));
-             const px2 = mapX(xVals[i + 1]);
-             const py2 = mapY(dy(i + 1));
+      // Directional Arrows (paced along path arc-length so high-density data like CV curves display clear arrows)
+      if (state.showHysteresis && !state.data.sortByX && xVals.length >= 2) {
+        let totalPathLen = 0;
+        const segDists = [];
+        for (let i = 0; i < xVals.length - 1; i++) {
+          const px1 = mapX(xVals[i]);
+          const py1 = mapY(dy(i));
+          const px2 = mapX(xVals[i + 1]);
+          const py2 = mapY(dy(i + 1));
+          const d = Math.hypot(px2 - px1, py2 - py1);
+          segDists.push(d);
+          totalPathLen += d;
+        }
 
-             const dx = px2 - px1;
-             const dyP = py2 - py1;
-             const dist = Math.sqrt(dx * dx + dyP * dyP);
+        const targetSpacing = Math.max(50, Math.min(130, totalPathLen / 8));
+        let accum = targetSpacing * 0.4;
 
-             if (dist > 25) {
-                 const midX = px1 + dx * 0.55;
-                 const midY = py1 + dyP * 0.55;
-                 const angle = Math.atan2(dyP, dx) * 180 / Math.PI;
-                 const isBack = i >= maxIdx;
-
-                 svgContent += `
-                    <g transform="translate(${midX}, ${midY}) rotate(${angle})" opacity="${(isBack ? 0.75 : 0.95) * seriesOpacity}">
-                       <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="${seriesColor}" />
-                    </g>
-                 `;
-             }
-         }
+        for (let i = 0; i < xVals.length - 1; i++) {
+          accum += segDists[i];
+          if (accum >= targetSpacing) {
+            accum = 0;
+            const step = Math.max(1, Math.floor(xVals.length / 300));
+            const iNext = Math.min(xVals.length - 1, i + step);
+            const px1 = mapX(xVals[i]);
+            const py1 = mapY(dy(i));
+            const px2 = mapX(xVals[iNext]);
+            const py2 = mapY(dy(iNext));
+            const dx = px2 - px1;
+            const dyP = py2 - py1;
+            if (Math.hypot(dx, dyP) > 0.01) {
+              const angle = Math.atan2(dyP, dx) * 180 / Math.PI;
+              const isBack = i >= maxIdx;
+              svgContent += `
+                <g transform="translate(${px1}, ${py1}) rotate(${angle})" opacity="${(isBack ? 0.75 : 0.95) * seriesOpacity}">
+                  <polygon points="-5,-4.5 4.5,0 -5,4.5" fill="${seriesColor}" />
+                </g>
+              `;
+            }
+          }
+        }
       }
     }
 
@@ -1227,7 +1258,14 @@ function renderChart() {
 
     let turnIdx = 0;
     xVals.forEach((x, i) => { if (x > xVals[turnIdx]) turnIdx = i; });
-    xVals.forEach((xVal, idx) => {
+    
+    // For large datasets in scatter-line mode, sample markers so they don't form a thick smear,
+    // while keeping the continuous line and all data points fully represented.
+    const isDense = xVals.length > 300 && state.plotMode === "scatter-line";
+    const markerStride = isDense ? Math.max(1, Math.ceil(xVals.length / 150)) : 1;
+
+    for (let idx = 0; idx < xVals.length; idx += markerStride) {
+      const xVal = xVals[idx];
       const px = mapX(xVal);
       const yVal = dy(idx);
       const py = mapY(yVal);
@@ -1248,7 +1286,7 @@ function renderChart() {
           ` : ""}
         </g>
       `;
-    });
+    }
 
     // --- Trendlines ---
     if (state.showTrendlines && xVals.length >= 2) {
@@ -1263,6 +1301,7 @@ function renderChart() {
         sumXY += xVals[i] * yv;
         sumXX += xVals[i] * xVals[i];
       }
+
       let denom = (n * sumXX - sumX * sumX);
       if (Math.abs(denom) > 1e-12) {
         let slope = (n * sumXY - sumX * sumY) / denom;
@@ -1277,8 +1316,9 @@ function renderChart() {
         }
         let rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
 
-        const x1 = Math.min(...xVals);
-        const x2 = Math.max(...xVals);
+        const xb = arrayBounds(xVals);
+        const x1 = xb.min;
+        const x2 = xb.max;
         const y1 = slope * x1 + intercept;
         const y2 = slope * x2 + intercept;
 
@@ -1438,43 +1478,47 @@ function renderChart() {
   if (state._booted) queueSave();
 }
 
-// --- 7. Interactive Hover Tooltips ---
+// --- 7. Interactive Hover Tooltips (Event Delegation for High Performance) ---
 function attachHoverListeners() {
-  const points = svg.querySelectorAll(".point-group");
-  points.forEach(pt => {
-    pt.addEventListener("mouseenter", e => {
-      const seriesId = pt.getAttribute("data-series");
-      const x = pt.getAttribute("data-x");
-      const y = pt.getAttribute("data-y");
-      const s = dataset.series.find(item => item.id === seriesId);
-      if (!s) return;
+  if (svg._hasHoverListener) return;
+  svg._hasHoverListener = true;
 
-      const seriesName = state.lang === "fa" ? s.nameFa : s.nameEn;
+  svg.addEventListener("pointermove", e => {
+    const pt = e.target.closest(".point-group");
+    if (!pt) {
+      if (tooltip && tooltip.classList.contains("visible")) tooltip.classList.remove("visible");
+      return;
+    }
+    const seriesId = pt.getAttribute("data-series");
+    const x = pt.getAttribute("data-x");
+    const y = pt.getAttribute("data-y");
+    const s = dataset.series.find(item => item.id === seriesId);
+    if (!s || !tooltip) return;
 
-      const xLabel = state.xTitle || (state.lang === 'fa' ? 'محور X' : 'X');
-      const yLabel = state.yTitle || (state.lang === 'fa' ? 'محور Y' : 'Y');
-      tooltip.innerHTML = `
-        <div style="font-weight: 700; color: ${state.theme === 'dark' ? s.colorDark : s.colorLight}; margin-bottom: 3px;">
-          ${seriesName}
-        </div>
-        <div>${xLabel}: <strong>${x}</strong></div>
-        <div>${yLabel}: <strong>${y}</strong></div>
-      `;
+    const seriesName = state.lang === "fa" ? s.nameFa : s.nameEn;
+    const xLabel = state.xTitle || (state.lang === 'fa' ? 'محور X' : 'X');
+    const yLabel = state.yTitle || (state.lang === 'fa' ? 'محور Y' : 'Y');
+    tooltip.innerHTML = `
+      <div style="font-weight: 700; color: ${state.theme === 'dark' ? s.colorDark : s.colorLight}; margin-bottom: 3px;">
+        ${seriesName}
+      </div>
+      <div>${xLabel}: <strong>${x}</strong></div>
+      <div>${yLabel}: <strong>${y}</strong></div>
+    `;
 
-      const svgRect = svg.getBoundingClientRect();
-      const px = mapX(parseFloat(x));
-      const py = mapY(parseFloat(y));
-      const scaleX = svgRect.width / chartBox.width;
-      const scaleY = svgRect.height / chartBox.height;
+    const svgRect = svg.getBoundingClientRect();
+    const px = mapX(parseFloat(x));
+    const py = mapY(parseFloat(y));
+    const scaleX = svgRect.width / chartBox.width;
+    const scaleY = svgRect.height / chartBox.height;
 
-      tooltip.style.left = `${px * scaleX}px`;
-      tooltip.style.top = `${py * scaleY}px`;
-      tooltip.classList.add("visible");
-    });
+    tooltip.style.left = `${px * scaleX}px`;
+    tooltip.style.top = `${py * scaleY}px`;
+    tooltip.classList.add("visible");
+  });
 
-    pt.addEventListener("mouseleave", () => {
-      tooltip.classList.remove("visible");
-    });
+  svg.addEventListener("pointerleave", () => {
+    if (tooltip) tooltip.classList.remove("visible");
   });
 }
 
@@ -1829,12 +1873,14 @@ function syncInputsToDataset() {
   });
 }
 
+let renderAllTableRows = false;
+
 function renderDataTable() {
   if (!dataTableBody) return;
   dataTableBody.innerHTML = "";
   const dataTableHeader = document.getElementById("dataTableHeader");
   if (dataTableHeader) {
-    let theadHTML = `<tr><th style="padding: 8px;">X (RH)</th>`;
+    let theadHTML = `<tr><th style="padding: 8px;">X (${state.xTitle || 'RH'})</th>`;
     dataset.series.forEach(s => {
       theadHTML += `<th style="padding: 8px;">${state.lang === 'fa' ? s.nameFa : s.nameEn}</th>`;
     });
@@ -1842,7 +1888,13 @@ function renderDataTable() {
     dataTableHeader.innerHTML = theadHTML;
   }
 
-  dataset.xValues.forEach((x, idx) => {
+  const totalRows = dataset.xValues.length;
+  const maxInitialRows = 50;
+  const rowsToRender = (renderAllTableRows || totalRows <= maxInitialRows) ? totalRows : maxInitialRows;
+
+  const fragment = document.createDocumentFragment();
+  for (let idx = 0; idx < rowsToRender; idx++) {
+    const x = dataset.xValues[idx];
     const tr = document.createElement("tr");
     let html = `<td><input type="number" step="any" class="table-input" data-col="x" data-idx="${idx}" value="${x}"></td>`;
     
@@ -1850,17 +1902,68 @@ function renderDataTable() {
       html += `<td><input type="number" step="any" class="table-input" data-col="${s.id}" data-idx="${idx}" value="${s.yValues[idx] ?? 0}"></td>`;
     });
     
-    html += `<td><button class="btn-delete-row" data-idx="${idx}" title="حذف سطر" style="background: none; border: none; cursor: pointer; color: #f43f5e; font-size: 16px;">×</button></td>`;
+    html += `<td><button class="btn-delete-row" data-idx="${idx}" title="${state.lang === 'fa' ? 'حذف سطر' : 'Delete row'}" style="background: none; border: none; cursor: pointer; color: #f43f5e; font-size: 16px;">×</button></td>`;
     tr.innerHTML = html;
-    dataTableBody.appendChild(tr);
-  });
-  
-  dataTableBody.querySelectorAll(".btn-delete-row").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const idx = parseInt(e.target.getAttribute("data-idx"), 10);
-      deleteRow(idx);
+    fragment.appendChild(tr);
+  }
+  dataTableBody.appendChild(fragment);
+
+  if (!dataTableBody._hasDeleteListener) {
+    dataTableBody._hasDeleteListener = true;
+    dataTableBody.addEventListener("click", e => {
+      const btn = e.target.closest(".btn-delete-row");
+      if (btn) {
+        const idx = parseInt(btn.getAttribute("data-idx"), 10);
+        deleteRow(idx);
+      }
     });
-  });
+  }
+
+  const tableNoticeId = "tablePaginationNotice";
+  let noticeEl = document.getElementById(tableNoticeId);
+  if (!noticeEl) {
+    noticeEl = document.createElement("div");
+    noticeEl.id = tableNoticeId;
+    noticeEl.style.cssText = "padding: 8px 12px; font-size: 0.8rem; color: var(--text-dim); background: var(--bg-card-subtle); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;";
+    const scrollBox = dataTableBody.closest(".table-scroll");
+    if (scrollBox && scrollBox.parentNode) {
+      scrollBox.parentNode.insertBefore(noticeEl, scrollBox.nextSibling);
+    }
+  }
+
+  if (totalRows > maxInitialRows && !renderAllTableRows) {
+    noticeEl.style.display = "flex";
+    noticeEl.innerHTML = `
+      <span>${state.lang === 'fa' ? `نمایش ۵۰ سطر اول از ${totalRows} سطر` : `Showing first 50 of ${totalRows} rows`}</span>
+      <button id="btnShowAllRows" type="button" style="background: var(--primary-accent); color: white; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; font-family: inherit;">
+        ${state.lang === 'fa' ? 'نمایش همه سطرها' : 'Show all rows'}
+      </button>
+    `;
+    const btnShow = document.getElementById("btnShowAllRows");
+    if (btnShow) {
+      btnShow.onclick = () => {
+        renderAllTableRows = true;
+        renderDataTable();
+      };
+    }
+  } else if (totalRows > maxInitialRows && renderAllTableRows) {
+    noticeEl.style.display = "flex";
+    noticeEl.innerHTML = `
+      <span>${state.lang === 'fa' ? `نمایش تمام ${totalRows} سطر` : `Showing all ${totalRows} rows`}</span>
+      <button id="btnShowFewerRows" type="button" style="background: transparent; color: var(--primary-accent); border: 1px solid var(--primary-accent); border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; font-family: inherit;">
+        ${state.lang === 'fa' ? 'محدود به ۵۰ سطر' : 'Limit to 50'}
+      </button>
+    `;
+    const btnFewer = document.getElementById("btnShowFewerRows");
+    if (btnFewer) {
+      btnFewer.onclick = () => {
+        renderAllTableRows = false;
+        renderDataTable();
+      };
+    }
+  } else if (noticeEl) {
+    noticeEl.style.display = "none";
+  }
 }
 
 function deleteRow(idx) {
@@ -1904,8 +2007,9 @@ function getNiceStep(span, targetTicks = 5) {
 
 function autoScaleAxis() {
   if (!dataset.xValues || !dataset.xValues.length) return;
-  const minX = Math.min(...dataset.xValues);
-  const maxX = Math.max(...dataset.xValues);
+  const xBounds = arrayBounds(dataset.xValues);
+  const minX = xBounds.min;
+  const maxX = xBounds.max;
   
   let allY = [];
   dataset.series.forEach(s => {
@@ -1914,17 +2018,18 @@ function autoScaleAxis() {
     }
   });
   if (!allY.length) return;
-  const minY = Math.min(...allY);
-  const maxY = Math.max(...allY);
+  const yBounds = arrayBounds(allY);
+  const minY = yBounds.min;
+  const maxY = yBounds.max;
 
-  const xSpan = Math.max(1, maxX - minX);
+  const xSpan = Math.max(1e-6, maxX - minX);
   const xStep = getNiceStep(xSpan, 6);
   state.axis.xMin = Math.floor(minX / xStep) * xStep;
   state.axis.xMax = Math.ceil(maxX / xStep) * xStep;
   if (state.axis.xMax <= state.axis.xMin) state.axis.xMax = state.axis.xMin + xStep * 5;
   state.axis.xStep = xStep;
 
-  const ySpan = Math.max(1, maxY - minY);
+  const ySpan = Math.max(1e-6, maxY - minY);
   const yStep = getNiceStep(ySpan, 6);
   state.axis.yMin = Math.floor(minY / yStep) * yStep;
   state.axis.yMax = Math.ceil(maxY / yStep) * yStep;
@@ -2038,22 +2143,75 @@ function parseSmartExcel(rawRows) {
   }
 
   // Standard tabular format
-  const isHeaderRow = isNaN(parseFloat(r0[0])) || 
-    (typeof r0[1] === "string" && isNaN(parseFloat(r0[1])));
+  // Find where the numeric data table begins (skipping instrument metadata / preambles like "Tech: CV", "E1(v)=...")
+  const isNumericCell = v => {
+    if (typeof v === "number") return isFinite(v);
+    if (typeof v !== "string") return false;
+    const s = v.trim();
+    return s !== "" && !isNaN(Number(s));
+  };
+  const isDataRow = r => Array.isArray(r) && r.length >= 2 && isNumericCell(r[0]) && isNumericCell(r[1]);
+
+  let firstDataIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (isDataRow(rows[i])) {
+      if (i + 1 < rows.length && isDataRow(rows[i + 1])) {
+        firstDataIdx = i;
+        break;
+      } else if (i + 1 >= rows.length) {
+        firstDataIdx = i;
+        break;
+      }
+    }
+  }
+
+  if (firstDataIdx === -1) {
+    firstDataIdx = rows.findIndex(r => r && isNumericCell(r[0]));
+    if (firstDataIdx === -1) firstDataIdx = 0;
+  }
+
+  const candidateData = rows.slice(firstDataIdx).filter(r => r && r.length && isNumericCell(r[0]));
+  const dataRows = candidateData.length ? candidateData : rows.slice(firstDataIdx);
+  const numCols = dataRows[0] ? dataRows[0].length : 2;
 
   let headers = [];
-  let dataRows = [];
-
-  if (isHeaderRow) {
-    headers = r0.map((h, i) => (h ? String(h).trim() : (i === 0 ? "RH (%)" : `نمونه ${i}`)));
-    dataRows = rows.slice(1);
-  } else {
-    // Headerless: row 0 is already numeric data
-    headers = ["RH (%)"];
-    for (let i = 1; i < r0.length; i++) {
-      headers.push(`نمونه ${i}`);
+  if (firstDataIdx > 0) {
+    const prevRow = rows[firstDataIdx - 1];
+    const isPrevRowHeader = prevRow && prevRow.some(c => isNaN(parseFloat(c)));
+    if (isPrevRowHeader && prevRow.length === numCols) {
+      headers = prevRow.map((h, i) => (h ? String(h).trim() : (i === 0 ? "RH (%)" : `نمونه ${i}`)));
+    } else if (isPrevRowHeader && prevRow.length > numCols && prevRow.length % numCols === 0) {
+      // Each column name was split into multiple words (e.g. "Potential /V" and "Current /uA")
+      const wordsPerCol = prevRow.length / numCols;
+      for (let c = 0; c < numCols; c++) {
+        headers.push(prevRow.slice(c * wordsPerCol, (c + 1) * wordsPerCol).join(" "));
+      }
+    } else if (isPrevRowHeader && prevRow.length > 1) {
+      headers = prevRow.slice(0, numCols).map((h, i) => (h ? String(h).trim() : (i === 0 ? "RH (%)" : `نمونه ${i}`)));
+      while (headers.length < numCols) {
+        headers.push(`نمونه ${headers.length}`);
+      }
+    } else {
+      headers = ["RH (%)"];
+      for (let i = 1; i < numCols; i++) {
+        headers.push(`نمونه ${i}`);
+      }
     }
-    dataRows = rows;
+  } else {
+    // Data starts at row 0: check if row 0 itself is a header
+    const r0 = rows[0];
+    const isHeaderRow = isNaN(parseFloat(r0[0])) || 
+      (typeof r0[1] === "string" && isNaN(parseFloat(r0[1])));
+
+    if (isHeaderRow) {
+      headers = r0.map((h, i) => (h ? String(h).trim() : (i === 0 ? "RH (%)" : `نمونه ${i}`)));
+      dataRows.shift();
+    } else {
+      headers = ["RH (%)"];
+      for (let i = 1; i < (r0 ? r0.length : numCols); i++) {
+        headers.push(`نمونه ${i}`);
+      }
+    }
   }
 
   const series = [];
@@ -2093,7 +2251,8 @@ function parseSmartExcel(rawRows) {
     built.push(s);
   });
 
-  return { xValues, series: built };
+  const xColName = headers[0] || "";
+  return { xValues, series: built, xColName };
 }
 
 function workbookRows(workbook) {
@@ -2114,6 +2273,18 @@ function applyImportedRows(rows) {
       ? "داده معتبری در فایل اکسل یافت نشد!"
       : "No usable data was found in that Excel file.");
     return 0;
+  }
+
+  // Auto-detect X/Y labels if the dataset carries clear headers (e.g. CV or potentiostat curves)
+  if (parsed.xColName && parsed.xColName !== "RH (%)" && parsed.xColName !== "X") {
+    state.xTitle = parsed.xColName;
+    const inpXTitle = document.getElementById("inpXTitle");
+    if (inpXTitle) inpXTitle.value = state.xTitle;
+  }
+  if (parsed.series && parsed.series.length === 1 && parsed.series[0].nameEn && !parsed.series[0].nameEn.startsWith("نمونه")) {
+    state.yTitle = parsed.series[0].nameEn;
+    const inpYTitle = document.getElementById("inpYTitle");
+    if (inpYTitle) inpYTitle.value = state.yTitle;
   }
 
   const colorPalette = [
@@ -2216,7 +2387,9 @@ function splitTextRows(text) {
     .filter(l => l.trim() !== "" && l.trim().charAt(0) !== "#");
   if (!lines.length) return [];
 
-  const sample = lines.slice(0, 25);
+  // When guessing separator, inspect lines containing numbers (the actual data block)
+  const numLines = lines.filter(l => /\d/.test(l)).slice(0, 50);
+  const sample = numLines.length >= 5 ? numLines : lines.slice(0, 25);
   const consistentCols = splitter => {
     const counts = sample.map(l => splitter(l).length);
     const tally = {};
@@ -2226,7 +2399,7 @@ function splitTextRows(text) {
       const n = Number(k);
       if (tally[k] > hits || (tally[k] === hits && n > mode)) { hits = tally[k]; mode = n; }
     });
-    return mode >= 2 && hits >= Math.ceil(counts.length * 0.8) ? mode : 0;
+    return mode >= 2 && hits >= Math.ceil(counts.length * 0.7) ? mode : 0;
   };
 
   const splitters = [
@@ -2234,6 +2407,7 @@ function splitTextRows(text) {
     l => l.split("\t"),
     l => l.split(";"),
     l => l.split("|"),
+    l => l.trim().split(/\t+|\s{2,}/),
     l => l.trim().split(/[ \t]+/)
   ];
   let split = splitters[splitters.length - 1];
@@ -2252,7 +2426,7 @@ function splitTextRows(text) {
       const n = Number(k);
       if (tally[k] > hits || (tally[k] === hits && n > mode)) { hits = tally[k]; mode = n; }
     });
-    if (rows[0].length !== mode) rows.shift();
+    if (rows[0].length !== mode && !rows[0].some(c => !isNaN(parseFloat(c)))) rows.shift();
   }
   return rows;
 }
