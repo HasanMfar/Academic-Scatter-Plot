@@ -2496,7 +2496,10 @@ function deleteRow(idx) {
   }
   syncInputsToDataset();
   dataset.xValues.splice(idx, 1);
-  dataset.series.forEach(s => s.yValues.splice(idx, 1));
+  dataset.series.forEach(s => {
+    s.yValues.splice(idx, 1);
+    if (s.errValues) s.errValues.splice(idx, 1);
+  });
   renderDataTable();
   renderChart();
 }
@@ -2505,7 +2508,10 @@ function addRow() {
   syncInputsToDataset();
   const lastX = dataset.xValues.length > 0 ? dataset.xValues[dataset.xValues.length - 1] + 10 : 0;
   dataset.xValues.push(lastX);
-  dataset.series.forEach(s => s.yValues.push(0));
+  dataset.series.forEach(s => {
+    s.yValues.push(0);
+    if (s.errValues) s.errValues.push(0);
+  });
   renderDataTable();
   renderChart();
 }
@@ -2689,8 +2695,12 @@ function calculateCurveFit(xVals, s, dy, model) {
 
         for (let step = 0; step <= numInterp; step++) {
           const curX = xMin + (step / numInterp) * (xMax - xMin);
-          const curY = a * Math.pow(curX, b);
-          pathPts.push({ x: mapX(curX), y: mapY(curY) });
+          if (curX > 0) {
+            const curY = a * Math.pow(curX, b);
+            if (isFinite(curY)) {
+              pathPts.push({ x: mapX(curX), y: mapY(curY) });
+            }
+          }
         }
         label = `y = ${a.toFixed(3)}·x^(${b.toFixed(3)}) (R² = ${rSquared.toFixed(3)})`;
       }
@@ -3931,8 +3941,23 @@ function initEvents() {
       const series = dataset.series.filter(s => s.visible);
       if (!xVals.length || !series.length) return;
 
+      function escapeLatex(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/\\/g, '\\textbackslash ')
+          .replace(/&/g, '\\&')
+          .replace(/%/g, '\\%')
+          .replace(/\$/g, '\\$')
+          .replace(/#/g, '\\#')
+          .replace(/_/g, '\\_')
+          .replace(/\{/g, '\\{')
+          .replace(/\}/g, '\\}')
+          .replace(/~/g, '\\textasciitilde ')
+          .replace(/\^/g, '\\textasciicircum ');
+      }
+
       const cols = ["r", ...series.map(() => "r")].join("");
-      const colHeaders = [escapeXml(state.xTitle || "X"), ...series.map(s => escapeXml(state.lang === "fa" ? s.nameFa : s.nameEn))].join(" & ");
+      const colHeaders = [escapeLatex(state.xTitle || "X"), ...series.map(s => escapeLatex(state.lang === "fa" ? s.nameFa : s.nameEn))].join(" & ");
 
       const rows = [];
       const maxRows = Math.min(xVals.length, 50);
@@ -3941,10 +3966,11 @@ function initEvents() {
         rows.push(rowVals.map(v => typeof v === "number" ? Number(v.toFixed(4)) : v).join(" & ") + " \\\\");
       }
 
+      const captionStr = state.chartTitle ? escapeLatex(state.chartTitle) : "Experimental Data";
       const latex = [
         "\\begin{table}[htbp]",
         "\\centering",
-        `\\caption{${state.chartTitle || "Experimental Data"}${xVals.length > 50 ? " (First 50 points)" : ""}}`,
+        `\\caption{${captionStr}${xVals.length > 50 ? " (First 50 points)" : ""}}`,
         "\\label{tab:data}",
         `\\begin{tabular}{${cols}}`,
         "\\hline",
@@ -4483,6 +4509,9 @@ function serializeSettings() {
     showGrid: state.showGrid,
     showHysteresis: state.showHysteresis,
     showTrendlines: state.showTrendlines,
+    fitModel: state.fitModel,
+    showFitEquation: state.showFitEquation,
+    colorPalette: state.colorPalette,
     analysisType: state.analysisType,
     showCalloutBox: state.showCalloutBox,
     chartTitle: state.chartTitle,
@@ -4495,6 +4524,8 @@ function serializeSettings() {
     type: Object.assign({}, state.type),
     data: Object.assign({}, state.data),
     zoom: Object.assign({}, state.zoom),
+    peaks: Object.assign({}, state.peaks),
+    crosshair: Object.assign({}, state.crosshair),
     callouts: JSON.parse(JSON.stringify(state.callouts)),
     series: dataset.series.map(s => ({
       id: s.id, nameFa: s.nameFa, nameEn: s.nameEn,
