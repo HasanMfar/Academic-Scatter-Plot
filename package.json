@@ -3,7 +3,7 @@
   "private": true,
   "description": "Client-side publication-ready scatter plot generator — dev tooling: jsdom test suites and asset generators",
   "scripts": {
-    "test": "node temp_build/smoke.js && node temp_build/import_e2e.js && node temp_build/text_import_e2e.js && node temp_build/sample_loader_e2e.js",
+    "test": "node temp_build/smoke.js && node temp_build/import_e2e.js && node temp_build/text_import_e2e.js && node temp_build/sample_loader_e2e.js && node temp_build/fixes.js",
     "samples": "node temp_build/make_samples.js",
     "gallery": "node temp_build/make_gallery.js"
   },
