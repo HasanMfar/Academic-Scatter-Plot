@@ -335,6 +335,45 @@ step('per-series controls exist', () => {
   if (sels.length < 4) throw new Error('expected marker+dash selects per series, got ' + sels.length);
 });
 
+step('LaTeX export escapes text fields but preserves numeric cells', () => {
+  const originalDataset = JSON.parse(window.eval('JSON.stringify(dataset)'));
+  const originalState = JSON.parse(window.eval('JSON.stringify({chartTitle: state.chartTitle, xTitle: state.xTitle, lang: state.lang})'));
+  const clipboardDescriptor = Object.getOwnPropertyDescriptor(window.navigator, 'clipboard');
+  const specialText = '%&_#$\\{}~^';
+  const expectedText = '\\%\\&\\_\\#\\$\\textbackslash{}\\{\\}\\textasciitilde{}\\textasciicircum{}';
+  let copiedText;
+
+  try {
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: text => { copiedText = text; return Promise.resolve(); } }
+    });
+    window.eval(`
+      state.lang = "en";
+      state.chartTitle = ${JSON.stringify(specialText)};
+      state.xTitle = ${JSON.stringify(specialText)};
+      dataset.xValues = [12];
+      dataset.series = [{nameEn: ${JSON.stringify(specialText)}, nameFa: "نام", visible: true, yValues: [4]}];
+    `);
+    $('copyLatexBtn').click();
+
+    if (!copiedText) throw new Error('clipboard writeText was not called');
+    if (!copiedText.includes(`\\caption{${expectedText}}`)) throw new Error('caption was not LaTeX-escaped: ' + copiedText);
+    if (!copiedText.includes(`${expectedText} & ${expectedText} \\\\`)) throw new Error('headers were not LaTeX-escaped: ' + copiedText);
+    if (!copiedText.includes('12 & 4 \\\\')) throw new Error('numeric cells changed: ' + copiedText);
+  } finally {
+    window.eval(`
+      state.chartTitle = ${JSON.stringify(originalState.chartTitle)};
+      state.xTitle = ${JSON.stringify(originalState.xTitle)};
+      state.lang = ${JSON.stringify(originalState.lang)};
+      dataset.xValues = ${JSON.stringify(originalDataset.xValues)};
+      dataset.series = ${JSON.stringify(originalDataset.series)};
+    `);
+    if (clipboardDescriptor) Object.defineProperty(window.navigator, 'clipboard', clipboardDescriptor);
+    else delete window.navigator.clipboard;
+  }
+});
+
 step('no runtime errors captured', () => {
   if (errors.length) throw new Error(errors.join('\n'));
 });

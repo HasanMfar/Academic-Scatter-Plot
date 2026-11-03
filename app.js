@@ -724,6 +724,23 @@ function escapeXml(str) {
     .replace(/"/g, "&quot;");
 }
 
+function escapeLatex(str) {
+  if (str == null) return "";
+  const replacements = {
+    "\\": "\\textbackslash{}",
+    "%": "\\%",
+    "&": "\\&",
+    "_": "\\_",
+    "#": "\\#",
+    "$": "\\$",
+    "{": "\\{",
+    "}": "\\}",
+    "~": "\\textasciitilde{}",
+    "^": "\\textasciicircum{}"
+  };
+  return String(str).replace(/[\\%&#_${}~^]/g, char => replacements[char]);
+}
+
 function polylineD(pts) {
   return pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 }
@@ -3941,7 +3958,7 @@ function initEvents() {
       if (!xVals.length || !series.length) return;
 
       const cols = ["r", ...series.map(() => "r")].join("");
-      const colHeaders = [escapeXml(state.xTitle || "X"), ...series.map(s => escapeXml(state.lang === "fa" ? s.nameFa : s.nameEn))].join(" & ");
+      const colHeaders = [escapeLatex(state.xTitle || "X"), ...series.map(s => escapeLatex(state.lang === "fa" ? s.nameFa : s.nameEn))].join(" & ");
 
       const rows = [];
       const maxRows = Math.min(xVals.length, 50);
@@ -3953,7 +3970,7 @@ function initEvents() {
       const latex = [
         "\\begin{table}[htbp]",
         "\\centering",
-        `\\caption{${state.chartTitle || "Experimental Data"}${xVals.length > 50 ? " (First 50 points)" : ""}}`,
+        `\\caption{${escapeLatex(state.chartTitle || "Experimental Data")}${xVals.length > 50 ? " (First 50 points)" : ""}}`,
         "\\label{tab:data}",
         `\\begin{tabular}{${cols}}`,
         "\\hline",
