@@ -724,6 +724,23 @@ function escapeXml(str) {
     .replace(/"/g, "&quot;");
 }
 
+function escapeLatex(str) {
+  if (str == null) return "";
+  const replacements = {
+    "\\": "\\textbackslash{}",
+    "%": "\\%",
+    "&": "\\&",
+    "_": "\\_",
+    "#": "\\#",
+    "$": "\\$",
+    "{": "\\{",
+    "}": "\\}",
+    "~": "\\textasciitilde{}",
+    "^": "\\textasciicircum{}"
+  };
+  return String(str).replace(/[\\%&#_${}~^]/g, char => replacements[char]);
+}
+
 function polylineD(pts) {
   return pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 }
@@ -2496,7 +2513,10 @@ function deleteRow(idx) {
   }
   syncInputsToDataset();
   dataset.xValues.splice(idx, 1);
-  dataset.series.forEach(s => s.yValues.splice(idx, 1));
+  dataset.series.forEach(s => {
+    s.yValues.splice(idx, 1);
+    if (s.errValues) s.errValues.splice(idx, 1);
+  });
   renderDataTable();
   renderChart();
 }
@@ -2505,7 +2525,10 @@ function addRow() {
   syncInputsToDataset();
   const lastX = dataset.xValues.length > 0 ? dataset.xValues[dataset.xValues.length - 1] + 10 : 0;
   dataset.xValues.push(lastX);
-  dataset.series.forEach(s => s.yValues.push(0));
+  dataset.series.forEach(s => {
+    s.yValues.push(0);
+    if (s.errValues) s.errValues.push(null);
+  });
   renderDataTable();
   renderChart();
 }
@@ -2670,9 +2693,12 @@ function calculateCurveFit(xVals, s, dy, model) {
     const valid = pts.filter(p => p.x > 0 && p.y > 0);
     if (valid.length >= 2) {
       let slx = 0, sly = 0, slxy = 0, slxx = 0, sy = 0;
+      let validXMin = Infinity, validXMax = -Infinity;
       for (let p of valid) {
         const lx = Math.log(p.x), ly = Math.log(p.y);
         slx += lx; sly += ly; slxy += lx * ly; slxx += lx * lx; sy += p.y;
+        if (p.x < validXMin) validXMin = p.x;
+        if (p.x > validXMax) validXMax = p.x;
       }
       const denom = valid.length * slxx - slx * slx;
       if (Math.abs(denom) > 1e-12) {
@@ -2688,7 +2714,7 @@ function calculateCurveFit(xVals, s, dy, model) {
         rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
 
         for (let step = 0; step <= numInterp; step++) {
-          const curX = xMin + (step / numInterp) * (xMax - xMin);
+          const curX = validXMin + (step / numInterp) * (validXMax - validXMin);
           const curY = a * Math.pow(curX, b);
           pathPts.push({ x: mapX(curX), y: mapY(curY) });
         }
@@ -3932,7 +3958,7 @@ function initEvents() {
       if (!xVals.length || !series.length) return;
 
       const cols = ["r", ...series.map(() => "r")].join("");
-      const colHeaders = [escapeXml(state.xTitle || "X"), ...series.map(s => escapeXml(state.lang === "fa" ? s.nameFa : s.nameEn))].join(" & ");
+      const colHeaders = [escapeLatex(state.xTitle || "X"), ...series.map(s => escapeLatex(state.lang === "fa" ? s.nameFa : s.nameEn))].join(" & ");
 
       const rows = [];
       const maxRows = Math.min(xVals.length, 50);
@@ -3944,7 +3970,7 @@ function initEvents() {
       const latex = [
         "\\begin{table}[htbp]",
         "\\centering",
-        `\\caption{${state.chartTitle || "Experimental Data"}${xVals.length > 50 ? " (First 50 points)" : ""}}`,
+        `\\caption{${escapeLatex(state.chartTitle || "Experimental Data")}${xVals.length > 50 ? " (First 50 points)" : ""}}`,
         "\\label{tab:data}",
         `\\begin{tabular}{${cols}}`,
         "\\hline",
@@ -4483,6 +4509,9 @@ function serializeSettings() {
     showGrid: state.showGrid,
     showHysteresis: state.showHysteresis,
     showTrendlines: state.showTrendlines,
+    fitModel: state.fitModel,
+    showFitEquation: state.showFitEquation,
+    colorPalette: state.colorPalette,
     analysisType: state.analysisType,
     showCalloutBox: state.showCalloutBox,
     chartTitle: state.chartTitle,
@@ -4495,6 +4524,8 @@ function serializeSettings() {
     type: Object.assign({}, state.type),
     data: Object.assign({}, state.data),
     zoom: Object.assign({}, state.zoom),
+    peaks: JSON.parse(JSON.stringify(state.peaks)),
+    crosshair: JSON.parse(JSON.stringify(state.crosshair)),
     callouts: JSON.parse(JSON.stringify(state.callouts)),
     series: dataset.series.map(s => ({
       id: s.id, nameFa: s.nameFa, nameEn: s.nameEn,

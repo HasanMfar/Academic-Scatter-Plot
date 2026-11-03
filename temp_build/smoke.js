@@ -127,6 +127,84 @@ step('error bars render when errValues present', () => {
   window.eval('state.data.showErrorBars = false; delete dataset.series[0].errValues; renderChart();');
 });
 
+step('power fit uses only valid positive X domain', () => {
+  const result = JSON.parse(window.eval(`
+    (function() {
+      const xs = [-4, 0, 2, 8];
+      const ys = [100, 100, Math.sqrt(2), Math.sqrt(8)];
+      const fit = calculateCurveFit(xs, {}, i => ys[i], 'power');
+      return JSON.stringify({
+        pathD: fit.pathD,
+        expectedStart: mapX(2),
+        expectedEnd: mapX(8)
+      });
+    })()
+  `));
+  const coords = result.pathD.match(/-?Infinity|NaN|[-+]?(?:\d*\.?\d+)(?:[eE][-+]?\d+)?/g) || [];
+  if (/NaN|Infinity/.test(result.pathD)) throw new Error('non-finite path coordinates: ' + result.pathD);
+  if (coords.length < 4) throw new Error('power-fit path has too few coordinates');
+  const numbers = coords.map(Number);
+  if (numbers[0] !== result.expectedStart) throw new Error('path starts outside valid domain: ' + numbers[0]);
+  if (numbers[numbers.length - 2] !== result.expectedEnd) throw new Error('path ends outside valid domain: ' + numbers[numbers.length - 2]);
+});
+
+step('power fit retains linear fallback with fewer than two valid points', () => {
+  const results = JSON.parse(window.eval(`
+    (function() {
+      const xVals = [-4, 0, 2];
+      const yAt = i => [1, 3, 7][i];
+      return JSON.stringify({
+        fallback: calculateCurveFit(xVals, {}, yAt, 'power'),
+        linear: calculateCurveFit(xVals, {}, yAt, 'linear')
+      });
+    })()
+  `));
+  if (!results.fallback || !results.linear ||
+      results.fallback.pathD !== results.linear.pathD ||
+      results.fallback.label !== results.linear.label) {
+    throw new Error('linear fallback differs from direct linear fit: ' + JSON.stringify(results));
+  }
+});
+
+step('row edits keep error values aligned', () => {
+  const original = JSON.parse(window.eval('JSON.stringify(dataset)'));
+  try {
+    window.eval(`
+      dataset.xValues = [10, 20, 30];
+      dataset.series[0].yValues = [100, 200, 300];
+      dataset.series[0].errValues = [1, 2, 3];
+      dataset.series[1].yValues = [1000, 2000, 3000];
+      delete dataset.series[1].errValues;
+      renderDataTable();
+      deleteRow(1);
+    `);
+    let rows = JSON.parse(window.eval('JSON.stringify({x: dataset.xValues, y: dataset.series.map(s => s.yValues), err: dataset.series[0].errValues})'));
+    if (JSON.stringify(rows.x) !== JSON.stringify([10, 30])) throw new Error('deleted x row mismatch: ' + JSON.stringify(rows.x));
+    if (JSON.stringify(rows.y) !== JSON.stringify([[100, 300], [1000, 3000]])) throw new Error('deleted y row mismatch: ' + JSON.stringify(rows.y));
+    if (JSON.stringify(rows.err) !== JSON.stringify([1, 3])) throw new Error('deleted error row mismatch: ' + JSON.stringify(rows.err));
+
+    window.eval('addRow()');
+    rows = JSON.parse(window.eval('JSON.stringify({x: dataset.xValues, y: dataset.series.map(s => s.yValues), err: dataset.series[0].errValues})'));
+    if (rows.err.length !== rows.x.length || rows.err[2] !== null) {
+      throw new Error('appended error value should be explicit null: ' + JSON.stringify(rows.err));
+    }
+    if (rows.x[2] !== 40 || rows.y[0][2] !== 0 || rows.y[1][2] !== 0) {
+      throw new Error('appended row mismatch: ' + JSON.stringify(rows));
+    }
+  } finally {
+    window.eval(`dataset.xValues = ${JSON.stringify(original.xValues)};`);
+    original.series.forEach((series, index) => {
+      window.eval(`dataset.series[${index}].yValues = ${JSON.stringify(series.yValues)};`);
+      if (Object.prototype.hasOwnProperty.call(series, 'errValues')) {
+        window.eval(`dataset.series[${index}].errValues = ${JSON.stringify(series.errValues)};`);
+      } else {
+        window.eval(`delete dataset.series[${index}].errValues;`);
+      }
+    });
+    window.eval('renderDataTable(); renderChart();');
+  }
+});
+
 step('title inside figure', () => {
   window.eval('state.type.titlePlacement = "inside"; renderChart();');
   const bar = document.querySelector('.chart-title-bar');
@@ -210,6 +288,65 @@ step('settings serialize/restore round trip', () => {
   if (JSON.stringify(back.ticks) !== JSON.stringify(orig.ticks)) throw new Error('ticks did not round trip');
 });
 
+step('settings persist fit, palette, peak and crosshair options', () => {
+  const previous = JSON.parse(window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})'));
+  const expected = {
+    fitModel: 'polynomial2',
+    showFitEquation: false,
+    colorPalette: 'viridis',
+    peaks: { enabled: true, type: 'minima', sens: 7, showFWHM: false, showLabels: false },
+    crosshair: { enabled: true }
+  };
+  try {
+    window.eval(`state.fitModel = 'polynomial2';
+      state.showFitEquation = false;
+      state.colorPalette = 'viridis';
+      state.peaks = ${JSON.stringify(expected.peaks)};
+      state.crosshair = ${JSON.stringify(expected.crosshair)};`);
+
+    const json = window.eval('JSON.stringify(serializeSettings())');
+    const saved = JSON.parse(json);
+    for (const key of ['fitModel', 'showFitEquation', 'colorPalette', 'peaks', 'crosshair']) {
+      if (JSON.stringify(saved[key]) !== JSON.stringify(expected[key])) throw new Error(key + ' was not serialized');
+    }
+
+    const detached = window.eval(`(function() {
+      const settings = serializeSettings();
+      return settings.peaks !== state.peaks && settings.crosshair !== state.crosshair;
+    })()`);
+    if (!detached) throw new Error('peak or crosshair settings share state objects');
+
+    window.eval(`state.fitModel = 'linear';
+      state.showFitEquation = true;
+      state.colorPalette = 'default';
+      state.peaks.sens = 2;
+      state.crosshair.enabled = false;
+      applySettings(JSON.parse(${JSON.stringify(json)}));`);
+
+    const restored = JSON.parse(window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})'));
+    if (JSON.stringify(restored) !== JSON.stringify(expected)) throw new Error('fit, palette, peak or crosshair settings did not restore');
+
+    const roundTrip = JSON.parse(window.eval('JSON.stringify(serializeSettings())'));
+    for (const key of ['fitModel', 'showFitEquation', 'colorPalette', 'peaks', 'crosshair']) {
+      if (JSON.stringify(roundTrip[key]) !== JSON.stringify(expected[key])) throw new Error(key + ' did not round trip');
+    }
+  } finally {
+    window.eval('applySettings(' + JSON.stringify(previous) + ')');
+  }
+});
+
+step('legacy settings preserve current fit and analysis defaults', () => {
+  const previous = window.eval('JSON.stringify(serializeSettings())');
+  const before = window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})');
+  try {
+    window.eval('applySettings({version: 1, markerSize: 13})');
+    const after = window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})');
+    if (after !== before) throw new Error('settings without new fields overwrote current defaults');
+  } finally {
+    window.eval('applySettings(JSON.parse(' + JSON.stringify(previous) + '))');
+  }
+});
+
 step('language switch updates new labels', () => {
   window.eval('setLanguagePreset("en");');
   const summaryEn = $('secLayout').querySelector('summary').textContent;
@@ -263,6 +400,45 @@ step('persian error column headers still attach', () => {
 step('per-series controls exist', () => {
   const sels = $('seriesCheckboxesContainer').querySelectorAll('select');
   if (sels.length < 4) throw new Error('expected marker+dash selects per series, got ' + sels.length);
+});
+
+step('LaTeX export escapes text fields but preserves numeric cells', () => {
+  const originalDataset = JSON.parse(window.eval('JSON.stringify(dataset)'));
+  const originalState = JSON.parse(window.eval('JSON.stringify({chartTitle: state.chartTitle, xTitle: state.xTitle, lang: state.lang})'));
+  const clipboardDescriptor = Object.getOwnPropertyDescriptor(window.navigator, 'clipboard');
+  const specialText = '%&_#$\\{}~^';
+  const expectedText = '\\%\\&\\_\\#\\$\\textbackslash{}\\{\\}\\textasciitilde{}\\textasciicircum{}';
+  let copiedText;
+
+  try {
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: text => { copiedText = text; return Promise.resolve(); } }
+    });
+    window.eval(`
+      state.lang = "en";
+      state.chartTitle = ${JSON.stringify(specialText)};
+      state.xTitle = ${JSON.stringify(specialText)};
+      dataset.xValues = [12];
+      dataset.series = [{nameEn: ${JSON.stringify(specialText)}, nameFa: "نام", visible: true, yValues: [4]}];
+    `);
+    $('copyLatexBtn').click();
+
+    if (!copiedText) throw new Error('clipboard writeText was not called');
+    if (!copiedText.includes(`\\caption{${expectedText}}`)) throw new Error('caption was not LaTeX-escaped: ' + copiedText);
+    if (!copiedText.includes(`${expectedText} & ${expectedText} \\\\`)) throw new Error('headers were not LaTeX-escaped: ' + copiedText);
+    if (!copiedText.includes('12 & 4 \\\\')) throw new Error('numeric cells changed: ' + copiedText);
+  } finally {
+    window.eval(`
+      state.chartTitle = ${JSON.stringify(originalState.chartTitle)};
+      state.xTitle = ${JSON.stringify(originalState.xTitle)};
+      state.lang = ${JSON.stringify(originalState.lang)};
+      dataset.xValues = ${JSON.stringify(originalDataset.xValues)};
+      dataset.series = ${JSON.stringify(originalDataset.series)};
+    `);
+    if (clipboardDescriptor) Object.defineProperty(window.navigator, 'clipboard', clipboardDescriptor);
+    else delete window.navigator.clipboard;
+  }
 });
 
 step('no runtime errors captured', () => {
