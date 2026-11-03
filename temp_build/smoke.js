@@ -127,6 +127,37 @@ step('error bars render when errValues present', () => {
   window.eval('state.data.showErrorBars = false; delete dataset.series[0].errValues; renderChart();');
 });
 
+step('power fit uses only valid positive X domain', () => {
+  const result = JSON.parse(window.eval(`
+    (function() {
+      const xs = [-4, 0, 2, 8];
+      const ys = [100, 100, Math.sqrt(2), Math.sqrt(8)];
+      const fit = calculateCurveFit(xs, {}, i => ys[i], 'power');
+      return JSON.stringify({
+        pathD: fit.pathD,
+        expectedStart: mapX(2),
+        expectedEnd: mapX(8)
+      });
+    })()
+  `));
+  const coords = result.pathD.match(/-?Infinity|NaN|[-+]?(?:\d*\.?\d+)(?:[eE][-+]?\d+)?/g) || [];
+  if (/NaN|Infinity/.test(result.pathD)) throw new Error('non-finite path coordinates: ' + result.pathD);
+  if (coords.length < 4) throw new Error('power-fit path has too few coordinates');
+  const numbers = coords.map(Number);
+  if (numbers[0] !== result.expectedStart) throw new Error('path starts outside valid domain: ' + numbers[0]);
+  if (numbers[numbers.length - 2] !== result.expectedEnd) throw new Error('path ends outside valid domain: ' + numbers[numbers.length - 2]);
+});
+
+step('power fit retains linear fallback with fewer than two valid points', () => {
+  const result = JSON.parse(window.eval(`
+    (function() {
+      const fit = calculateCurveFit([-4, 0, 2], {}, i => [1, 3, 7][i], 'power');
+      return JSON.stringify({ pathD: fit.pathD, label: fit.label });
+    })()
+  `));
+  if (!result.pathD || !/^y = .*x/.test(result.label)) throw new Error('linear fallback missing: ' + JSON.stringify(result));
+});
+
 step('row edits keep error values aligned', () => {
   const original = JSON.parse(window.eval('JSON.stringify(dataset)'));
   try {

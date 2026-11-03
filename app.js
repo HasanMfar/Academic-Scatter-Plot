@@ -2676,9 +2676,12 @@ function calculateCurveFit(xVals, s, dy, model) {
     const valid = pts.filter(p => p.x > 0 && p.y > 0);
     if (valid.length >= 2) {
       let slx = 0, sly = 0, slxy = 0, slxx = 0, sy = 0;
+      let validXMin = Infinity, validXMax = -Infinity;
       for (let p of valid) {
         const lx = Math.log(p.x), ly = Math.log(p.y);
         slx += lx; sly += ly; slxy += lx * ly; slxx += lx * lx; sy += p.y;
+        if (p.x < validXMin) validXMin = p.x;
+        if (p.x > validXMax) validXMax = p.x;
       }
       const denom = valid.length * slxx - slx * slx;
       if (Math.abs(denom) > 1e-12) {
@@ -2694,7 +2697,7 @@ function calculateCurveFit(xVals, s, dy, model) {
         rSquared = ssTot === 0 ? 1 : Math.max(0, 1 - (ssRes / ssTot));
 
         for (let step = 0; step <= numInterp; step++) {
-          const curX = xMin + (step / numInterp) * (xMax - xMin);
+          const curX = validXMin + (step / numInterp) * (validXMax - validXMin);
           const curY = a * Math.pow(curX, b);
           pathPts.push({ x: mapX(curX), y: mapY(curY) });
         }
