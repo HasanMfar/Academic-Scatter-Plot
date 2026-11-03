@@ -328,10 +328,15 @@ step('settings persist fit, palette, peak and crosshair options', () => {
 });
 
 step('legacy settings preserve current fit and analysis defaults', () => {
+  const previous = window.eval('JSON.stringify(serializeSettings())');
   const before = window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})');
-  window.eval('applySettings({version: 1, markerSize: 13})');
-  const after = window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})');
-  if (after !== before) throw new Error('settings without new fields overwrote current defaults');
+  try {
+    window.eval('applySettings({version: 1, markerSize: 13})');
+    const after = window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})');
+    if (after !== before) throw new Error('settings without new fields overwrote current defaults');
+  } finally {
+    window.eval('applySettings(JSON.parse(' + JSON.stringify(previous) + '))');
+  }
 });
 
 step('language switch updates new labels', () => {
