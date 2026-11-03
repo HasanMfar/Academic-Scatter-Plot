@@ -39,6 +39,32 @@ step('DOMContentLoaded boot', () => {
 
 const $ = id => document.getElementById(id);
 
+step('tutorial opens, changes language, and closes cleanly', () => {
+  const panel = $('tutorialPanel');
+  if (!panel.hidden) throw new Error('tutorial should start closed');
+  $('btnOpenTutorial').click();
+  if (panel.hidden || !$('tutorialStepTitle').textContent.includes('با یک کالیبراسیون ساده شروع کنید')) {
+    throw new Error('Persian opening step did not render');
+  }
+  window.eval('setLanguagePreset("en")');
+  if (!$('tutorialStepTitle').textContent.includes('Start with a clean calibration')) {
+    throw new Error('English opening step did not render');
+  }
+  $('btnTutorialNext').click();
+  if (!$('tutorialStepTitle').textContent.includes('Read the uncertainty')) {
+    throw new Error('next step did not render');
+  }
+  $('btnTutorialBack').click();
+  if (!$('tutorialStepTitle').textContent.includes('Start with a clean calibration')) {
+    throw new Error('previous step did not render');
+  }
+  $('btnTutorialClose').click();
+  if (!panel.hidden || document.querySelector('.tutorial-highlight')) {
+    throw new Error('tutorial failed to close or clear its target');
+  }
+  window.eval('setLanguagePreset("fa")');
+});
+
 step('svg rendered', () => {
   const svg = $('scatterPlotSvg');
   if (!svg.innerHTML || svg.innerHTML.length < 500) throw new Error('svg empty');

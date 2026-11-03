@@ -141,7 +141,7 @@ function pick(value) {
     if (flags.hyst !== wantHyst || flags.hystChk !== wantHyst) problems.push('hysteresis ' + flags.hyst);
     if (flags.annot !== wantAnnot) problems.push('annotations ' + flags.annot);
     if (flags.inplot !== wantInplot) problems.push('inplot legend ' + flags.inplot);
-    if (flags.trend !== (o.value === 'BeerLambert_Calibration.xlsx')) problems.push('trendline ' + flags.trend);
+    if (flags.trend !== (o.value === 'BeerLambert_Calibration.xlsx' || o.value === 'Getting_Started_Calibration.csv')) problems.push('trendline ' + flags.trend);
     if (flags.labels) problems.push('data labels on');
     if (/مسیر رفت/.test(app.svg()) !== wantHyst) problems.push('forward/return legend mismatch');
 
@@ -151,7 +151,7 @@ function pick(value) {
     if (window.eval('state.data.smoothing') !== 'straight' || window.eval('state.data.yTransform') !== 'none') {
       problems.push('data shaping not reset');
     }
-    const wantErr = o.value === 'BeerLambert_Calibration.xlsx';
+    const wantErr = o.value === 'BeerLambert_Calibration.xlsx' || o.value === 'Getting_Started_Calibration.csv';
     if (window.eval('state.data.showErrorBars') !== wantErr) problems.push('showErrorBars ' + wantErr);
     if ($('chkErrorBars').checked !== wantErr) problems.push('chkErrorBars not synced');
     if (wantErr) {
@@ -185,6 +185,25 @@ function pick(value) {
     if (problems.length) failMsg(o.value, problems.join(' ; '));
     else console.log('OK  ', o.value.padEnd(30), `pts=${after.xValues.length} series=${after.series.length} logX=${logX} svg=${screenshot} | ${toast}`);
   }
+  window.eval('setLanguagePreset("en");');
+  await pick('Getting_Started_Calibration.csv');
+  const starterSample = state();
+  const starterSeries = starterSample.series[0];
+  if (starterSample.xValues.length !== 8) failMsg('starter calibration rows', starterSample.xValues.length + ' != 8');
+  if (starterSample.series.length !== 1 || starterSeries.nameEn !== 'Absorbance') {
+    failMsg('starter calibration series', JSON.stringify(starterSample.series.map(s => s.nameEn)));
+  }
+  if (!starterSeries.errValues || starterSeries.errValues.length !== 8 || starterSeries.errValues.some(v => !(v > 0))) {
+    failMsg('starter calibration SD values', JSON.stringify(starterSeries.errValues));
+  }
+  if (!window.eval('state.showTrendlines && state.data.showErrorBars')) {
+    failMsg('starter calibration presentation', 'trendline or error bars are disabled');
+  }
+  const starterTitles = JSON.parse(window.eval('JSON.stringify({title: state.chartTitle, x: state.xTitle, y: state.yTitle})'));
+  if (starterTitles.title !== 'Calibration curve: absorbance vs concentration'
+    || starterTitles.x !== 'Concentration (mg/L)' || starterTitles.y !== 'Absorbance (a.u.)') {
+    failMsg('starter calibration captions', JSON.stringify(starterTitles));
+  }
   if (!app.requested.every(u => u.startsWith('samples/'))) failMsg('fetch path', app.requested.join(','));
 
   // 3. Language switch: the same option reports its English label and English captions.
@@ -197,6 +216,38 @@ function pick(value) {
   if (/[؀-ۿ]/.test(enUi.title + enUi.sub + enUi.x + enUi.y)) failMsg('english captions', JSON.stringify(enUi));
   else if (enUi.title !== enUi.drawn) failMsg('english title not drawn', JSON.stringify(enUi));
   else console.log('OK   english captions:', [enUi.title, enUi.x, enUi.y].join(' | '));
+
+  // 3b. The guide loads the same beginner sample and follows its ordered steps.
+  $('btnOpenTutorial').click();
+  if ($('tutorialPanel').hidden) failMsg('tutorial opens', 'panel remains hidden');
+  else if (!/Start with a clean calibration/.test($('tutorialStepTitle').textContent)) {
+    failMsg('tutorial opening step', $('tutorialStepTitle').textContent);
+  }
+  $('btnTutorialLoadSample').click();
+  await new Promise(r => setTimeout(r, 80));
+  if (state().xValues.length !== 8 || window.eval('!state.data.showErrorBars || !state.showTrendlines')) {
+    failMsg('tutorial loads calibration sample', JSON.stringify({
+      points: state().xValues.length,
+      showErrorBars: window.eval('state.data.showErrorBars'),
+      trendline: window.eval('state.showTrendlines')
+    }));
+  }
+  if (!/Read the uncertainty/.test($('tutorialStepTitle').textContent)) {
+    failMsg('tutorial advances after sample load', $('tutorialStepTitle').textContent);
+  }
+  $('btnTutorialNext').click();
+  if (!/Give the figure/.test($('tutorialStepTitle').textContent)) {
+    failMsg('tutorial advances to styling', $('tutorialStepTitle').textContent);
+  }
+  $('btnTutorialBack').click();
+  if (!/Read the uncertainty/.test($('tutorialStepTitle').textContent)) {
+    failMsg('tutorial returns to uncertainty step', $('tutorialStepTitle').textContent);
+  }
+  $('btnTutorialNext').click();
+  $('btnTutorialClose').click();
+  if (!$('tutorialPanel').hidden || document.querySelector('.tutorial-highlight')) {
+    failMsg('tutorial closes and clears highlight', 'panel/highlight not cleared');
+  }
   window.eval('setLanguagePreset("fa");');
 
   // 4. Failure path: a 404 must not silently wipe the current dataset.

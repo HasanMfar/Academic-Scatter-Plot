@@ -27,6 +27,17 @@ Researchers often struggle with complex, proprietary software (like OriginLab or
 
 **Academic Scatter Plot Generator** provides an intuitive, high-performance web studio that runs **100% locally in your browser**. No installation, no Python/R code, and zero server uploads — your scientific data never leaves your computer.
 
+## 🧪 Start with the guided tutorial
+
+Open the app and choose **Start tutorial** in the top bar. The four short steps load a teaching dataset, explain its standard-deviation error bars and linear fit, show where to change the color palette, and point to the export tools.
+
+The tutorial uses [`samples/Getting_Started_Calibration.csv`](samples/Getting_Started_Calibration.csv): eight concentration/absorbance measurements with an `Absorbance SD` column. The app recognizes that column automatically, then turns on error bars and a linear trendline. You can also load it directly from **Data → Quick-load a sample dataset → Start here — calibration curve**.
+
+1. Load the starter data and check the axis units.
+2. Compare the spread of each measurement with the fitted trend.
+3. Try a palette in **Style**; preview changes appear immediately.
+4. Export PNG for reports, SVG for vector editing, or a LaTeX table for your manuscript.
+
 ---
 
 ## 🚀 Key Features
@@ -147,6 +158,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 
 | File | Application & What It Demonstrates |
 |------|------------------------------------|
+| [`samples/Getting_Started_Calibration.csv`](samples/Getting_Started_Calibration.csv) | Beginner calibration — 8 concentration/absorbance points, SD error bars, and a linear fit |
 | [`samples/Raman_Spectroscopy.xlsx`](samples/Raman_Spectroscopy.xlsx) | Raman Spectroscopy — 201 points, D/G/2D graphene bands, automated peak finder & FWHM |
 | [`samples/Cyclic_Voltammetry.xlsx`](samples/Cyclic_Voltammetry.xlsx) | Cyclic Voltammetry (CV) — 7,996 points, automated redox peaks ($E_{pa}, E_{pc}, \Delta E_p$), and loop area |
 | [`samples/QCM_Hysteresis.xlsx`](samples/QCM_Hysteresis.xlsx) | Cyclic sensor response — hysteresis loop detection and dashed return lines |
@@ -160,7 +172,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 
 ## 🛠️ How to Use
 
-1. **Launch:** Open the **[Online App](https://hasanmfar.github.io/Academic-Scatter-Plot/)** or download this repository and double-click `index.html`.
+1. **Launch:** Open the **[Online App](https://hasanmfar.github.io/Academic-Scatter-Plot/)**. To run a downloaded copy, serve the repository over HTTP (for example, `python -m http.server 8000`) and open `http://localhost:8000`; bundled samples use `fetch` and do not load from `file://`.
 2. **Load Data:** Choose a bundled dataset from the dropdown, or click **Download Excel Template**, populate your experimental values, and upload your `.xlsx` or `.csv`.
 3. **Customize:** Switch between the **Data**, **Axes**, **Style**, **Labels**, and **Tools** tabs to fine-tune your visualization.
 4. **Export:** Click **Export PNG (600 DPI)**, **SVG**, or **Copy LaTeX** and embed directly into your manuscript.
@@ -187,6 +199,17 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 یک استودیوی تحت وب زیبا، تعاملی، پیشرفته و کاملاً مستقل برای دانشجویان، اساتید و پژوهشگران، جهت رسم **نمودارهای علمی و دانشگاهی در سطح مقالات ISI** بدون نیاز به حتی یک خط کدنویسی.
 
 **▶️ [ورود به نسخه آنلاین (بدون نیاز به نصب)](https://hasanmfar.github.io/Academic-Scatter-Plot/)**
+
+## 🧪 شروع سریع با راهنمای تعاملی
+
+در برنامه روی **راهنمای شروع** در نوار بالایی بزنید. چهار گام کوتاه، داده آموزشی کالیبراسیون را بارگذاری می‌کند، میله‌های خطای انحراف معیار و خط برازش را توضیح می‌دهد، محل تغییر پالت رنگ را نشان می‌دهد و شما را به ابزارهای خروجی هدایت می‌کند.
+
+فایل [`samples/Getting_Started_Calibration.csv`](samples/Getting_Started_Calibration.csv) شامل هشت اندازه‌گیری غلظت و جذب به‌همراه ستون `Absorbance SD` است. برنامه این ستون را خودکار تشخیص می‌دهد و میله‌های خطا و برازش خطی را فعال می‌کند. فایل از مسیر **داده‌ها ← بارگذاری سریع داده نمونه ← شروع سریع — منحنی کالیبراسیون** هم در دسترس است.
+
+۱. داده نمونه را بارگذاری و واحدهای محورها را بررسی کنید.
+۲. پراکندگی اندازه‌گیری‌ها را با روند برازش‌شده مقایسه کنید.
+۳. در تب **ظاهر** یک پالت رنگ را امتحان کنید؛ پیش‌نمایش بلافاصله به‌روز می‌شود.
+۴. برای گزارش PNG، برای ویرایش برداری SVG یا برای مقاله جدول LaTeX خروجی بگیرید.
 
 ---
 
@@ -283,7 +306,7 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 
 ## 🛠️ راهنمای سریع استفاده
 
-۱. **اجرا:** وارد **[نسخه آنلاین](https://hasanmfar.github.io/Academic-Scatter-Plot/)** شوید یا مخزن را دانلود کرده و فایل `index.html` را در مرورگر باز کنید.
+۱. **اجرا:** وارد **[نسخه آنلاین](https://hasanmfar.github.io/Academic-Scatter-Plot/)** شوید. برای اجرای نسخه دانلودشده، مخزن را روی HTTP اجرا کنید (مثلاً `python -m http.server 8000`) و `http://localhost:8000` را باز کنید؛ بارگذاری نمونه‌های همراه با `fetch` انجام می‌شود و از مسیر `file://` کار نمی‌کند.
 ۲. **ورود داده:** یکی از دیتاست‌های آماده را انتخاب کنید یا قالب خام اکسل را دانلود، پر کرده و مجدداً آپلود نمایید.
 ۳. **تنظیمات:** با استفاده از تب‌های سایدبار و نوار جستجو، ابعاد، فونت، رنگ‌ها و خطوط را سفارشی کنید.
 ۴. **خروجی:** با کلیک بر روی **PNG (600 DPI)** یا **SVG** یا **کپی LaTeX** فایل مقاله خود را دریافت کنید.
