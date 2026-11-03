@@ -4509,6 +4509,9 @@ function serializeSettings() {
     showGrid: state.showGrid,
     showHysteresis: state.showHysteresis,
     showTrendlines: state.showTrendlines,
+    fitModel: state.fitModel,
+    showFitEquation: state.showFitEquation,
+    colorPalette: state.colorPalette,
     analysisType: state.analysisType,
     showCalloutBox: state.showCalloutBox,
     chartTitle: state.chartTitle,
@@ -4521,6 +4524,8 @@ function serializeSettings() {
     type: Object.assign({}, state.type),
     data: Object.assign({}, state.data),
     zoom: Object.assign({}, state.zoom),
+    peaks: JSON.parse(JSON.stringify(state.peaks)),
+    crosshair: JSON.parse(JSON.stringify(state.crosshair)),
     callouts: JSON.parse(JSON.stringify(state.callouts)),
     series: dataset.series.map(s => ({
       id: s.id, nameFa: s.nameFa, nameEn: s.nameEn,

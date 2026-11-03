@@ -280,6 +280,60 @@ step('settings serialize/restore round trip', () => {
   if (JSON.stringify(back.ticks) !== JSON.stringify(orig.ticks)) throw new Error('ticks did not round trip');
 });
 
+step('settings persist fit, palette, peak and crosshair options', () => {
+  const previous = JSON.parse(window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})'));
+  const expected = {
+    fitModel: 'polynomial2',
+    showFitEquation: false,
+    colorPalette: 'viridis',
+    peaks: { enabled: true, type: 'minima', sens: 7, showFWHM: false, showLabels: false },
+    crosshair: { enabled: true }
+  };
+  try {
+    window.eval(`state.fitModel = 'polynomial2';
+      state.showFitEquation = false;
+      state.colorPalette = 'viridis';
+      state.peaks = ${JSON.stringify(expected.peaks)};
+      state.crosshair = ${JSON.stringify(expected.crosshair)};`);
+
+    const json = window.eval('JSON.stringify(serializeSettings())');
+    const saved = JSON.parse(json);
+    for (const key of ['fitModel', 'showFitEquation', 'colorPalette', 'peaks', 'crosshair']) {
+      if (JSON.stringify(saved[key]) !== JSON.stringify(expected[key])) throw new Error(key + ' was not serialized');
+    }
+
+    const detached = window.eval(`(function() {
+      const settings = serializeSettings();
+      return settings.peaks !== state.peaks && settings.crosshair !== state.crosshair;
+    })()`);
+    if (!detached) throw new Error('peak or crosshair settings share state objects');
+
+    window.eval(`state.fitModel = 'linear';
+      state.showFitEquation = true;
+      state.colorPalette = 'default';
+      state.peaks.sens = 2;
+      state.crosshair.enabled = false;
+      applySettings(JSON.parse(${JSON.stringify(json)}));`);
+
+    const restored = JSON.parse(window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})'));
+    if (JSON.stringify(restored) !== JSON.stringify(expected)) throw new Error('fit, palette, peak or crosshair settings did not restore');
+
+    const roundTrip = JSON.parse(window.eval('JSON.stringify(serializeSettings())'));
+    for (const key of ['fitModel', 'showFitEquation', 'colorPalette', 'peaks', 'crosshair']) {
+      if (JSON.stringify(roundTrip[key]) !== JSON.stringify(expected[key])) throw new Error(key + ' did not round trip');
+    }
+  } finally {
+    window.eval('applySettings(' + JSON.stringify(previous) + ')');
+  }
+});
+
+step('legacy settings preserve current fit and analysis defaults', () => {
+  const before = window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})');
+  window.eval('applySettings({version: 1, markerSize: 13})');
+  const after = window.eval('JSON.stringify({fitModel: state.fitModel, showFitEquation: state.showFitEquation, colorPalette: state.colorPalette, peaks: state.peaks, crosshair: state.crosshair})');
+  if (after !== before) throw new Error('settings without new fields overwrote current defaults');
+});
+
 step('language switch updates new labels', () => {
   window.eval('setLanguagePreset("en");');
   const summaryEn = $('secLayout').querySelector('summary').textContent;
