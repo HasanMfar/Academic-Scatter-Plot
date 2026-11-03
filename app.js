@@ -2496,7 +2496,10 @@ function deleteRow(idx) {
   }
   syncInputsToDataset();
   dataset.xValues.splice(idx, 1);
-  dataset.series.forEach(s => s.yValues.splice(idx, 1));
+  dataset.series.forEach(s => {
+    s.yValues.splice(idx, 1);
+    if (s.errValues) s.errValues.splice(idx, 1);
+  });
   renderDataTable();
   renderChart();
 }
@@ -2505,7 +2508,10 @@ function addRow() {
   syncInputsToDataset();
   const lastX = dataset.xValues.length > 0 ? dataset.xValues[dataset.xValues.length - 1] + 10 : 0;
   dataset.xValues.push(lastX);
-  dataset.series.forEach(s => s.yValues.push(0));
+  dataset.series.forEach(s => {
+    s.yValues.push(0);
+    if (s.errValues) s.errValues.push(null);
+  });
   renderDataTable();
   renderChart();
 }

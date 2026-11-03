@@ -127,6 +127,45 @@ step('error bars render when errValues present', () => {
   window.eval('state.data.showErrorBars = false; delete dataset.series[0].errValues; renderChart();');
 });
 
+step('row edits keep error values aligned', () => {
+  const original = JSON.parse(window.eval('JSON.stringify(dataset)'));
+  try {
+    window.eval(`
+      dataset.xValues = [10, 20, 30];
+      dataset.series[0].yValues = [100, 200, 300];
+      dataset.series[0].errValues = [1, 2, 3];
+      dataset.series[1].yValues = [1000, 2000, 3000];
+      delete dataset.series[1].errValues;
+      renderDataTable();
+      deleteRow(1);
+    `);
+    let rows = JSON.parse(window.eval('JSON.stringify({x: dataset.xValues, y: dataset.series.map(s => s.yValues), err: dataset.series[0].errValues})'));
+    if (JSON.stringify(rows.x) !== JSON.stringify([10, 30])) throw new Error('deleted x row mismatch: ' + JSON.stringify(rows.x));
+    if (JSON.stringify(rows.y) !== JSON.stringify([[100, 300], [1000, 3000]])) throw new Error('deleted y row mismatch: ' + JSON.stringify(rows.y));
+    if (JSON.stringify(rows.err) !== JSON.stringify([1, 3])) throw new Error('deleted error row mismatch: ' + JSON.stringify(rows.err));
+
+    window.eval('addRow()');
+    rows = JSON.parse(window.eval('JSON.stringify({x: dataset.xValues, y: dataset.series.map(s => s.yValues), err: dataset.series[0].errValues})'));
+    if (rows.err.length !== rows.x.length || rows.err[2] !== null) {
+      throw new Error('appended error value should be explicit null: ' + JSON.stringify(rows.err));
+    }
+    if (rows.x[2] !== 40 || rows.y[0][2] !== 0 || rows.y[1][2] !== 0) {
+      throw new Error('appended row mismatch: ' + JSON.stringify(rows));
+    }
+  } finally {
+    window.eval(`dataset.xValues = ${JSON.stringify(original.xValues)};`);
+    original.series.forEach((series, index) => {
+      window.eval(`dataset.series[${index}].yValues = ${JSON.stringify(series.yValues)};`);
+      if (Object.prototype.hasOwnProperty.call(series, 'errValues')) {
+        window.eval(`dataset.series[${index}].errValues = ${JSON.stringify(series.errValues)};`);
+      } else {
+        window.eval(`delete dataset.series[${index}].errValues;`);
+      }
+    });
+    window.eval('renderDataTable(); renderChart();');
+  }
+});
+
 step('title inside figure', () => {
   window.eval('state.type.titlePlacement = "inside"; renderChart();');
   const bar = document.querySelector('.chart-title-bar');
