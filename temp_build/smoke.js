@@ -149,13 +149,21 @@ step('power fit uses only valid positive X domain', () => {
 });
 
 step('power fit retains linear fallback with fewer than two valid points', () => {
-  const result = JSON.parse(window.eval(`
+  const results = JSON.parse(window.eval(`
     (function() {
-      const fit = calculateCurveFit([-4, 0, 2], {}, i => [1, 3, 7][i], 'power');
-      return JSON.stringify({ pathD: fit.pathD, label: fit.label });
+      const xVals = [-4, 0, 2];
+      const yAt = i => [1, 3, 7][i];
+      return JSON.stringify({
+        fallback: calculateCurveFit(xVals, {}, yAt, 'power'),
+        linear: calculateCurveFit(xVals, {}, yAt, 'linear')
+      });
     })()
   `));
-  if (!result.pathD || !/^y = .*x/.test(result.label)) throw new Error('linear fallback missing: ' + JSON.stringify(result));
+  if (!results.fallback || !results.linear ||
+      results.fallback.pathD !== results.linear.pathD ||
+      results.fallback.label !== results.linear.label) {
+    throw new Error('linear fallback differs from direct linear fit: ' + JSON.stringify(results));
+  }
 });
 
 step('row edits keep error values aligned', () => {
