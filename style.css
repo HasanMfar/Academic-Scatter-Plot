@@ -1097,6 +1097,214 @@ html[dir="ltr"] .sidebar-search-box .search-clear-btn {
     background: #ffffff !important;
     color: #000000 !important;
   }
+}
+
+/* Calibration walkthrough */
+.tutorial-launcher {
+  border-color: var(--border-highlight);
+  color: var(--primary-accent);
+}
+
+.tutorial-launcher-mark {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.45rem;
+  line-height: 0.7;
+  transform: rotate(-18deg);
+}
+
+.tutorial-panel {
+  position: fixed;
+  inset-inline-start: 20px;
+  inset-block-end: 20px;
+  z-index: 3000;
+  width: min(370px, calc(100vw - 32px));
+  padding: 18px 20px 16px;
+  color: var(--text-main);
+  background: var(--bg-card);
+  border: 1px solid var(--border-highlight);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card), 0 0 0 4px var(--primary-glow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.tutorial-panel[hidden],
+.tutorial-panel [hidden] {
+  display: none;
+}
+
+.tutorial-panel-head,
+.tutorial-identity,
+.tutorial-actions,
+.tutorial-actions-end {
+  display: flex;
+  align-items: center;
+}
+
+.tutorial-panel-head,
+.tutorial-actions {
+  justify-content: space-between;
+}
+
+.tutorial-identity {
+  gap: 12px;
+  min-width: 0;
+}
+
+.tutorial-eyebrow,
+.tutorial-step-count {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+}
+
+.tutorial-eyebrow {
+  color: var(--primary-accent);
+  text-transform: uppercase;
+}
+
+.tutorial-step-count {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tutorial-close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tutorial-close:hover {
+  color: var(--text-main);
+  border-color: var(--primary-accent);
+}
+
+.tutorial-trace {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  height: 32px;
+  margin: 8px 0 10px;
+}
+
+.tutorial-trace::before {
+  position: absolute;
+  inset-inline: 5px;
+  top: 50%;
+  height: 1px;
+  content: "";
+  background: var(--border-color);
+}
+
+.tutorial-progress-step {
+  z-index: 1;
+  width: 8px;
+  height: 8px;
+  justify-self: center;
+  background: var(--bg-secondary);
+  border: 2px solid var(--text-dim);
+  border-radius: 50%;
+}
+
+.tutorial-progress-step.active {
+  background: #06b6d4;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 3px var(--bg-card);
+}
+
+.tutorial-trace svg {
+  position: absolute;
+  inset: 3px 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 6px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tutorial-trace path {
+  fill: none;
+  stroke: var(--primary-accent);
+  stroke-width: 1.25;
+}
+
+.tutorial-trace circle {
+  fill: #06b6d4;
+}
+
+.tutorial-panel h2 {
+  margin: 0 0 7px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.28rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+html[dir="rtl"] .tutorial-panel h2 {
+  font-family: var(--font-persian);
+  font-size: 1.12rem;
+  letter-spacing: 0;
+}
+
+.tutorial-panel p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.tutorial-actions {
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tutorial-actions-end {
+  gap: 8px;
+}
+
+.tutorial-panel .btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tutorial-highlight {
+  position: relative;
+  z-index: 20;
+  outline: 3px solid #06b6d4 !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(6, 182, 212, 0.18) !important;
+}
+
+.tutorial-panel :focus-visible,
+.tutorial-launcher:focus-visible {
+  outline: 3px solid #06b6d4;
+  outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+  .tutorial-panel {
+    inset-inline-start: 50%;
+    inset-block-end: 12px;
+    transform: translateX(-50%);
+  }
+
+  .tutorial-actions-end {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media print {
   .app-header, .sidebar-section, .header-actions, .metrics-row {
     display: none !important;
   }
@@ -1209,12 +1417,6 @@ input[type="number"] {
   height: 52px;
   margin: 0 auto 12px;
   color: var(--primary-accent);
-  animation: bounceDrop 1.2s infinite alternate ease-in-out;
-}
-
-@keyframes bounceDrop {
-  from { transform: translateY(-4px); }
-  to { transform: translateY(6px); }
 }
 
 /* --- Electrochemical & CV Metrics Cards --- */
@@ -1284,4 +1486,3 @@ input[type="number"] {
   font-weight: 600;
   fill: var(--text-color);
 }
-

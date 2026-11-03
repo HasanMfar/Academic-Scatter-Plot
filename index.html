@@ -54,6 +54,11 @@
           <span id="themeBtnText">تم تیره مدرن</span>
         </button>
 
+        <button id="btnOpenTutorial" class="btn btn-secondary tutorial-launcher" type="button" aria-controls="tutorialPanel" aria-expanded="false">
+          <span class="tutorial-launcher-mark" aria-hidden="true">⌁</span>
+          <span data-fa="راهنمای شروع" data-en="Start tutorial">راهنمای شروع</span>
+        </button>
+
         <!-- Export DPI Selector -->
         <select id="exportDpiSelect" class="select-dpi" title="انتخاب کیفیت خروجی تصویر">
           <option value="3">کیفیت ۳۰۰ DPI (چاپ و مقاله)</option>
@@ -97,6 +102,36 @@
         </button>
       </div>
     </header>
+
+    <aside id="tutorialPanel" class="tutorial-panel" aria-labelledby="tutorialStepTitle" aria-live="polite" hidden>
+      <div class="tutorial-panel-head">
+        <div class="tutorial-identity">
+          <span class="tutorial-eyebrow" data-fa="دفترچه آزمایش · کالیبراسیون" data-en="Lab note · calibration">دفترچه آزمایش · کالیبراسیون</span>
+          <span id="tutorialStepCount" class="tutorial-step-count">۱ / ۴</span>
+        </div>
+        <button id="btnTutorialClose" class="tutorial-close" type="button" aria-label="Close tutorial" data-fa-aria-label="بستن راهنما" data-en-aria-label="Close tutorial">×</button>
+      </div>
+      <div class="tutorial-trace" aria-hidden="true">
+        <span class="tutorial-progress-step active"></span>
+        <span class="tutorial-progress-step"></span>
+        <span class="tutorial-progress-step"></span>
+        <span class="tutorial-progress-step"></span>
+        <svg viewBox="0 0 116 25" preserveAspectRatio="none">
+          <path d="M2 21 C20 20 24 17 38 16 S59 12 70 11 S91 5 114 3"></path>
+          <circle cx="2" cy="21" r="2"></circle><circle cx="38" cy="16" r="2"></circle>
+          <circle cx="70" cy="11" r="2"></circle><circle cx="114" cy="3" r="2"></circle>
+        </svg>
+      </div>
+      <h2 id="tutorialStepTitle"></h2>
+      <p id="tutorialStepBody"></p>
+      <div class="tutorial-actions">
+        <button id="btnTutorialBack" class="btn btn-secondary btn-sm-reset" type="button" data-fa="قبلی" data-en="Back">قبلی</button>
+        <div class="tutorial-actions-end">
+          <button id="btnTutorialLoadSample" class="btn btn-secondary btn-sm-reset" type="button" data-fa="بارگذاری داده شروع" data-en="Load starter data">بارگذاری داده شروع</button>
+          <button id="btnTutorialNext" class="btn btn-primary btn-sm-reset" type="button" data-fa="بعدی" data-en="Next">بعدی</button>
+        </div>
+      </div>
+    </aside>
 
     <!-- Main Content Layout -->
     <main class="main-layout">
@@ -195,6 +230,7 @@
                     <div style="display: flex; gap: 8px; align-items: center;">
                       <select id="selSampleDataset" class="select-dpi" style="flex: 1 1 auto; min-width: 0;">
                         <option value="" data-fa="— انتخاب نمونه —" data-en="— choose a sample —">— انتخاب نمونه —</option>
+                        <option value="Getting_Started_Calibration.csv" data-fa="شروع سریع — منحنی کالیبراسیون" data-en="Start here — calibration curve">شروع سریع — منحنی کالیبراسیون</option>
                         <option value="QCM_Hysteresis.xlsx" data-fa="سنسور QCM — حلقه هیسترزیس" data-en="QCM sensor — hysteresis loop">سنسور QCM — حلقه هیسترزیس</option>
                         <option value="BeerLambert_Calibration.xlsx" data-fa="کالیبراسیون بیر–لامبرت (با خطا)" data-en="Beer–Lambert calibration (with SD)">کالیبراسیون بیر–لامبرت (با خطا)</option>
                         <option value="Damped_Oscillation.xlsx" data-fa="نوسان میرا — ۱۲۱ نقطه" data-en="Damped oscillation — 121 points">نوسان میرا — ۱۲۱ نقطه</option>

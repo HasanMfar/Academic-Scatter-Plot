@@ -3344,6 +3344,19 @@ function importExcelFile(e) {
 // Captions and axis labels reuse the wording of the README gallery figures;
 // only options that differ from the plain import behaviour are listed.
 const SAMPLE_OPTIONS = {
+  "Getting_Started_Calibration.csv": {
+    sortByX: true,
+    showErrorBars: true,
+    flags: { showTrendlines: true },
+    analysisType: "stats",
+    title: { fa: "منحنی کالیبراسیون: جذب در برابر غلظت", en: "Calibration curve: absorbance vs concentration" },
+    subtitle: {
+      fa: "نمونه شروع با میله‌های خطای انحراف معیار و برازش خطی",
+      en: "A first look at standard-deviation error bars and a linear fit"
+    },
+    xTitle: { fa: "غلظت (میلی‌گرم بر لیتر)", en: "Concentration (mg/L)" },
+    yTitle: { fa: "جذب (واحد نسبی)", en: "Absorbance (a.u.)" }
+  },
   "Raman_Spectroscopy.xlsx": {
     sortByX: true,
     flags: { showInplotLegend: true },
@@ -3501,6 +3514,151 @@ async function loadBundledSample(fileName) {
   }
 }
 
+const TUTORIAL_SAMPLE = "Getting_Started_Calibration.csv";
+const TUTORIAL_STEPS = [
+  {
+    title: { fa: "با یک کالیبراسیون ساده شروع کنید", en: "Start with a clean calibration" },
+    body: {
+      fa: "این داده آموزشی غلظت را در برابر جذب نشان می‌دهد. ستون انحراف معیار هم همراه آن است تا میله‌های خطا را ببینید.",
+      en: "This teaching dataset plots concentration against absorbance. It includes a standard-deviation column so you can see measurement uncertainty."
+    },
+    target: "#selSampleDataset",
+    pane: "pane-data"
+  },
+  {
+    title: { fa: "عدم‌قطعیت را کنار روند بخوانید", en: "Read the uncertainty, not just the trend" },
+    body: {
+      fa: "هر میله خطا یک انحراف معیار را نشان می‌دهد. خط روند خطی رابطه کلی را خلاصه می‌کند؛ این خط به‌تنهایی علت و معلول را ثابت نمی‌کند.",
+      en: "Each error bar shows one standard deviation. The linear fit summarizes the overall relationship; it does not by itself prove cause and effect."
+    },
+    target: "#chkErrorBars",
+    pane: "pane-data"
+  },
+  {
+    title: { fa: "به نمودار هویت بدهید", en: "Give the figure a visual voice" },
+    body: {
+      fa: "در تب ظاهر، پالت رنگ را تغییر دهید. پیش‌نمایش زنده است؛ برچسب‌ها و واحدهای محور را در تب عناوین بررسی کنید.",
+      en: "Open Style to try a scientific color palette. The preview updates live; check labels and units in the Labels tab."
+    },
+    target: "#selColorPalette",
+    pane: "pane-style"
+  },
+  {
+    title: { fa: "برای گزارش خروجی بگیرید", en: "Export a figure for your report" },
+    body: {
+      fa: "PNG با وضوح انتخاب‌شده برای اسلاید و گزارش مناسب است. برای ویرایش برداری، SVG بگیرید؛ جدول LaTeX هم داده‌های فعال را کپی می‌کند.",
+      en: "Use PNG at your chosen resolution for slides and reports. Choose SVG for editable vector artwork, or copy a LaTeX table of the active data."
+    },
+    target: "#exportPngBtn"
+  }
+];
+let tutorialStepIndex = 0;
+
+function renderTutorialStep() {
+  const panel = document.getElementById("tutorialPanel");
+  if (!panel || panel.hidden) return;
+  const step = TUTORIAL_STEPS[tutorialStepIndex];
+  if (!step) return;
+
+  document.querySelectorAll(".tutorial-highlight").forEach(el => el.classList.remove("tutorial-highlight"));
+  const lang = state.lang === "en" ? "en" : "fa";
+  const number = tutorialStepIndex + 1;
+  const digits = lang === "fa" ? "۰۱۲۳۴۵۶۷۸۹" : "0123456789";
+  const localizeNumber = value => String(value).replace(/\d/g, digit => digits[Number(digit)]);
+  const count = document.getElementById("tutorialStepCount");
+  const title = document.getElementById("tutorialStepTitle");
+  const body = document.getElementById("tutorialStepBody");
+  const back = document.getElementById("btnTutorialBack");
+  const next = document.getElementById("btnTutorialNext");
+  const load = document.getElementById("btnTutorialLoadSample");
+  const open = document.getElementById("btnOpenTutorial");
+  const close = document.getElementById("btnTutorialClose");
+  if (count) count.textContent = `${localizeNumber(number)} / ${localizeNumber(TUTORIAL_STEPS.length)}`;
+  if (title) title.textContent = step.title[lang];
+  if (body) body.textContent = step.body[lang];
+  if (back) {
+    back.disabled = tutorialStepIndex === 0;
+    back.textContent = lang === "fa" ? "قبلی" : "Back";
+  }
+  if (next) {
+    next.textContent = tutorialStepIndex === TUTORIAL_STEPS.length - 1
+      ? (lang === "fa" ? "پایان" : "Finish")
+      : (lang === "fa" ? "بعدی" : "Next");
+  }
+  if (load) load.hidden = tutorialStepIndex !== 0;
+  if (open) open.setAttribute("aria-expanded", "true");
+  if (close) close.setAttribute("aria-label", lang === "fa" ? "بستن راهنما" : "Close tutorial");
+  panel.dir = lang === "fa" ? "rtl" : "ltr";
+  panel.querySelectorAll(".tutorial-progress-step").forEach((el, index) => {
+    el.classList.toggle("active", index <= tutorialStepIndex);
+    if (index === tutorialStepIndex) el.setAttribute("aria-current", "step");
+    else el.removeAttribute("aria-current");
+  });
+
+  if (step.pane) {
+    const tab = document.querySelector(`.sidebar-tab-btn[data-tab="${step.pane}"]`);
+    if (tab && !tab.classList.contains("active")) tab.click();
+  }
+  const target = document.querySelector(step.target);
+  if (target) {
+    target.classList.add("tutorial-highlight");
+    if (typeof target.focus === "function") target.focus({ preventScroll: true });
+  }
+}
+
+function closeTutorial() {
+  const panel = document.getElementById("tutorialPanel");
+  const open = document.getElementById("btnOpenTutorial");
+  if (!panel) return;
+  panel.hidden = true;
+  document.querySelectorAll(".tutorial-highlight").forEach(el => el.classList.remove("tutorial-highlight"));
+  if (open) {
+    open.setAttribute("aria-expanded", "false");
+    open.focus();
+  }
+}
+
+function initTutorial() {
+  const panel = document.getElementById("tutorialPanel");
+  const open = document.getElementById("btnOpenTutorial");
+  const close = document.getElementById("btnTutorialClose");
+  const back = document.getElementById("btnTutorialBack");
+  const next = document.getElementById("btnTutorialNext");
+  const load = document.getElementById("btnTutorialLoadSample");
+  const select = document.getElementById("selSampleDataset");
+  if (!panel || !open || !close || !back || !next || !load) return;
+
+  open.addEventListener("click", () => {
+    tutorialStepIndex = 0;
+    panel.hidden = false;
+    renderTutorialStep();
+    close.focus();
+  });
+  close.addEventListener("click", closeTutorial);
+  back.addEventListener("click", () => {
+    if (tutorialStepIndex > 0) tutorialStepIndex--;
+    renderTutorialStep();
+  });
+  next.addEventListener("click", () => {
+    if (tutorialStepIndex >= TUTORIAL_STEPS.length - 1) {
+      closeTutorial();
+      return;
+    }
+    tutorialStepIndex++;
+    renderTutorialStep();
+  });
+  load.addEventListener("click", async () => {
+    if (select) select.value = TUTORIAL_SAMPLE;
+    const points = await loadBundledSample(TUTORIAL_SAMPLE);
+    if (points > 0) {
+      tutorialStepIndex = 1;
+      renderTutorialStep();
+    }
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !panel.hidden) closeTutorial();
+  });
+}
 
 // --- 12. Toast Notification ---
 function showToast(message) {
@@ -3655,6 +3813,9 @@ function setLanguagePreset(newLang) {
   setupCalloutsControls();
   renderDataTable();
   syncUIFromState();
+  if (typeof renderTutorialStep === "function" && !document.getElementById("tutorialPanel").hidden) {
+    renderTutorialStep();
+  }
   renderChart();
   renderLegend();
 }
@@ -4963,6 +5124,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initAdvancedEvents();
   initZoomInteractions();
   initSidebarTabsAndSearch();
+  initTutorial();
   state._booted = true;
-});
-
+}, { once: true });
