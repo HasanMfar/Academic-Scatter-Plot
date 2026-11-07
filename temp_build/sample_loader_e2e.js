@@ -232,16 +232,16 @@ function pick(value) {
       trendline: window.eval('state.showTrendlines')
     }));
   }
-  if (!/Read the uncertainty/.test($('tutorialStepTitle').textContent)) {
+  if (!/Bring your own measurements/.test($('tutorialStepTitle').textContent)) {
     failMsg('tutorial advances after sample load', $('tutorialStepTitle').textContent);
   }
   $('btnTutorialNext').click();
-  if (!/Give the figure/.test($('tutorialStepTitle').textContent)) {
-    failMsg('tutorial advances to styling', $('tutorialStepTitle').textContent);
+  if (!/Read the uncertainty/.test($('tutorialStepTitle').textContent)) {
+    failMsg('tutorial advances to the uncertainty step', $('tutorialStepTitle').textContent);
   }
   $('btnTutorialBack').click();
-  if (!/Read the uncertainty/.test($('tutorialStepTitle').textContent)) {
-    failMsg('tutorial returns to uncertainty step', $('tutorialStepTitle').textContent);
+  if (!/Bring your own measurements/.test($('tutorialStepTitle').textContent)) {
+    failMsg('tutorial returns to the import step', $('tutorialStepTitle').textContent);
   }
   $('btnTutorialNext').click();
   $('btnTutorialClose').click();

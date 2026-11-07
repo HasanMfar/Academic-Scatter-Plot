@@ -107,19 +107,13 @@
       <div class="tutorial-panel-head">
         <div class="tutorial-identity">
           <span class="tutorial-eyebrow" data-fa="دفترچه آزمایش · کالیبراسیون" data-en="Lab note · calibration">دفترچه آزمایش · کالیبراسیون</span>
-          <span id="tutorialStepCount" class="tutorial-step-count">۱ / ۴</span>
+          <span id="tutorialStepCount" class="tutorial-step-count">۱ / ۸</span>
         </div>
         <button id="btnTutorialClose" class="tutorial-close" type="button" aria-label="Close tutorial" data-fa-aria-label="بستن راهنما" data-en-aria-label="Close tutorial">×</button>
       </div>
       <div class="tutorial-trace" aria-hidden="true">
-        <span class="tutorial-progress-step active"></span>
-        <span class="tutorial-progress-step"></span>
-        <span class="tutorial-progress-step"></span>
-        <span class="tutorial-progress-step"></span>
         <svg viewBox="0 0 116 25" preserveAspectRatio="none">
           <path d="M2 21 C20 20 24 17 38 16 S59 12 70 11 S91 5 114 3"></path>
-          <circle cx="2" cy="21" r="2"></circle><circle cx="38" cy="16" r="2"></circle>
-          <circle cx="70" cy="11" r="2"></circle><circle cx="114" cy="3" r="2"></circle>
         </svg>
       </div>
       <h2 id="tutorialStepTitle"></h2>
@@ -280,7 +274,7 @@
                   <div style="background: var(--bg-card-subtle); padding: 12px; border-radius: 6px; border: 1px solid var(--border-highlight); margin-bottom: 15px;">
                     <label class="control-label" style="color: var(--primary-accent);">۲. آپلود فایل داده (اکسل یا متنی)</label>
                     <span style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">فایل را پر کرده و اینجا آپلود کنید تا نمودار کاملاً اتوماتیک با تعداد ستون‌های شما رسم شود. فایل‌های متنی با جداکنندهٔ کاما، تب، نقطه‌ویرگول و فاصله (.csv / .tsv / .txt) هم پشتیبانی می‌شوند.</span>
-                    <label for="excelImportInput" class="btn btn-primary btn-sm-reset" style="display: block; text-align: center; cursor: pointer; margin-top: 0;">
+                    <label for="excelImportInput" id="lblImportFile" class="btn btn-primary btn-sm-reset" style="display: block; text-align: center; cursor: pointer; margin-top: 0;">
                       📤 انتخاب فایل داده (xlsx / csv / txt)
                     </label>
                     <input type="file" id="excelImportInput" accept=".xlsx, .xls, .csv, .tsv, .txt, .dat, .prn" style="display: none;">

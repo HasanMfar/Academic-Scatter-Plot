@@ -29,14 +29,18 @@ Researchers often struggle with complex, proprietary software (like OriginLab or
 
 ## 🧪 Start with the guided tutorial
 
-Open the app and choose **Start tutorial** in the top bar. The four short steps load a teaching dataset, explain its standard-deviation error bars and linear fit, show where to change the color palette, and point to the export tools.
+Open the app and choose **Start tutorial** in the top bar. The eight short steps walk the whole workflow: load a teaching dataset, bring in your own workbook or text file, read the standard-deviation error bars and linear fit, pick an analysis mode, run the peak finder, switch to a log axis, try a color palette, and export the finished figure.
 
 The tutorial uses [`samples/Getting_Started_Calibration.csv`](samples/Getting_Started_Calibration.csv): eight concentration/absorbance measurements with an `Absorbance SD` column. The app recognizes that column automatically, then turns on error bars and a linear trendline. You can also load it directly from **Data → Quick-load a sample dataset → Start here — calibration curve**.
 
 1. Load the starter data and check the axis units.
-2. Compare the spread of each measurement with the fitted trend.
-3. Try a palette in **Style**; preview changes appear immediately.
-4. Export PNG for reports, SVG for vector editing, or a LaTeX table for your manuscript.
+2. Download the blank workbook, or upload your own csv/tsv/txt file.
+3. Compare the spread of each measurement with the fitted trend.
+4. Pick the analysis mode that matches the experiment (CV, spectroscopy, hysteresis, statistics).
+5. Find real peaks with the peak finder, and read their width with FWHM.
+6. Use a logarithmic axis when the values span several decades.
+7. Try a palette in **Style**; preview changes appear immediately.
+8. Export PNG for reports, SVG for vector editing, or a LaTeX table for your manuscript.
 
 ---
 
@@ -202,14 +206,18 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 
 ## 🧪 شروع سریع با راهنمای تعاملی
 
-در برنامه روی **راهنمای شروع** در نوار بالایی بزنید. چهار گام کوتاه، داده آموزشی کالیبراسیون را بارگذاری می‌کند، میله‌های خطای انحراف معیار و خط برازش را توضیح می‌دهد، محل تغییر پالت رنگ را نشان می‌دهد و شما را به ابزارهای خروجی هدایت می‌کند.
+در برنامه روی **راهنمای شروع** در نوار بالایی بزنید. هشت گام کوتاه، کل مسیر کار را نشان می‌دهد: بارگذاری داده آموزشی، ورود فایل اکسل یا متنی خودتان، خواندن میله‌های خطای انحراف معیار و خط برازش، انتخاب حالت تحلیل، یابندهٔ پیک، محور لگاریتمی، پالت رنگ و در پایان خروجی گرفتن از نمودار.
 
 فایل [`samples/Getting_Started_Calibration.csv`](samples/Getting_Started_Calibration.csv) شامل هشت اندازه‌گیری غلظت و جذب به‌همراه ستون `Absorbance SD` است. برنامه این ستون را خودکار تشخیص می‌دهد و میله‌های خطا و برازش خطی را فعال می‌کند. فایل از مسیر **داده‌ها ← بارگذاری سریع داده نمونه ← شروع سریع — منحنی کالیبراسیون** هم در دسترس است.
 
 ۱. داده نمونه را بارگذاری و واحدهای محورها را بررسی کنید.
-۲. پراکندگی اندازه‌گیری‌ها را با روند برازش‌شده مقایسه کنید.
-۳. در تب **ظاهر** یک پالت رنگ را امتحان کنید؛ پیش‌نمایش بلافاصله به‌روز می‌شود.
-۴. برای گزارش PNG، برای ویرایش برداری SVG یا برای مقاله جدول LaTeX خروجی بگیرید.
+۲. قالب اکسل خام را بگیرید یا فایل csv/tsv/txt خودتان را آپلود کنید.
+۳. پراکندگی اندازه‌گیری‌ها را با روند برازش‌شده مقایسه کنید.
+۴. حالت تحلیلی متناسب با آزمایش را انتخاب کنید (ولتامتری، طیف‌سنجی، هیسترزیس، آمار).
+۵. با یابندهٔ پیک، پیک‌های واقعی و پهنای FWHM آن‌ها را پیدا کنید.
+۶. وقتی مقادیر چند دهه تغییر می‌کنند، محور لگاریتمی را روشن کنید.
+۷. در تب **ظاهر** یک پالت رنگ را امتحان کنید؛ پیش‌نمایش بلافاصله به‌روز می‌شود.
+۸. برای گزارش PNG، برای ویرایش برداری SVG یا برای مقاله جدول LaTeX خروجی بگیرید.
 
 ---
 

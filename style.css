@@ -1293,9 +1293,12 @@ html[dir="rtl"] .tutorial-panel h2 {
 
 @media (max-width: 768px) {
   .tutorial-panel {
-    inset-inline-start: 50%;
+    /* Centred with logical insets so the panel stays centred in RTL (the default) as well as LTR. */
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    margin-inline: auto;
     inset-block-end: 12px;
-    transform: translateX(-50%);
+    transform: none;
   }
 
   .tutorial-actions-end {

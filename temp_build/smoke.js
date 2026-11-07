@@ -51,12 +51,31 @@ step('tutorial opens, changes language, and closes cleanly', () => {
     throw new Error('English opening step did not render');
   }
   $('btnTutorialNext').click();
-  if (!$('tutorialStepTitle').textContent.includes('Read the uncertainty')) {
+  if (!$('tutorialStepTitle').textContent.includes('Bring your own measurements')) {
     throw new Error('next step did not render');
   }
   $('btnTutorialBack').click();
   if (!$('tutorialStepTitle').textContent.includes('Start with a clean calibration')) {
     throw new Error('previous step did not render');
+  }
+
+  // Every step must point at a real control, and the pips must track the step list.
+  const pips = document.querySelectorAll('.tutorial-progress-step');
+  if (pips.length !== 8) {
+    throw new Error('expected 8 progress pips, got ' + pips.length);
+  }
+  let guard = 0;
+  while ($('tutorialStepTitle').textContent !== 'Export a figure for your report' && guard++ < 20) {
+    if (!document.querySelector('.tutorial-highlight')) {
+      throw new Error('step without a highlight target: ' + $('tutorialStepTitle').textContent);
+    }
+    $('btnTutorialNext').click();
+  }
+  if ($('tutorialStepTitle').textContent !== 'Export a figure for your report') {
+    throw new Error('tutorial did not reach its last step');
+  }
+  if (!document.querySelector('.tutorial-highlight')) {
+    throw new Error('last step has no highlight target');
   }
   $('btnTutorialClose').click();
   if (!panel.hidden || document.querySelector('.tutorial-highlight')) {

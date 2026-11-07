@@ -3526,6 +3526,15 @@ const TUTORIAL_STEPS = [
     pane: "pane-data"
   },
   {
+    title: { fa: "داده‌های خودتان را وارد کنید", en: "Bring your own measurements" },
+    body: {
+      fa: "قالب اکسل خام را بگیرید؛ تعداد ستون‌ها را همان‌جا تعیین می‌کنید. پر کنید و از همین بخش آپلود کنید. فایل‌های متنی csv، tsv و txt هم با جداکنندهٔ کاما، تب، نقطه‌ویرگول یا فاصله خوانده می‌شوند.",
+      en: "Download the blank workbook first — it sets the number of columns for you — fill it in, then upload it here. Plain-text csv, tsv and txt files are read too, split on commas, tabs, semicolons or spaces."
+    },
+    target: "#lblImportFile",
+    pane: "pane-data"
+  },
+  {
     title: { fa: "عدم‌قطعیت را کنار روند بخوانید", en: "Read the uncertainty, not just the trend" },
     body: {
       fa: "هر میله خطا یک انحراف معیار را نشان می‌دهد. خط روند خطی رابطه کلی را خلاصه می‌کند؛ این خط به‌تنهایی علت و معلول را ثابت نمی‌کند.",
@@ -3533,6 +3542,33 @@ const TUTORIAL_STEPS = [
     },
     target: "#chkErrorBars",
     pane: "pane-data"
+  },
+  {
+    title: { fa: "به برنامه بگویید چه چیزی را تحلیل کند", en: "Tell the app what to analyse" },
+    body: {
+      fa: "حالت تحلیل را انتخاب کنید: ولتامتری چرخه‌ای، طیف‌سنجی و پیک‌ها، هیسترزیس سنسور یا آمار منحنی. هر حالت کارت خلاصهٔ خودش را می‌سازد — پیک اکسایش و کاهش، پهنای FWHM یا بازهٔ خطی.",
+      en: "Choose an analysis mode: cyclic voltammetry, spectroscopy and peaks, sensor hysteresis, or curve statistics. Each one builds its own summary cards — redox peaks, FWHM widths, or the linear region."
+    },
+    target: "#selAnalysisType",
+    pane: "pane-data"
+  },
+  {
+    title: { fa: "پیک‌های واقعی را پیدا کنید", en: "Find the peaks that matter" },
+    body: {
+      fa: "در تب ابزارها یابندهٔ پیک را روشن کنید. حساسیت را تا جایی بالا ببرید که فقط شانه‌های واقعی طیف بمانند، و برای خواندن پهنای هر پیک، FWHM را نمایش دهید.",
+      en: "In Tools, switch on the peak finder. Raise the sensitivity until only real spectral shoulders remain, then show FWHM to read each peak width."
+    },
+    target: "#chkPeakFinder",
+    pane: "pane-tools"
+  },
+  {
+    title: { fa: "بازهٔ چند دهه‌ای را با محور لگاریتمی رام کنید", en: "Tame a wide range with a log axis" },
+    body: {
+      fa: "وقتی مقادیر چند دهه تغییر می‌کنند — مثل بسامد در نمودار بُد — محور X لگاریتمی را روشن کنید. برای بازگشت به مقیاس خطی همین گزینه را خاموش کنید.",
+      en: "When values span several decades — impedance frequency on a Bode plot, for instance — switch the X axis to logarithmic. Turn it off again to return to a linear scale."
+    },
+    target: "#chkLogX",
+    pane: "pane-axes"
   },
   {
     title: { fa: "به نمودار هویت بدهید", en: "Give the figure a visual voice" },
@@ -3554,11 +3590,29 @@ const TUTORIAL_STEPS = [
 ];
 let tutorialStepIndex = 0;
 
+// The progress pips are generated from TUTORIAL_STEPS so the number of steps
+// and the number of pips can never drift apart.
+function ensureTutorialProgress() {
+  const trace = document.querySelector(".tutorial-trace");
+  if (!trace) return;
+  const existing = trace.querySelectorAll(".tutorial-progress-step");
+  if (existing.length === TUTORIAL_STEPS.length) return;
+  existing.forEach(el => el.remove());
+  trace.style.gridTemplateColumns = "repeat(" + TUTORIAL_STEPS.length + ", 1fr)";
+  const svg = trace.querySelector("svg");
+  for (let i = 0; i < TUTORIAL_STEPS.length; i++) {
+    const pip = document.createElement("span");
+    pip.className = "tutorial-progress-step";
+    trace.insertBefore(pip, svg);
+  }
+}
+
 function renderTutorialStep() {
   const panel = document.getElementById("tutorialPanel");
   if (!panel || panel.hidden) return;
   const step = TUTORIAL_STEPS[tutorialStepIndex];
   if (!step) return;
+  ensureTutorialProgress();
 
   document.querySelectorAll(".tutorial-highlight").forEach(el => el.classList.remove("tutorial-highlight"));
   const lang = state.lang === "en" ? "en" : "fa";
