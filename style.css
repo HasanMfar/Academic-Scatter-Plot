@@ -453,6 +453,12 @@ html[dir="ltr"] body {
   align-items: start;
 }
 
+/* Grid items default to a min-content floor, which let the wide data table
+   push the whole column past a phone viewport. Let them shrink instead. */
+.main-layout > * {
+  min-width: 0;
+}
+
 @media (max-width: 1120px) {
   .main-layout {
     grid-template-columns: 1fr;
@@ -1076,6 +1082,27 @@ html[dir="ltr"] .sidebar-search-box .search-clear-btn {
 .raw-data-table th, .raw-data-table td {
   padding: 6px 8px;
   border: 1px solid var(--border-color);
+}
+
+/* Row delete was a bare 9x18px glyph - far under the 24x24px minimum
+   target size, and impossible to hit on a touch screen. */
+.btn-delete-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  line-height: 1;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.btn-delete-row:hover,
+.btn-delete-row:focus-visible {
+  background: rgba(244, 63, 94, 0.14) !important;
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
 }
 
 .raw-data-table th {

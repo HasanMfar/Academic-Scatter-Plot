@@ -4752,6 +4752,24 @@ function serializeSettings() {
   };
 }
 
+// Settings remember axis limits, so a range that was auto-fitted to one dataset
+// can survive into the next one and leave the plot empty. Detect that case and
+// fall back to auto-scaling; a deliberately zoomed window still overlaps data.
+function axisWindowHidesData() {
+  if (!dataset.xValues || !dataset.xValues.length) return false;
+  const x = arrayBounds(dataset.xValues);
+  const ys = [];
+  dataset.series.forEach(s => {
+    if (s.visible === false || !Array.isArray(s.yValues)) return;
+    s.yValues.forEach(v => ys.push(v));
+  });
+  if (!ys.length) return false;
+  const y = arrayBounds(ys);
+  const disjoint = (aMin, aMax, bMin, bMax) => Math.min(aMax, bMax) < Math.max(aMin, bMin);
+  return disjoint(x.min, x.max, state.axis.xMin, state.axis.xMax)
+    || disjoint(y.min, y.max, state.axis.yMin, state.axis.yMax);
+}
+
 function applySettings(obj) {
   if (!obj || typeof obj !== "object") return false;
   const s = obj.state && typeof obj.state === "object" ? obj.state : obj;
@@ -4763,6 +4781,7 @@ function applySettings(obj) {
   ["axis", "layout", "ticks", "type", "data", "zoom", "peaks", "crosshair"].forEach(k => {
     if (s[k] && typeof s[k] === "object") Object.assign(state[k], s[k]);
   });
+  if (axisWindowHidesData()) autoScaleAxis();
   if (s.callouts && typeof s.callouts === "object") state.callouts = s.callouts;
   if (Array.isArray(s.series)) {
     s.series.forEach(src => {

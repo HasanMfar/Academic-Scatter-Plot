@@ -84,6 +84,14 @@ step('tutorial opens, changes language, and closes cleanly', () => {
   window.eval('setLanguagePreset("fa")');
 });
 
+step('stale axis limits from a previous dataset do not blank the plot', () => {
+  // Settings persist axis limits, so a window fitted to another dataset used to
+  // survive a reload and leave every point outside the drawn area.
+  window.eval('applySettings({axis: {xMin: 0, xMax: 14, yMin: 0, yMax: 0.7}})');
+  const ax = JSON.parse(window.eval('JSON.stringify({xMin: state.axis.xMin, xMax: state.axis.xMax})'));
+  if (ax.xMax <= 14) throw new Error('axis was not re-fitted to the current data: ' + JSON.stringify(ax));
+});
+
 step('svg rendered', () => {
   const svg = $('scatterPlotSvg');
   if (!svg.innerHTML || svg.innerHTML.length < 500) throw new Error('svg empty');
