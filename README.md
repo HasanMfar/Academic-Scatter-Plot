@@ -172,6 +172,8 @@ Every figure below was rendered entirely by the app's SVG engine. The original d
 | [`samples/Impedance_Bode.xlsx`](samples/Impedance_Bode.xlsx) | Wide frequency range — logarithmic horizontal axis ($\log_{10} X$) |
 | [`samples/Solar_Cell_IV.xlsx`](samples/Solar_Cell_IV.xlsx) | Photovoltaic performance — direct callouts and custom axis intervals |
 
+Sheet names, column headers and row counts for every file are listed in [`samples/README.md`](samples/README.md).
+
 ---
 
 ## 🛠️ How to Use
