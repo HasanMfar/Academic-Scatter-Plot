@@ -3607,6 +3607,64 @@ function ensureTutorialProgress() {
   }
 }
 
+// A step can point at a control the user cannot see: native checkboxes are
+// display:none behind their styled wrapper, and some settings live in collapsed
+// <details>. Highlight the nearest painted element, open the section, and let the
+// sidebar scroller bring it into view, so the hint never points at nothing.
+function tutorialAnchorFor(target) {
+  if (!target) return null;
+  let details = target.closest("details");
+  while (details) {
+    details.open = true;
+    details = details.parentElement ? details.parentElement.closest("details") : null;
+  }
+  // Native checkboxes and radios are display:none and drawn by their wrapper.
+  let el = target;
+  if (el.matches && el.matches('input[type="checkbox"], input[type="radio"]')) {
+    el = el.closest("label") || el.parentElement || el;
+  }
+  // Anything still unpainted (collapsed or hidden container) walks up to the
+  // nearest element that actually occupies space. Skipped when the document has
+  // no layout at all (jsdom), where every rect is empty.
+  if (document.body.getClientRects().length > 0) {
+    let n = el;
+    while (n && n !== document.body && !n.getClientRects().length) n = n.parentElement;
+    if (n && n !== document.body) el = n;
+  }
+  return el && el !== document.body ? el : null;
+}
+
+// The tutorial panel is fixed to the bottom of the viewport, so centring a
+// target can park it behind the panel - worst on phones. Nudge the scroll
+// container until the highlighted control clears the panel.
+function tutorialScrollParent(el) {
+  for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+    const cs = getComputedStyle(n);
+    if (/(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight) return n;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
+function revealTutorialAnchor(anchor) {
+  if (!anchor || typeof anchor.scrollIntoView !== "function") return;
+  anchor.scrollIntoView({ block: "center", inline: "nearest" });
+  const panel = document.getElementById("tutorialPanel");
+  if (!panel || panel.hidden) return;
+  const a = anchor.getBoundingClientRect();
+  const p = panel.getBoundingClientRect();
+  const overlaps = !(a.right < p.left || a.left > p.right || a.bottom < p.top || a.top > p.bottom);
+  if (!overlaps) return;
+  // Scroll forward (content moves up) until the anchor clears the panel.
+  const delta = a.bottom - p.top + 16;
+  if (delta <= 0) return;
+  const scroller = tutorialScrollParent(anchor);
+  if (scroller === (document.scrollingElement || document.documentElement)) {
+    window.scrollTo({ top: window.scrollY + delta });
+  } else {
+    scroller.scrollTop = scroller.scrollTop + delta;
+  }
+}
+
 function renderTutorialStep() {
   const panel = document.getElementById("tutorialPanel");
   if (!panel || panel.hidden) return;
@@ -3655,7 +3713,11 @@ function renderTutorialStep() {
   }
   const target = document.querySelector(step.target);
   if (target) {
-    target.classList.add("tutorial-highlight");
+    const anchor = tutorialAnchorFor(target);
+    if (anchor) {
+      anchor.classList.add("tutorial-highlight");
+      revealTutorialAnchor(anchor);
+    }
     if (typeof target.focus === "function") target.focus({ preventScroll: true });
   }
 }
@@ -3665,6 +3727,7 @@ function closeTutorial() {
   const open = document.getElementById("btnOpenTutorial");
   if (!panel) return;
   panel.hidden = true;
+  document.body.classList.remove("tutorial-open");
   document.querySelectorAll(".tutorial-highlight").forEach(el => el.classList.remove("tutorial-highlight"));
   if (open) {
     open.setAttribute("aria-expanded", "false");
@@ -3685,6 +3748,7 @@ function initTutorial() {
   open.addEventListener("click", () => {
     tutorialStepIndex = 0;
     panel.hidden = false;
+    document.body.classList.add("tutorial-open");
     renderTutorialStep();
     close.focus();
   });

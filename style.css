@@ -1332,6 +1332,14 @@ html[dir="rtl"] .tutorial-panel h2 {
     flex-wrap: wrap;
     justify-content: flex-end;
   }
+
+  /* The panel is fixed to the bottom of a phone screen and can cover the very
+     control a step points at when that control sits at the end of the page.
+     Reserve its height while the tutorial is open so the page can scroll the
+     highlighted control clear of it. */
+  body.tutorial-open .app-container {
+    padding-bottom: 320px;
+  }
 }
 
 @media print {
