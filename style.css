@@ -1141,6 +1141,7 @@ html[dir="ltr"] .sidebar-search-box .search-clear-btn {
 
 .tutorial-panel {
   position: fixed;
+  /* Logical, so the panel lands opposite the settings column in RTL and LTR. */
   inset-inline-start: 20px;
   inset-block-end: 20px;
   z-index: 3000;
@@ -1338,7 +1339,8 @@ html[dir="rtl"] .tutorial-panel h2 {
      Reserve its height while the tutorial is open so the page can scroll the
      highlighted control clear of it. */
   body.tutorial-open .app-container {
-    padding-bottom: 320px;
+    /* Set from the panel's measured height as each step renders. */
+    padding-bottom: var(--tutorial-panel-h, 320px);
   }
 }
 

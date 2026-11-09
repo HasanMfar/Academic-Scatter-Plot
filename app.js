@@ -3451,7 +3451,7 @@ const SAMPLE_OPTIONS = {
   }
 };
 
-async function loadBundledSample(fileName) {
+async function loadBundledSample(fileName, override) {
   if (!fileName) return 0;
   if (typeof XLSX === "undefined") {
     showToast(state.lang === "fa" ? "کتابخانه SheetJS بارگذاری نشده است." : "SheetJS is not loaded.");
@@ -3477,7 +3477,9 @@ async function loadBundledSample(fileName) {
     const cap = v => (v && typeof v === "object" ? v[lang] : v);
     // Each sample renders the way its README figure is drawn, independently of
     // whatever data shaping was active before.
-    state.ticks.xLog = !!opts.xLog;
+    // A caller (the tutorial) may need the sample's axis mode switched, so the
+    // reader can turn log X on and off and watch the difference.
+    state.ticks.xLog = override && typeof override.xLog === "boolean" ? override.xLog : !!opts.xLog;
     state.data.sortByX = !!opts.sortByX;
     state.data.smoothing = "straight";
     state.data.yTransform = "none";
@@ -3497,6 +3499,9 @@ async function loadBundledSample(fileName) {
     if (opts.yTitle) state.yTitle = cap(opts.yTitle);
     if (opts.callouts) Object.assign(state.callouts, opts.callouts);
 
+    // A sample is a showcase: its window belongs to its own data, not to the
+    // dataset that happened to be on screen before it.
+    autoScaleAxis();
     syncUIFromState();
     renderChart();
     renderLegend();
@@ -3523,7 +3528,8 @@ const TUTORIAL_STEPS = [
       en: "This teaching dataset plots concentration against absorbance. It includes a standard-deviation column so you can see measurement uncertainty."
     },
     target: "#selSampleDataset",
-    pane: "pane-data"
+    pane: "pane-data",
+    sample: { file: TUTORIAL_SAMPLE, label: { fa: "بارگذاری داده شروع", en: "Load starter data" } }
   },
   {
     title: { fa: "داده‌های خودتان را وارد کنید", en: "Bring your own measurements" },
@@ -3555,20 +3561,22 @@ const TUTORIAL_STEPS = [
   {
     title: { fa: "پیک‌های واقعی را پیدا کنید", en: "Find the peaks that matter" },
     body: {
-      fa: "در تب ابزارها یابندهٔ پیک را روشن کنید. حساسیت را تا جایی بالا ببرید که فقط شانه‌های واقعی طیف بمانند، و برای خواندن پهنای هر پیک، FWHM را نمایش دهید.",
-      en: "In Tools, switch on the peak finder. Raise the sensitivity until only real spectral shoulders remain, then show FWHM to read each peak width."
+      fa: "در تب ابزارها یابندهٔ پیک را روشن کنید. حساسیت را تا جایی بالا ببرید که فقط شانه‌های واقعی طیف بمانند، و برای خواندن پهنای هر پیک، FWHM را نمایش دهید. روی یک خط کالیبراسیون پیکی برای پیدا کردن نیست؛ دکمهٔ پایین پنل طیف رامان را می‌آورد.",
+      en: "In Tools, switch on the peak finder. Raise the sensitivity until only real spectral shoulders remain, then show FWHM to read each peak width. A straight calibration line has no peaks to find — the button below loads a Raman spectrum."
     },
     target: "#chkPeakFinder",
-    pane: "pane-tools"
+    pane: "pane-tools",
+    sample: { file: "Raman_Spectroscopy.xlsx", label: { fa: "بارگذاری طیف رامان", en: "Load Raman spectrum" } }
   },
   {
     title: { fa: "بازهٔ چند دهه‌ای را با محور لگاریتمی رام کنید", en: "Tame a wide range with a log axis" },
     body: {
-      fa: "وقتی مقادیر چند دهه تغییر می‌کنند — مثل بسامد در نمودار بُد — محور X لگاریتمی را روشن کنید. برای بازگشت به مقیاس خطی همین گزینه را خاموش کنید.",
-      en: "When values span several decades — impedance frequency on a Bode plot, for instance — switch the X axis to logarithmic. Turn it off again to return to a linear scale."
+      fa: "وقتی مقادیر چند دهه تغییر می‌کنند — مثل بسامد در نمودار بُد — محور X لگاریتمی را روشن کنید. برای بازگشت به مقیاس خطی همین گزینه را خاموش کنید. دکمهٔ پایین پنل یک نمونهٔ پنج‌دهه‌ای بارگذاری می‌کند تا تفاوت را ببینید.",
+      en: "When values span several decades — impedance frequency on a Bode plot, for instance — switch the X axis to logarithmic. Turn it off again to return to a linear scale. The button below loads a five-decade sample so you can see the difference."
     },
     target: "#chkLogX",
-    pane: "pane-axes"
+    pane: "pane-axes",
+    sample: { file: "Impedance_Bode.xlsx", xLog: false, label: { fa: "بارگذاری نمونهٔ بُد", en: "Load Bode sample" } }
   },
   {
     title: { fa: "به نمودار هویت بدهید", en: "Give the figure a visual voice" },
@@ -3697,7 +3705,11 @@ function renderTutorialStep() {
       ? (lang === "fa" ? "پایان" : "Finish")
       : (lang === "fa" ? "بعدی" : "Next");
   }
-  if (load) load.hidden = tutorialStepIndex !== 0;
+  if (load) {
+    // Only the steps whose feature needs matching data offer a sample.
+    load.hidden = !step.sample;
+    if (step.sample) load.textContent = step.sample.label[lang];
+  }
   if (open) open.setAttribute("aria-expanded", "true");
   if (close) close.setAttribute("aria-label", lang === "fa" ? "بستن راهنما" : "Close tutorial");
   panel.dir = lang === "fa" ? "rtl" : "ltr";
@@ -3706,6 +3718,12 @@ function renderTutorialStep() {
     if (index === tutorialStepIndex) el.setAttribute("aria-current", "step");
     else el.removeAttribute("aria-current");
   });
+
+  // Reserve exactly as much room below the page as this step's panel takes, so
+  // the spotlight can always be scrolled clear of it on a short screen.
+  if (document.body.classList.contains("tutorial-open")) {
+    document.body.style.setProperty("--tutorial-panel-h", Math.round(panel.getBoundingClientRect().height + 24) + "px");
+  }
 
   if (step.pane) {
     const tab = document.querySelector(`.sidebar-tab-btn[data-tab="${step.pane}"]`);
@@ -3738,6 +3756,7 @@ function closeTutorial() {
   if (!panel) return;
   panel.hidden = true;
   document.body.classList.remove("tutorial-open");
+  document.body.style.removeProperty("--tutorial-panel-h");
   document.querySelectorAll(".tutorial-highlight").forEach(el => el.classList.remove("tutorial-highlight"));
   if (open) {
     open.setAttribute("aria-expanded", "false");
@@ -3779,10 +3798,18 @@ function initTutorial() {
     renderTutorialStep();
   });
   load.addEventListener("click", async () => {
-    if (select) select.value = TUTORIAL_SAMPLE;
-    const points = await loadBundledSample(TUTORIAL_SAMPLE);
-    if (points > 0) {
+    const step = TUTORIAL_STEPS[tutorialStepIndex];
+    if (!step || !step.sample) return;
+    if (select) select.value = step.sample.file;
+    const points = await loadBundledSample(step.sample.file, step.sample);
+    // The opening step hands over to the import step; later steps stay put so
+    // the reader can look at the freshly plotted data first.
+    if (points > 0 && tutorialStepIndex === 0) {
       tutorialStepIndex = 1;
+      renderTutorialStep();
+    } else if (points > 0) {
+      // The chart re-render moves the page under the fixed panel; re-show the
+      // step so its spotlight is scrolled clear again.
       renderTutorialStep();
     }
   });
@@ -3975,9 +4002,16 @@ function setLanguagePreset(newLang) {
   renderLegend();
 }
 
+// Wholesale body.className writes used to drop unrelated flags such as
+// tutorial-open, which has to survive a theme change or a sample load.
+function applyThemeClass() {
+  document.body.classList.remove("theme-light", "theme-dark");
+  document.body.classList.add(`theme-${state.theme}`);
+}
+
 function toggleTheme() {
   state.theme = state.theme === "dark" ? "light" : "dark";
-  document.body.className = `theme-${state.theme}`;
+  applyThemeClass();
   if (themeBtnText) themeBtnText.textContent = state.theme === "dark" ? "تم روشن دانشگاهی" : "تم تیره مدرن";
   renderChart();
   renderLegend();
@@ -4568,7 +4602,7 @@ function updateExportSize() {
 function syncUIFromState() {
   const L = state.layout, T = state.ticks, Y = state.type, D = state.data, Z = state.zoom;
 
-  document.body.className = `theme-${state.theme}`;
+  applyThemeClass();
   if (themeBtnText) themeBtnText.textContent = state.theme === "dark" ? "تم روشن دانشگاهی" : "تم تیره مدرن";
   if (langBtnText) langBtnText.textContent = state.lang === "fa" ? "English" : "فارسی";
 
@@ -4882,6 +4916,11 @@ function applySettings(obj) {
   ["axis", "layout", "ticks", "type", "data", "zoom", "peaks", "crosshair"].forEach(k => {
     if (s[k] && typeof s[k] === "object") Object.assign(state[k], s[k]);
   });
+  // A restored English session must not boot into the RTL document shell.
+  if (s.lang === "en" || s.lang === "fa") {
+    document.documentElement.lang = s.lang;
+    document.documentElement.dir = s.lang === "en" ? "ltr" : "rtl";
+  }
   if (axisWindowHidesData()) autoScaleAxis();
   if (s.callouts && typeof s.callouts === "object") state.callouts = s.callouts;
   if (Array.isArray(s.series)) {
@@ -4980,8 +5019,31 @@ function ensureLogBounds(axis) {
   const minKey = axis === "x" ? "xMin" : "yMin";
   const maxKey = axis === "x" ? "xMax" : "yMax";
   if (state.axis[minKey] > 0) return;
-  const mx = state.axis[maxKey];
-  state.axis[minKey] = mx > 0 ? Math.pow(10, Math.floor(Math.log10(mx)) - 2) : 1;
+  // Zero cannot sit on a log axis. Fit the data's own positive span rather than
+  // carving two decades off the current maximum, which hides the low decades of
+  // a wide-range dataset instead of showing them.
+  let lo = Infinity;
+  let hi = -Infinity;
+  const note = value => {
+    if (!(value > 0) || !Number.isFinite(value)) return;
+    if (value < lo) lo = value;
+    if (value > hi) hi = value;
+  };
+  if (axis === "x") {
+    (dataset.xValues || []).forEach(note);
+  } else {
+    dataset.series.forEach(s => {
+      if (s.visible === false || !Array.isArray(s.yValues)) return;
+      s.yValues.forEach((v, i) => note(displayY(s, i)));
+    });
+  }
+  if (lo === Infinity) {
+    const mx = state.axis[maxKey];
+    state.axis[minKey] = mx > 0 ? Math.pow(10, Math.floor(Math.log10(mx)) - 2) : 1;
+  } else {
+    state.axis[minKey] = Math.pow(10, Math.floor(Math.log10(lo)));
+    state.axis[maxKey] = Math.pow(10, Math.ceil(Math.log10(hi)));
+  }
   if (!(state.axis[maxKey] > state.axis[minKey])) state.axis[maxKey] = state.axis[minKey] * 100;
   const inp = document.getElementById(axis === "x" ? "inpXMin" : "inpYMin");
   if (inp) inp.value = state.axis[minKey];
