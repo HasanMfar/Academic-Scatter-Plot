@@ -103,7 +103,7 @@
       </div>
     </header>
 
-    <aside id="tutorialPanel" class="tutorial-panel" aria-labelledby="tutorialStepTitle" aria-live="polite" hidden>
+    <aside id="tutorialPanel" class="tutorial-panel" role="dialog" aria-modal="true" aria-labelledby="tutorialStepTitle" aria-describedby="tutorialStepBody" hidden>
       <div class="tutorial-panel-head">
         <div class="tutorial-identity">
           <span class="tutorial-eyebrow" data-fa="دفترچه آزمایش · کالیبراسیون" data-en="Lab note · calibration">دفترچه آزمایش · کالیبراسیون</span>
@@ -116,8 +116,10 @@
           <path d="M2 21 C20 20 24 17 38 16 S59 12 70 11 S91 5 114 3"></path>
         </svg>
       </div>
-      <h2 id="tutorialStepTitle"></h2>
-      <p id="tutorialStepBody"></p>
+      <div class="tutorial-step-text" aria-live="polite">
+        <h2 id="tutorialStepTitle"></h2>
+        <p id="tutorialStepBody"></p>
+      </div>
       <div class="tutorial-actions">
         <button id="btnTutorialBack" class="btn btn-secondary btn-sm-reset" type="button" data-fa="قبلی" data-en="Back">قبلی</button>
         <div class="tutorial-actions-end">
@@ -1087,6 +1089,6 @@
       document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
     }
   </script>
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>

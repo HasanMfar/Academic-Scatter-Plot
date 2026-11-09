@@ -3711,6 +3711,8 @@ function renderTutorialStep() {
     const tab = document.querySelector(`.sidebar-tab-btn[data-tab="${step.pane}"]`);
     if (tab && !tab.classList.contains("active")) tab.click();
   }
+  // The highlighted control is only ever shown, never focused: focus stays in
+  // the dialog so the trap below keeps working and the user is not thrown out of it.
   const target = document.querySelector(step.target);
   if (target) {
     const anchor = tutorialAnchorFor(target);
@@ -3718,8 +3720,16 @@ function renderTutorialStep() {
       anchor.classList.add("tutorial-highlight");
       revealTutorialAnchor(anchor);
     }
-    if (typeof target.focus === "function") target.focus({ preventScroll: true });
   }
+}
+
+function tutorialFocusable(panel) {
+  const selector = 'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  return [...panel.querySelectorAll(selector)].filter(el => {
+    if (el.disabled || el.hidden || el.closest("[hidden]")) return false;
+    // jsdom reports every element as unrendered, so only trust rects in a real layout.
+    return document.body.getClientRects().length === 0 || el.getClientRects().length > 0;
+  });
 }
 
 function closeTutorial() {
@@ -3731,7 +3741,10 @@ function closeTutorial() {
   document.querySelectorAll(".tutorial-highlight").forEach(el => el.classList.remove("tutorial-highlight"));
   if (open) {
     open.setAttribute("aria-expanded", "false");
-    open.focus();
+    // Hand focus back to the launcher, but never steal it from wherever the
+    // user has since moved it (another action can close the panel too).
+    const active = document.activeElement;
+    if (!active || active === document.body || panel.contains(active)) open.focus();
   }
 }
 
@@ -3774,7 +3787,31 @@ function initTutorial() {
     }
   });
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && !panel.hidden) closeTutorial();
+    if (panel.hidden) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeTutorial();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    // Keep Tab inside the dialog: the page behind it is marked aria-modal.
+    const items = tutorialFocusable(panel);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    if (!panel.contains(active)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+      return;
+    }
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   });
 }
 
